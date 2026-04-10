@@ -154,5 +154,5 @@ Aplikacja dostępna pod adresem: `http://127.0.0.1:5000`
 
 ## 📬 Kontakt
 
-Projekt realizowany w ramach przedmiotu **Aplikacje Internetowe**
-Instytut Informatyki Stosowanej im. Krzysztofa Brzeskiego – ANS Elbląg
+Projekt realizowany w ramach przedmiotu **Aplikacje Internetowe II**
+e-mail: 21284@student.ans-elblag.pl
