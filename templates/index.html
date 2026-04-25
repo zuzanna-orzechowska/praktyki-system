@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-light p-5 rounded">
+    <h1>Panel Główny</h1>
+    <p class="lead">Zalogowałeś się jako: <strong>{{ current_user.rola }}</strong></p>
+    <hr class="my-4">
+    <p>Zgodnie z dokumentacją, tutaj zobaczysz status swojej praktyki.</p>
+</div>
+{% endblock %}
