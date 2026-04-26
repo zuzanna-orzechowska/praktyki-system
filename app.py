@@ -2,13 +2,16 @@ from flask import Flask, render_template
 from extensions import db, login_manager
 from blueprints.auth import auth_bp
 from flask_login import login_required
+import os
 
 def create_app():
     app = Flask(__name__)
 
     #do testowania
     app.config['SECRET_KEY'] = 'twoj-bardzo-tajny-klucz-123'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///praktyki.db'
+
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
     
     #inicjalizacja rozszerzeń
     db.init_app(app)

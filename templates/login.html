@@ -2,7 +2,6 @@
 
 {% block content %}
 <style>
-    /* Zostawiamy tylko style specyficzne dla logowania */
     .login-container {
         margin-top: 50px;
         max-width: 400px;
@@ -19,18 +18,18 @@
     }
 </style>
 
-<div class="container d-flex justify-content-center">
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="login-container w-100">
         <div class="card p-4">
             <div class="text-center mb-4">
                 <h4>System Obsługi Praktyk</h4>
-                <p class="text-muted">ANS w Elblągu [cite: 2]</p>
+                <p class="text-muted">ANS w Elblągu</p>
             </div>
 
             <form method="POST">
                 <div class="mb-3">
                     <label class="form-label">Email uczelniany</label>
-                    <input type="email" name="email" class="form-control" placeholder="nr_albumu@student.ans.elblag.pl"
+                    <input type="email" name="email" class="form-control" placeholder="indeks@student.ans-elblag.pl"
                         required>
                 </div>
                 <div class="mb-3">
@@ -41,8 +40,7 @@
             </form>
 
             <div class="mt-3 text-center">
-                <small><a href="{{ url_for('auth.reset_hasla') }}" class="text-muted">Zapomniałeś hasła? [cite:
-                        197]</a></small>
+                <small><a href="{{ url_for('auth.reset_hasla') }}" class="text-muted">Zapomniałeś hasła?</a></small>
             </div>
         </div>
     </div>
