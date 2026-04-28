@@ -204,6 +204,20 @@ CREATE TABLE historia_statusu (
     FOREIGN KEY (zmieniony_przez) REFERENCES uzytkownik(id) ON DELETE RESTRICT
 );
 
+-- ------------------------------------------------------------
+-- 11. HARMONOGRAM PRAKTYKI
+-- ------------------------------------------------------------
+CREATE TABLE harmonogram_praktyki (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id         INTEGER NOT NULL, 
+    lp                  INTEGER NOT NULL,
+    dzial_komorka       TEXT NOT NULL,
+    planowana_liczba_dni INTEGER NOT NULL CHECK (planowana_liczba_dni > 0),
+    
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE,
+    UNIQUE (dokument_id, lp)
+);
+
 -- ============================================================
 -- INDEKSY – przyspieszenie najczęstszych zapytań
 -- ============================================================

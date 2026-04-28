@@ -6,9 +6,9 @@ erDiagram
         string imie
         string nazwisko
         string rola
+        int aktywny
         datetime created_at
         datetime updated_at
-        bool aktywny
     }
 
     STUDENT {
@@ -32,6 +32,7 @@ erDiagram
         string telefon
         int zopz_id FK
         datetime created_at
+        datetime updated_at
     }
 
     PRAKTYKA {
@@ -59,6 +60,14 @@ erDiagram
         datetime updated_at
     }
 
+    HARMONOGRAM_PRAKTYKI {
+        int id PK
+        int dokument_id FK
+        int lp
+        string dzial_komorka
+        int planowana_liczba_dni
+    }
+
     WPIS_DZIENNIKA {
         int id PK
         int dokument_id FK
@@ -66,7 +75,7 @@ erDiagram
         date data_wpisu
         text opis_prac
         string nr_efektu
-        bool potwierdzony_zopz
+        int potwierdzony_zopz
         datetime potwierdzono_at
     }
 
@@ -75,7 +84,7 @@ erDiagram
         int dokument_id FK
         string kod_efektu
         text opis_efektu
-        bool uzyskany
+        int uzyskany
         string podpis_zopz
         date data_podpisu
     }
@@ -115,14 +124,16 @@ erDiagram
     }
 
     UZYTKOWNIK ||--o| STUDENT : "ma profil"
-    UZYTKOWNIK ||--o{ ZAKLAD_PRACY : "jest ZOPZ"
+    UZYTKOWNIK ||--o{ ZAKLAD_PRACY : "zarządza jako ZOPZ"
+    UZYTKOWNIK ||--o{ PRAKTYKA : "nadzoruje jako UOPZ"
+    UZYTKOWNIK ||--o{ DOKUMENT : "tworzy"
+    UZYTKOWNIK ||--o{ HISTORIA_STATUSU : "zmienia status"
     STUDENT ||--o{ PRAKTYKA : "odbywa"
     ZAKLAD_PRACY ||--o{ PRAKTYKA : "przyjmuje"
-    UZYTKOWNIK ||--o{ PRAKTYKA : "nadzoruje jako UOPZ"
-    PRAKTYKA ||--|{ DOKUMENT : "zawiera"
-    PRAKTYKA ||--o| PROTOKOL : "ma protokol"
-    PRAKTYKA ||--o| POROZUMIENIE : "ma porozumienie"
-    PRAKTYKA ||--o{ HISTORIA_STATUSU : "ma historie"
-    DOKUMENT ||--o{ WPIS_DZIENNIKA : "zawiera wpisy"
-    DOKUMENT ||--o{ EFEKT_UCZENIA : "zawiera efekty"
-    UZYTKOWNIK ||--o{ HISTORIA_STATUSU : "wprowadzil"
+    PRAKTYKA ||--|{ DOKUMENT : "posiada załączniki"
+    PRAKTYKA ||--o| PROTOKOL : "kończy się"
+    PRAKTYKA ||--o| POROZUMIENIE : "wymaga"
+    PRAKTYKA ||--o{ HISTORIA_STATUSU : "rejestruje zmiany"
+    DOKUMENT ||--o{ WPIS_DZIENNIKA : "ma wpisy (Zal 6)"
+    DOKUMENT ||--o{ EFEKT_UCZENIA : "ma efekty (Zal 4)"
+    DOKUMENT ||--o{ HARMONOGRAM_PRAKTYKI : "ma plan (Zal 2a)"
