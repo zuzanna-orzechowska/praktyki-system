@@ -19,7 +19,8 @@ def create_app():
     app.register_blueprint(auth_bp)
     
     @app.route('/')
-    @login_required
+    @app.route('/pytania')
+    @app.route('/kontakt')
     def index():
         return render_template('index.html')
 
