@@ -218,6 +218,19 @@ CREATE TABLE harmonogram_praktyki (
     UNIQUE (dokument_id, lp)
 );
 
+-- ------------------------------------------------------------
+-- 12. SPRAWOZDANIE Z PRAKTYKI (Zał. 7)
+-- ------------------------------------------------------------
+CREATE TABLE sprawozdanie (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id         INTEGER NOT NULL UNIQUE,
+    charakterystyka     TEXT NOT NULL,
+    opis_prac           TEXT NOT NULL,
+    wiedza_umiejetnosci TEXT NOT NULL,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
 -- ============================================================
 -- INDEKSY – przyspieszenie najczęstszych zapytań
 -- ============================================================

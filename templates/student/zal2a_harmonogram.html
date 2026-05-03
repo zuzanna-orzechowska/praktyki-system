@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Program i Harmonogram (Zał. 2a)</h2>
+    <span class="badge {% if suma_dni == 120 %}bg-success{% else %}bg-warning text-dark{% endif %}">Suma dni: <span
+            id="sumaBadge">{{ suma_dni }}</span> / 120</span>
+</div>
+
+<div class="card mb-4 shadow-sm border-0 p-3 bg-light">
+    <div class="row">
+        <div class="col-md-6">
+            <p class="mb-1"><strong>Student:</strong> {{ current_user.imie }} {{ current_user.nazwisko }} ({{
+                student.nr_albumu }})</p>
+            <p class="mb-1"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <p class="mb-1"><strong>Firma:</strong> {{ praktyka.zaklad.nazwa }}</p>
+            <p class="mb-1"><strong>Termin:</strong> {{ praktyka.data_start }} do {{ praktyka.data_end }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Harmonogram Form -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white fw-bold">Twój Harmonogram (Plan pracy)</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('student.zal2a_harmonogram') }}">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%">L.p.</th>
+                        <th style="width: 65%">Dział / komórka / przykładowe prace</th>
+                        <th style="width: 20%">Planowana liczba dni</th>
+                        <th style="width: 10%">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody id="harmonogramBody">
+                    {% if pozycje %}
+                    {% for p in pozycje %}
+                    <tr>
+                        <td class="text-center fw-bold row-num">{{ p.lp }}</td>
+                        <td><input type="text" name="dzial[]" class="form-control" value="{{ p.dzial_komorka }}"
+                                required></td>
+                        <td><input type="number" name="dni[]" class="form-control dni-input"
+                                value="{{ p.planowana_liczba_dni }}" min="1" max="120" onchange="calculateSum()"
+                                required></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHRow(this)"><i
+                                    class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td class="text-center fw-bold row-num">1</td>
+                        <td><input type="text" name="dzial[]" class="form-control" placeholder="np. Dział Wdrożeń IT"
+                                required></td>
+                        <td><input type="number" name="dni[]" class="form-control dni-input" value="120" min="1"
+                                max="120" onchange="calculateSum()" required></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHRow(this)"><i
+                                    class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-light fw-bold">
+                        <td colspan="2" class="text-end">Łącznie dni (wymagane 120):</td>
+                        <td class="text-center text-primary fs-5" id="totalDays">0</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" onclick="addHRow()">
+                    <i class="bi bi-plus-circle"></i> Dodaj pozycję
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save"></i> Zapisz projekt harmonogramu
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function addHRow() {
+        const tbody = document.getElementById('harmonogramBody');
+        const rowCount = tbody.getElementsByTagName('tr').length;
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td class="text-center fw-bold row-num">${rowCount + 1}</td>
+            <td><input type="text" name="dzial[]" class="form-control" placeholder="Kolejny dział..." required></td>
+            <td><input type="number" name="dni[]" class="form-control dni-input" value="10" min="1" max="120" onchange="calculateSum()" required></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHRow(this)"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(newRow);
+        calculateSum();
+    }
+
+    function removeHRow(button) {
+        button.closest('tr').remove();
+        const rows = document.getElementById('harmonogramBody').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].querySelector('.row-num').innerText = i + 1;
+        }
+        calculateSum();
+    }
+
+    function calculateSum() {
+        const inputs = document.querySelectorAll('.dni-input');
+        let sum = 0;
+        inputs.forEach(input => sum += parseInt(input.value) || 0);
+        document.getElementById('totalDays').innerText = sum;
+        document.getElementById('sumaBadge').innerText = sum;
+
+        if (sum > 120) {
+            alert('Uwaga: Przekroczyłeś wymaganą sumę 120 dni roboczych!');
+        }
+    }
+
+    window.onload = calculateSum;
+</script>
+{% endblock %}

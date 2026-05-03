@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Karta Praktyki (Zał. 3)</h2>
+    <span class="badge bg-secondary">Dokument Informacyjny</span>
+</div>
+
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body p-5"
+        style="border: 1px solid #dee2e6; max-width: 900px; margin: 0 auto; background-color: #fff;">
+
+        <div class="text-center mb-4">
+            <h4 class="fw-bold m-0">KARTA PRAKTYKI ZAWODOWEJ</h4>
+            <h5 class="fw-bold mt-2">SKIEROWANIE NA PRAKTYKĘ</h5>
+        </div>
+
+        <p style="text-align: justify;">
+            Na podstawie porozumienia nr
+            <strong>{% if porozumienie and porozumienie.id %}{{ porozumienie.id }}{% else %}........{% endif
+                %}</strong>,
+            z dnia <strong>{% if porozumienie and porozumienie.data_podpisania %}{{ porozumienie.data_podpisania }}{%
+                else %}....................{% endif %}</strong> r.,
+            kieruję niżej wymienionego studenta na praktykę zawodową do zakładu pracy:
+        </p>
+
+        <div class="bg-light p-3 mb-4 text-center rounded fw-bold border">
+            {{ praktyka.zaklad.nazwa }}<br>
+            <small class="fw-normal">{{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}</small>
+        </div>
+
+        <table class="table table-borderless mb-4">
+            <tbody>
+                <tr>
+                    <td style="width: 30%;" class="fw-bold">Imię i nazwisko:</td>
+                    <td class="border-bottom border-dark">{{ current_user.imie }} {{ current_user.nazwisko }}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Numer albumu:</td>
+                    <td class="border-bottom border-dark">{{ student.nr_albumu }}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Studia / Kierunek:</td>
+                    <td class="border-bottom border-dark">inżynierskie {{ student.tryb_studiow }} / {{ student.kierunek
+                        }}</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Specjalność:</td>
+                    <td class="border-bottom border-dark">{{ student.specjalnosc or
+                        '...................................' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>Czas trwania praktyki:</strong> 6 miesięcy (120 dni roboczych)</p>
+        <p><strong>Termin praktyki:</strong> od {{ praktyka.data_start }} do {{ praktyka.data_end }}</p>
+
+        <p><strong>Uczelniany opiekun praktyki zawodowej:</strong>
+            <span class="border-bottom border-dark px-3">
+                {% if uopz %}{{ uopz.imie }} {{ uopz.nazwisko }}{% else %}Brak przypisanego opiekuna{% endif %}
+            </span>
+        </p>
+
+        <p class="mt-4"><strong>Zakładowy opiekun praktyki zawodowej:</strong>
+            <span class="border-bottom border-dark px-3">
+                {% if zopz %}{{ zopz.imie }} {{ zopz.nazwisko }}{% else
+                %}...................................................................{% endif %}
+            </span>
+        </p>
+
+        <hr class="my-5">
+
+        <!-- Sekcja Potwierdzeń z Zakładu Pracy -->
+        <h5 class="fw-bold mb-3">Zaświadczenie i potwierdzenia z Zakładu Pracy</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="p-3 border bg-light h-100">
+                    <p class="mb-5 fw-bold">Potwierdzam zgłoszenie się studenta na praktykę:</p>
+                    <div class="text-center text-muted" style="border-top: 1px dashed #ccc; padding-top: 5px;">
+                        <small>(data, pieczęć i podpis ZOPZ)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="p-3 border bg-light h-100">
+                    <p class="mb-5 fw-bold">Potwierdzam odbycie szkolenia BHP:</p>
+                    <div class="text-center text-muted" style="border-top: 1px dashed #ccc; padding-top: 5px;">
+                        <small>(data, pieczęć i podpis upoważnionego pracownika)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 border bg-light mt-3">
+            <p class="fw-bold mb-2">Zaświadczenie odbycia praktyki zawodowej</p>
+            <p>Zaświadczam, że student <strong>{{ current_user.imie }} {{ current_user.nazwisko }}</strong> odbył
+                praktykę zawodową w <strong>{{ praktyka.zaklad.nazwa }}</strong> w okresie od <strong>{{
+                    praktyka.data_start }}</strong> do <strong>{{ praktyka.data_end }}</strong> zgodnie z przyjętym
+                programem.</p>
+            <p>Uwagi:
+                ....................................................................................................................................
+            </p>
+            <div class="text-end text-muted mt-4"
+                style="width: 40%; margin-left: auto; border-top: 1px dashed #ccc; padding-top: 5px;">
+                <small>(pieczęć i podpis kierownika zakładu)</small>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <!-- Sekcja Ocen -->
+        <h5 class="fw-bold mb-3 text-center">Ocena przebiegu praktyki zawodowej</h5>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="p-3 border rounded border-primary">
+                    <h6 class="fw-bold text-primary">Ocena Zakładowego Opiekuna (ZOPZ)</h6>
+                    <p>Ocena parametryczna (2-5): <strong>{% if protokol and protokol.ocena_z %}{{ protokol.ocena_z }}{%
+                            else %}Brak{% endif %}</strong></p>
+                    <p>Ocena opisowa: <span
+                            class="text-muted">...................................................................................................</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="p-3 border rounded border-success">
+                    <h6 class="fw-bold text-success">Ocena Uczelnianego Opiekuna (UOPZ)</h6>
+                    <p>Ocena parametryczna (2-5): <strong>{% if protokol and protokol.ocena_u %}{{ protokol.ocena_u }}{%
+                            else %}Brak{% endif %}</strong></p>
+                    <p>Ocena opisowa: <span
+                            class="text-muted">...................................................................................................</span>
+                    </p>
+                    <hr>
+                    <p class="mb-0">Ocena sprawozdania (2-5): <strong>{% if protokol and protokol.ocena_s %}{{
+                            protokol.ocena_s }}{% else %}Brak{% endif %}</strong></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

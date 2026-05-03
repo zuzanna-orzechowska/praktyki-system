@@ -88,3 +88,37 @@ class Porozumienie(db.Model):
     plik_path = db.Column(db.String(255))
     praktyka = db.relationship('Praktyka', backref=db.backref('porozumienie', uselist=False))
     zaklad = db.relationship('ZakladPracy')
+
+class HarmonogramPraktyki(db.Model):
+    __tablename__ = 'harmonogram_praktyki'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
+    lp = db.Column(db.Integer, nullable=False)
+    dzial_komorka = db.Column(db.String(255), nullable=False)
+    planowana_liczba_dni = db.Column(db.Integer, nullable=False)
+    dokument = db.relationship('Dokument', backref=db.backref('pozycje_harmonogramu', cascade="all, delete-orphan"))
+
+class Protokol(db.Model):
+    __tablename__ = 'protokol'
+    id = db.Column(db.Integer, primary_key=True)
+    praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), unique=True, nullable=False)
+    ocena_s = db.Column(db.Float)  # ocena za sprawozdanie
+    ocena_u = db.Column(db.Float)  # ocena UOPZ
+    ocena_z = db.Column(db.Float)  # ocena ZOPZ
+    ocena_koncowa = db.Column(db.Float)
+    data_egzaminu = db.Column(db.Date)
+    przewodniczacy = db.Column(db.String(255))
+    plik_pdf_path = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    praktyka = db.relationship('Praktyka', backref=db.backref('protokol', uselist=False))
+
+class Sprawozdanie(db.Model):
+    __tablename__ = 'sprawozdanie'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    charakterystyka = db.Column(db.Text, nullable=False)
+    opis_prac = db.Column(db.Text, nullable=False)
+    wiedza_umiejetnosci = db.Column(db.Text, nullable=False)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
