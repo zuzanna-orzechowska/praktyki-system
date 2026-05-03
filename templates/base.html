@@ -196,13 +196,15 @@
         <div class="container d-flex flex-wrap">
             <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/"><i class="bi bi-list"></i>
                 AKTUALNOŚCI</a>
-            <a class="nav-link {% if request.path == '/dokumenty' %}active{% endif %}" href="/dokumenty">DOKUMENTY I REGULAMINY</a>
+            <a class="nav-link {% if request.path == '/dokumenty' %}active{% endif %}" href="/dokumenty">DOKUMENTY I
+                REGULAMINY</a>
             {% if current_user.is_authenticated %}
-                {% if current_user.rola == 'student' %}
-                <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL STUDENTA</a>
-                {% else %}
-                <a class="nav-link" href="#">MOJE PRAKTYKI</a>
-                {% endif %}
+            {% if current_user.rola == 'student' %}
+            <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL
+                STUDENTA</a>
+            {% else %}
+            <a class="nav-link" href="#">MOJE PRAKTYKI</a>
+            {% endif %}
             {% endif %}
         </div>
     </nav>
@@ -226,6 +228,9 @@
                 <ul class="sidebar-menu">
                     <li><a href="/student/dashboard" class="{% if 'dashboard' in request.path %}active{% endif %}">Mój
                             profil i status</a></li>
+                    <li><a href="/student/porozumienie"
+                            class="{% if 'porozumienie' in request.path %}active{% endif %}">Porozumienie (Zał. 1)</a>
+                    </li>
                     <li><a href="/student/dziennik"
                             class="{% if 'dziennik' in request.path %}active{% endif %}">Dziennik Praktyki (Zał. 6)</a>
                     </li>

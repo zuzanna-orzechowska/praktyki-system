@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Porozumienie o organizację praktyki (Zał. 1)
+    </h2>
+    {% if porozumienie and porozumienie.status == 'Podpisane' %}
+    <span class="badge bg-success">Status: Podpisane</span>
+    {% else %}
+    <span class="badge bg-secondary">Status: Szkic / Oczekujące</span>
+    {% endif %}
+</div>
+
+<div class="alert alert-secondary border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Ten dokument jest generowany automatycznie i zawierany między Instytutem a Zakładem
+    Pracy.
+    Jako student posiadasz do niego wyłącznie wgląd.
+</div>
+
+<div class="card shadow-sm mb-5 border-0">
+    <div class="card-body p-5"
+        style="border: 1px solid #dee2e6; max-width: 800px; margin: 0 auto; background-color: #fff;">
+        <h4 class="text-center mb-5" style="font-weight: bold; letter-spacing: 1px;">POROZUMIENIE NR .......</h4>
+
+        <p style="text-align: justify; line-height: 1.8;">
+            Zawarte w dniu
+            <strong>
+                {% if porozumienie and porozumienie.data_podpisania %}
+                {{ porozumienie.data_podpisania }}
+                {% else %}
+                ...................................
+                {% endif %}
+            </strong>
+            w Elblągu, pomiędzy <strong>Akademią Nauk Stosowanych w Elblągu</strong> reprezentowaną przez Dyrektora
+            Instytutu Informatyki Stosowanej, a Zakładem Pracy:
+        </p>
+
+        <!-- Dane Zakładu Pracy pobrane z bazy -->
+        <div class="bg-light p-3 mb-4 rounded" style="border-left: 4px solid #004a99;">
+            <strong class="d-block mb-1">Dane Zakładu Pracy:</strong>
+            {{ praktyka.zaklad.nazwa }}<br>
+            Adres: {{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}<br>
+            NIP: {{ praktyka.zaklad.nip or '.....................' }}
+        </div>
+
+        <p style="text-align: justify; line-height: 1.8;">
+            Zakład Pracy zobowiązuje się przyjąć na studencką praktykę zawodową następującego studenta:
+        </p>
+
+        <!-- Dane Studenta pobrane z bazy -->
+        <div class="bg-light p-3 mb-4 rounded" style="border-left: 4px solid #fbbc04;">
+            <strong class="d-block mb-1">Dane Studenta:</strong>
+            Imię i nazwisko: <strong>{{ current_user.imie }} {{ current_user.nazwisko }}</strong><br>
+            Nr albumu: <strong>{{ student.nr_albumu }}</strong><br>
+            Kierunek / Tryb studiów: {{ student.kierunek }}, {{ student.tryb_studiow }}<br>
+            Rok studiów: {{ student.rok_studiow }}
+        </div>
+
+        <p style="text-align: justify; line-height: 1.8;">
+            Zgodnie z ustaleniami, praktyka odbędzie się w terminie
+            od <strong>{{ praktyka.data_start }}</strong> do <strong>{{ praktyka.data_end }}</strong>
+            w wymiarze łącznym <strong>{{ praktyka.liczba_godzin }}</strong> godzin roboczych.
+        </p>
+
+        <!-- Miejsce na podpisy (wizualizacja) -->
+        <div class="row mt-5 pt-4 text-center">
+            <div class="col-6">
+                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
+                <small class="text-muted text-uppercase" style="font-size: 0.75rem;">Z ramienia Uczelni
+                    (Dyrektor)</small>
+                {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ porozumienie.podpisal_dziekanat }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
+                <small class="text-muted text-uppercase" style="font-size: 0.75rem;">Z ramienia Zakładu Pracy</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

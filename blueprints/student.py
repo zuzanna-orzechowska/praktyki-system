@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika
+from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie
 from datetime import datetime
 
 student_bp = Blueprint('student', __name__, url_prefix='/student')
@@ -135,3 +135,31 @@ def dziennik():
     ]
 
     return render_template('student/zal6_dziennik.html', praktyka=praktyka_info, wpisy=wpisy, today_date=today_date, max_date=max_date, efekty_lista=efekty_lista)
+
+
+@student_bp.route('/porozumienie')
+@login_required
+def porozumienie():
+    if current_user.rola != 'student':
+        flash('Odmowa dostępu.', 'danger')
+        return redirect(url_for('index'))
+
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    if not student:
+        flash('Twój profil studenta nie jest jeszcze kompletny.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    if not praktyka:
+        flash('Nie masz jeszcze przypisanej praktyki w systemie.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    #jesli nie ma porozumienia to pusty szkic z danymi z praktyki
+    porozumienie_doc = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+
+    return render_template(
+        'student/zal1_porozumienie.html',
+        student=student,
+        praktyka=praktyka,
+        porozumienie=porozumienie_doc
+    )
