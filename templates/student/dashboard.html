@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    .usos-tile {
+        display: flex;
+        align-items: center;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-radius: 4px;
+        padding: 20px;
+        text-decoration: none;
+        color: inherit;
+        transition: box-shadow 0.2s;
+        height: 100%;
+        border: 1px solid #f0f0f0;
+    }
+    .usos-tile:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-decoration: none;
+        color: inherit;
+    }
+    .usos-tile-icon {
+        font-size: 2.5rem;
+        color: #004a99;
+        margin-right: 20px;
+        min-width: 60px;
+        text-align: center;
+    }
+    .usos-tile-content h5 {
+        color: #004a99;
+        font-weight: 600;
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+    .usos-tile-content p {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0;
+        line-height: 1.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">Panel Studenta</h2>
+
+<div class="alert alert-light border mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <strong>Witaj, {{ current_user.imie }} {{ current_user.nazwisko }}!</strong>
+        <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-warning text-dark">Oczekuje na zgłoszenie (Zał. 9)</span></span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Profil i status -->
+    <div class="col-md-6 col-lg-6">
+        <a href="/student/dashboard" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Mój profil i status</h5>
+                <p>Sprawdź swoje dane oraz szczegóły procesu zaliczania praktyk (Zał. 9).</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Dziennik Praktyki -->
+    <div class="col-md-6 col-lg-6">
+        <a href="/student/dziennik" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Dziennik Praktyki (Zał. 6)</h5>
+                <p>Uzupełniaj wpisy w dzienniku praktyki każdego dnia pracy.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Wszystkie dokumenty -->
+    <div class="col-md-6 col-lg-6">
+        <a href="/dokumenty" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Wszystkie dokumenty</h5>
+                <p>Przeglądaj niezbędne regulaminy oraz pobieraj wzory formularzy.</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
