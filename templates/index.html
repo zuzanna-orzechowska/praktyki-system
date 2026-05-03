@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .info-panel {
+        border: 1px solid #dee2e6;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #fcfcfc;
+    }
+    .info-panel h2 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #212529;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+    .news-item {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #e0e0e0;
+    }
+    .news-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .news-date {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .news-title {
+        font-weight: bold;
+        color: #004a99;
+        font-size: 1.05rem;
+        margin-bottom: 8px;
+    }
+</style>
+
+{% if request.path == '/pytania' or request.path == '/kontakt' %}
+<div class="info-panel">
+    <h2>Informacja</h2>
+    <div class="alert alert-warning text-center">
+        <strong>Strona w rozbudowie.</strong> Zapraszamy wkrótce!
+    </div>
+</div>
+{% else %}
+
+{% if current_user.is_authenticated %}
+<div class="info-panel" style="background-color: #e9f7ef; border-color: #c3e6cb;">
+    <h2 style="border-bottom: 1px solid #c3e6cb;">Twój Panel Praktyk</h2>
+    <p class="mb-2">Zalogowałeś się jako: <strong>{{ current_user.rola }}</strong> ({{ current_user.email }})</p>
+    <div>
+        <p>Tutaj znajdziesz wszystkie dokumenty związane z realizacją Twojej praktyki zawodowej. Moduł w trakcie wdrażania.</p>
+        <button class="btn btn-success btn-sm">Przejdź do dokumentów</button>
+    </div>
+</div>
+{% endif %}
+
+<div class="info-panel">
+    <h2>Witamy w Systemie Obsługi Praktyk</h2>
+    <p>Serwis <strong>System Obsługi Praktyk</strong> to platforma Akademii Nauk Stosowanych w Elblągu przeznaczona do elektronicznego obiegu i archiwizacji dokumentacji związanej z praktykami studenckimi.</p>
+    
+    <p>Za pomocą systemu studenci mogą zgłaszać miejsca praktyk, pobierać niezbędne załączniki, a także prowadzić dzienniczek praktyk w formie elektronicznej. Opiekunowie i pracownicy dydaktyczni mają możliwość monitorowania i weryfikacji postępów studentów.</p>
+</div>
+
+<div class="info-panel">
+    <h2>Aktualności</h2>
+    
+    <div class="news-item">
+        <div class="news-date">10 Października 2026</div>
+        <div class="news-title">Uruchomienie nowej wersji Systemu Praktyk</div>
+        <div class="news-content">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        </div>
+    </div>
+    
+    <div class="news-item">
+        <div class="news-date">1 Września 2026</div>
+        <div class="news-title">Harmonogram realizacji praktyk w semestrze zimowym</div>
+        <div class="news-content">
+            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}

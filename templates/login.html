@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie - System Obsługi Praktyk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: #333;
+        }
+        
+        .login-top-bar {
+            background-color: #333333;
+            color: white;
+            padding: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .login-top-bar a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 30px;
+        }
+        
+        .login-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #004a99;
+            margin-bottom: 10px;
+        }
+
+        .login-logo span {
+            color: #6c757d;
+            font-weight: normal;
+        }
+
+        .login-instruction {
+            font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .login-box {
+            background-color: #f4f5f7;
+            padding: 30px;
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 2px;
+        }
+
+        .login-box .form-control {
+            border-radius: 0;
+            border: 1px solid #ced4da;
+            padding: 10px;
+        }
+
+        .login-box .form-control:focus {
+            box-shadow: none;
+            border-color: #0088cc;
+        }
+        
+        .login-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .btn-login {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            border-radius: 0;
+            padding: 10px 25px;
+            font-weight: bold;
+        }
+
+        .btn-login:hover {
+            background-color: #006699;
+            color: white;
+        }
+
+        .link-secondary {
+            color: #0088cc;
+            text-decoration: none;
+        }
+        
+        .link-secondary:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .footer-links a {
+            color: #0088cc;
+            text-decoration: none;
+            margin: 0 10px;
+            line-height: 2;
+            font-size: 0.9rem;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-top-bar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>Logowanie</div>
+            <div></div>
+        </div>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-6 text-center">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="login-header">
+            <div class="login-logo mb-4">
+                <img src="{{ url_for('static', filename='header-logo.svg') }}" alt="Logo ANS Elbląg" style="height: 80px;">
+            </div>
+        </div>
+
+        <div class="login-instruction">
+            Loginem do usług Uczelni jest adres e-mail<br>
+            <span style="font-weight: normal; font-size: 0.9rem;">(np. indeks@student.ans-elblag.pl lub i.nazwisko@ans-elblag.pl)</span>
+        </div>
+
+        <div class="login-box">
+            <form method="POST">
+                <div class="mb-3">
+                    <input type="email" name="email" class="form-control" placeholder="Identyfikator (E-mail)" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" name="password" class="form-control" placeholder="Hasło" required>
+                </div>
+                
+                <div class="login-actions">
+                    <button type="submit" class="btn btn-login">Zaloguj się</button>
+                    <a href="{{ url_for('auth.reset_hasla') }}" class="link-secondary">Ustaw nowe hasło</a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="footer-links">
+            <a href="#">Pomoc</a><br>
+            <a href="#">Deklaracja dostępności</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
