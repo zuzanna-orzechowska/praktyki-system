@@ -51,10 +51,10 @@
 {% if current_user.is_authenticated %}
 <div class="info-panel" style="background-color: #e9f7ef; border-color: #c3e6cb;">
     <h2 style="border-bottom: 1px solid #c3e6cb;">Twój Panel Praktyk</h2>
-    <p class="mb-2">Zalogowałeś się jako: <strong>{{ current_user.rola }}</strong> ({{ current_user.email }})</p>
+    <p class="mb-2">Zalogowałeś się jako: <strong>{{ current_user.imie }} {{ current_user.nazwisko }}</strong> ({{ current_user.email }})</p>
     <div>
         <p>Tutaj znajdziesz wszystkie dokumenty związane z realizacją Twojej praktyki zawodowej. Moduł w trakcie wdrażania.</p>
-        <button class="btn btn-success btn-sm">Przejdź do dokumentów</button>
+        <a href="{{ url_for('dokumenty') }}" class="btn btn-success btn-sm">Przejdź do dokumentów</a>
     </div>
 </div>
 {% endif %}
@@ -69,20 +69,8 @@
 <div class="info-panel">
     <h2>Aktualności</h2>
     
-    <div class="news-item">
-        <div class="news-date">10 Października 2026</div>
-        <div class="news-title">Uruchomienie nowej wersji Systemu Praktyk</div>
-        <div class="news-content">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </div>
-    </div>
-    
-    <div class="news-item">
-        <div class="news-date">1 Września 2026</div>
-        <div class="news-title">Harmonogram realizacji praktyk w semestrze zimowym</div>
-        <div class="news-content">
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </div>
+    <div class="alert alert-secondary text-center mt-3" role="alert">
+        <i class="bi bi-info-circle me-2"></i>W tym miejscu w przyszłości będą pojawiać się aktualności dotyczące praktyk zawodowych.
     </div>
 </div>
 
