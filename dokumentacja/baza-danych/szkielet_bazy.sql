@@ -231,6 +231,39 @@ CREATE TABLE sprawozdanie (
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );
 
+-- ------------------------------------------------------------
+-- 13. WNIOSEK O ZALICZENIE PRAKTYKI (Zał. 4b)
+-- ------------------------------------------------------------
+CREATE TABLE wniosek_zaliczenie_praktyki (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id             INTEGER NOT NULL UNIQUE,
+    uzasadnienie            TEXT NOT NULL,
+    okres_zatrudnienia_od   DATE NOT NULL,
+    okres_zatrudnienia_do   DATE NOT NULL,
+    stanowisko              TEXT NOT NULL,
+    zalaczniki_paths        TEXT,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 14. OŚWIADCZENIE INSTYTUCJI (Zał. 9)
+-- ------------------------------------------------------------
+CREATE TABLE oswiadczenie (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id             INTEGER NOT NULL UNIQUE,
+    miejscowosc             TEXT,
+    data_oswiadczenia       DATE,
+    nazwa_instytucji        TEXT,
+    opiekun_imie_nazwisko   TEXT,
+    opiekun_stanowisko      TEXT,
+    opiekun_telefon         TEXT,
+    opiekun_email           TEXT,
+    osoba_upowazniona       TEXT,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
 -- ============================================================
 -- INDEKSY – przyspieszenie najczęstszych zapytań
 -- ============================================================
