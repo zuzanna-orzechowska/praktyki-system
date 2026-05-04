@@ -1,10 +1,19 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie
+from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia
 from datetime import datetime
+from werkzeug.utils import secure_filename
+import os
 
 student_bp = Blueprint('student', __name__, url_prefix='/student')
+
+UPLOAD_FOLDER = 'static/uploads/zal4b'
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @student_bp.route('/dashboard')
 @login_required
@@ -296,3 +305,159 @@ def sprawozdanie():
         sprawozdanie=sprawozdanie_doc
     )
 
+@student_bp.route('/zal4_efekty')
+@login_required
+def zal4_efekty():
+    if current_user.rola != 'student':
+        return redirect(url_for('index'))
+
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka:
+        flash('Brak przypisanej praktyki.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4').first()
+    efekty = []
+    
+    if dokument:
+        efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all()
+
+    lista_wymaganych_efektow = [
+        "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych",
+        "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce",
+        "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy",
+        "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka",
+        "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania...",
+        "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje...",
+        "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia",
+        "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy / instytucji, opisać go, przedstawić koncepcję rozwiązania i ją zrealizować.",
+        "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności informatycznej...",
+        "Pracuje w zespole zajmującym się zawodowo branżą IT",
+        "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów",
+        "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje...",
+        "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków..."
+    ]
+
+    return render_template(
+        'student/zal4_efekty.html', 
+        student=student, 
+        praktyka=praktyka, 
+        dokument=dokument,
+        efekty=efekty,
+        lista_statyczna=lista_wymaganych_efektow
+    )
+
+@student_bp.route('/zal4a_decyzja')
+@login_required
+def zal4a_decyzja():
+    if current_user.rola != 'student':
+        return redirect(url_for('index'))
+
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka:
+        flash('Brak przypisanej praktyki.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
+
+    return render_template('student/zal4a_decyzja.html', student=student, praktyka=praktyka, dokument=dokument)
+
+@student_bp.route('/zal4b_wniosek', methods=['GET', 'POST'])
+@login_required
+def zal4b_wniosek():
+    if current_user.rola != 'student':
+        return redirect(url_for('index'))
+
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka:
+        flash('Brak przypisanej praktyki.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    # Znajdź dokument ZAL4B
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B').first()
+    wniosek = None
+
+    if dokument:
+         wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first()
+
+    if request.method == 'POST':
+        # Zabezpieczenie przed edycją, jeśli dokument został już wysłany lub rozpatrzony
+        if dokument and dokument.status != 'Draft':
+             flash('Wniosek został już złożony i nie może być edytowany.', 'warning')
+             return redirect(url_for('student.zal4b_wniosek'))
+
+        if not dokument:
+            dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B', utworzony_przez=current_user.id)
+            db.session.add(dokument)
+            db.session.commit()
+            
+        uzasadnienie = request.form.get('uzasadnienie')
+        data_od_str = request.form.get('data_od')
+        data_do_str = request.form.get('data_do')
+        stanowisko = request.form.get('stanowisko')
+
+        try:
+             data_od = datetime.strptime(data_od_str, '%Y-%m-%d').date()
+             data_do = datetime.strptime(data_do_str, '%Y-%m-%d').date()
+        except ValueError:
+             flash('Błędny format daty.', 'danger')
+             return redirect(url_for('student.zal4b_wniosek'))
+
+        #obsługa plików
+        uploaded_files = request.files.getlist('zalaczniki')
+        saved_file_paths = []
+        
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
+
+        for file in uploaded_files:
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"{current_user.id}_{int(datetime.now().timestamp())}_{file.filename}")
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(file_path)
+                saved_file_paths.append(file_path)
+            elif file.filename != '':
+                flash(f'Niedozwolony format pliku: {file.filename}', 'danger')
+
+        paths_string = ",".join(saved_file_paths)
+
+        if not wniosek:
+             wniosek = WniosekZaliczeniePraktyki(dokument_id=dokument.id)
+             db.session.add(wniosek)
+
+        wniosek.uzasadnienie = uzasadnienie
+        wniosek.okres_zatrudnienia_od = data_od
+        wniosek.okres_zatrudnienia_do = data_do
+        wniosek.stanowisko = stanowisko
+        
+        if wniosek.zalaczniki_paths and paths_string:
+             wniosek.zalaczniki_paths += "," + paths_string
+        elif paths_string:
+             wniosek.zalaczniki_paths = paths_string
+
+        if request.form.get('akcja') == 'wyslij':
+            dokument.status = 'Submitted'
+            flash('Wniosek został złożony i oczekuje na decyzję.', 'success')
+        else:
+             flash('Szkic wniosku został zapisany.', 'success')
+
+        db.session.commit()
+        return redirect(url_for('student.zal4b_wniosek'))
+
+    # lista załączników do wyświetlenia
+    zalaczniki_lista = wniosek.zalaczniki_paths.split(',') if wniosek and wniosek.zalaczniki_paths else []
+
+    return render_template(
+        'student/zal4b_wniosek.html', 
+        student=student, 
+        praktyka=praktyka, 
+        dokument=dokument,
+        wniosek=wniosek,
+        zalaczniki=zalaczniki_lista
+    )

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Potwierdzenie Efektów Uczenia się (Zał. 4)</h2>
+    <span class="badge bg-secondary">Dokument Informacyjny</span>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Ten dokument wypełnia Zakładowy Opiekun Praktyki (ZOPZ) na zakończenie Twojej praktyki.
+    Poniżej masz możliwość wglądu w aktualny stan zatwierdzenia efektów.
+</div>
+
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body p-4 bg-white">
+
+        <h4 class="text-center fw-bold mb-4">POTWIERDZENIE UZYSKANIA EFEKTÓW UCZENIA SIĘ<br>W RAMACH PRAKTYKI ZAWODOWEJ
+        </h4>
+
+        <div class="bg-light p-3 mb-4 rounded border">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Student/ka:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
+                    <p class="mb-0"><strong>Kierunek studiów:</strong> {{ student.kierunek }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-1"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
+                    <p class="mb-0"><strong>Specjalność:</strong> {{ student.specjalnosc or '........................'
+                        }}</p>
+                </div>
+            </div>
+        </div>
+
+        <p class="mb-4">
+            W ramach praktyki zawodowej zrealizowanej w wymiarze <strong>{{ praktyka.liczba_godzin }}</strong> godzin
+            student uzyskał/a (nie uzyskał/a) zakładane dla praktyki zawodowej efekty uczenia się:
+        </p>
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-light text-center">
+                <tr>
+                    <th style="width: 5%">Lp.</th>
+                    <th style="width: 75%">Efekty uczenia się</th>
+                    <th style="width: 20%">Potwierdzenie ZOPZ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if efekty %}
+                <!-- Jeśli ZOPZ zaczął wypełniać dokument w bazie -->
+                {% for efekt in efekty %}
+                <tr>
+                    <td class="text-center fw-bold">{{ loop.index }}</td>
+                    <td>{{ efekt.opis_efektu }}</td>
+                    <td class="text-center">
+                        {% if efekt.podpis_zopz %}
+                        {% if efekt.uzyskany == 1 %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Uzyskał/a</span>
+                        {% else %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Nie uzyskał/a</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="text-muted small">Oczekuje na weryfikację</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <!-- Wyświetlenie szkieletu, gdy dokument jeszcze fizycznie nie istnieje w bazie -->
+                {% for opis in lista_statyczna %}
+                <tr>
+                    <td class="text-center fw-bold">{{ "%02d"|format(loop.index) }}</td>
+                    <td>{{ opis }}</td>
+                    <td class="text-center text-muted small">
+                        <i class="bi bi-hourglass-split"></i> Oczekuje na ZOPZ
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+
+        <div class="row mt-5">
+            <div class="col-md-6 text-center">
+                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
+                <small class="text-muted">Potwierdzenie bezpośredniego opiekuna zakładowego</small><br>
+                <small class="text-muted">(Data, podpis i pieczęć zakładu pracy)</small>
+            </div>
+            <div class="col-md-6 text-center">
+                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
+                <small class="text-muted">Opinia opiekuna uczelnianego</small><br>
+                <small class="text-muted">(Data, podpis opiekuna uczelnianego)</small>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

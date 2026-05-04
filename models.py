@@ -122,3 +122,29 @@ class Sprawozdanie(db.Model):
     wiedza_umiejetnosci = db.Column(db.Text, nullable=False)
     
     dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
+
+class EfektUczenia(db.Model):
+    __tablename__ = 'efekt_uczenia'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
+    kod_efektu = db.Column(db.String(20), nullable=False)
+    opis_efektu = db.Column(db.Text, nullable=False)
+    uzyskany = db.Column(db.Integer, default=0)  # 1 = uzyskał, 0 = nie uzyskał / oczekuje
+    podpis_zopz = db.Column(db.String(255))
+    data_podpisu = db.Column(db.Date)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('efekty', cascade="all, delete-orphan"))
+
+class WniosekZaliczeniePraktyki(db.Model):
+    __tablename__ = 'wniosek_zaliczenie_praktyki'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    uzasadnienie = db.Column(db.Text, nullable=False)
+    okres_zatrudnienia_od = db.Column(db.Date, nullable=False)
+    okres_zatrudnienia_do = db.Column(db.Date, nullable=False)
+    stanowisko = db.Column(db.String(255), nullable=False)
+    
+    #lista ścieżek do załączonych plików
+    zalaczniki_paths = db.Column(db.Text) 
+    
+    dokument = db.relationship('Dokument', backref=db.backref('wniosek_zaliczenie', uselist=False, cascade="all, delete-orphan"))
