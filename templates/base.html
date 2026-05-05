@@ -200,10 +200,9 @@
                 REGULAMINY</a>
             {% if current_user.is_authenticated %}
             {% if current_user.rola == 'student' %}
-            <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL
-                STUDENTA</a>
-            {% else %}
-            <a class="nav-link" href="#">MOJE PRAKTYKI</a>
+            <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL PRAKTYK</a>
+            {% elif current_user.rola == 'uopz' %}
+            <a class="nav-link {% if 'uopz' in request.path %}active{% endif %}" href="{{ url_for('uopz.dashboard') }}">PANEL STUDENTÓW</a>
             {% endif %}
             {% endif %}
         </div>
@@ -226,8 +225,7 @@
                 {% if current_user.is_authenticated and current_user.rola == 'student' %}
                 <div class="sidebar-section-title mt-4">Panel Studenta</div>
                 <ul class="sidebar-menu">
-                    <li><a href="/student/dashboard" class="{% if 'dashboard' in request.path %}active{% endif %}">Mój
-                            profil i status</a></li>
+                    <li><a href="/student/dashboard" class="{% if 'dashboard' in request.path %}active{% endif %}">Panel praktyk</a></li>
                     <li><a href="/student/porozumienie"
                             class="{% if 'porozumienie' in request.path %}active{% endif %}">Porozumienie (Zał. 1)</a>
                     </li>
@@ -262,6 +260,16 @@
                     <li><a href="/student/zal8_protokol"
                             class="{% if 'zal8_protokol' in request.path %}active{% endif %}">Protokół (Zał. 8)</a></li>
                     <li><a href="/dokumenty">Wszystkie dokumenty</a></li>
+                </ul>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.rola == 'uopz' %}
+                <div class="sidebar-section-title mt-4">Panel UOPZ</div>
+                <ul class="sidebar-menu">
+                    <li><a href="{{ url_for('uopz.dashboard') }}"
+                            class="{% if 'uopz/dashboard' in request.path %}active{% endif %}">Moi Studenci</a></li>
+                    <li><a href="#">Wnioski do oceny (Zał. 4a)</a></li>
+                    <li><a href="#">Hospitacje</a></li>
                 </ul>
                 {% endif %}
             </div>

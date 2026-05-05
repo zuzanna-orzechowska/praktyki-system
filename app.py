@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from extensions import db, login_manager
 from blueprints.auth import auth_bp
 from blueprints.student import student_bp 
+from blueprints.uopz import uopz_bp
 from flask_login import login_required
 import os
 
@@ -17,6 +18,7 @@ def create_app():
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp) 
+    app.register_blueprint(uopz_bp)
     
     @app.route('/')
     @app.route('/pytania')

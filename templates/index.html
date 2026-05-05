@@ -48,16 +48,7 @@
 </div>
 {% else %}
 
-{% if current_user.is_authenticated %}
-<div class="info-panel" style="background-color: #e9f7ef; border-color: #c3e6cb;">
-    <h2 style="border-bottom: 1px solid #c3e6cb;">Twój Panel Praktyk</h2>
-    <p class="mb-2">Zalogowałeś się jako: <strong>{{ current_user.imie }} {{ current_user.nazwisko }}</strong> ({{ current_user.email }})</p>
-    <div>
-        <p>Tutaj znajdziesz wszystkie dokumenty związane z realizacją Twojej praktyki zawodowej. Moduł w trakcie wdrażania.</p>
-        <a href="{{ url_for('dokumenty') }}" class="btn btn-success btn-sm">Przejdź do dokumentów</a>
-    </div>
-</div>
-{% endif %}
+
 
 <div class="info-panel">
     <h2>Witamy w Systemie Obsługi Praktyk</h2>

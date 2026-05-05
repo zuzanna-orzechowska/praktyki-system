@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('uopz.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Wróć do listy studentów
+    </a>
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Teczka Studenta: {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}
+    </h2>
+</div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Nr albumu / Kierunek</p>
+                <p class="fw-bold">{{ student.nr_albumu }} / {{ student.kierunek }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Miejsce praktyki</p>
+                <p class="fw-bold">{{ praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak' }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Status</p>
+                <span class="badge bg-primary">{{ praktyka.status }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3">Dokumentacja Praktyki</h4>
+<div class="row g-3">
+
+    <!-- Zał. 2a: Harmonogram (Akceptacja) -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-calendar-check text-primary"></i> Program i harmonogram (Zał. 2a)
+                </h6>
+                <p class="text-muted small mb-3">Uzgadnianie programu praktyki ze studentem i ZOPZ.</p>
+
+                <button class="btn btn-sm btn-outline-primary" disabled>Sprawdź dokument</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 3: Skierowanie na praktykę -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-file-earmark-person text-success"></i> Skierowanie i Karta (Zał. 3)
+                </h6>
+                <p class="text-muted small mb-3">Wydanie skierowania przed rozpoczęciem praktyki.</p>
+                <button class="btn btn-sm btn-outline-success" disabled>Zarządzaj skierowaniem</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 6: Dziennik Praktyki (Weryfikacja) -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-journal-text text-warning"></i> Dziennik Praktyki (Zał. 6)</h6>
+                    {% if 'ZAL6' in dokumenty and dokumenty['ZAL6'].status == 'Submitted' %}
+                    <span class="badge bg-danger">Oczekuje na ocenę</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-3">Nadzór nad codziennymi wpisami studenta.</p>
+                <button class="btn btn-sm btn-outline-warning text-dark" disabled>Sprawdź dziennik</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 8: Protokół Zaliczenia -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-award text-danger"></i> Protokół Egzaminu (Zał. 8)</h6>
+                <p class="text-muted small mb-3">Wystawienie ocen cząstkowych i wygenerowanie protokołu z egzaminu.</p>
+                <button class="btn btn-sm btn-outline-danger" disabled>Przeprowadź egzamin</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
