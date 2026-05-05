@@ -33,27 +33,24 @@
 <div class="row g-3">
 
     <!-- Zał. 2a: Harmonogram (Akceptacja) -->
-    <div class="col-md-6">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="fw-bold"><i class="bi bi-calendar-check text-primary"></i> Program i harmonogram (Zał. 2a)
-                </h6>
-                <p class="text-muted small mb-3">Uzgadnianie programu praktyki ze studentem i ZOPZ.</p>
+    <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="fw-bold"><i class="bi bi-calendar-check text-primary"></i> Program i harmonogram (Zał. 2a)</h6>
+            <p class="text-muted small mb-3">Uzgadnianie programu praktyki ze studentem i ZOPZ.</p>
 
-                <button class="btn btn-sm btn-outline-primary" disabled>Sprawdź dokument</button>
-            </div>
+            <a href="{{ url_for('uopz.zal2a_harmonogram', student_id=student.id) }}"
+                class="btn btn-sm btn-outline-primary">Opracuj Harmonogram</a>
         </div>
     </div>
 
     <!-- Zał. 3: Skierowanie na praktykę -->
-    <div class="col-md-6">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="fw-bold"><i class="bi bi-file-earmark-person text-success"></i> Skierowanie i Karta (Zał. 3)
-                </h6>
-                <p class="text-muted small mb-3">Wydanie skierowania przed rozpoczęciem praktyki.</p>
-                <button class="btn btn-sm btn-outline-success" disabled>Zarządzaj skierowaniem</button>
-            </div>
+    <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="fw-bold"><i class="bi bi-file-earmark-person text-success"></i> Skierowanie i Karta (Zał. 3)</h6>
+            <p class="text-muted small mb-3">Wydanie skierowania przed rozpoczęciem praktyki.</p>
+            <a href="{{ url_for('uopz.zal3_karta', student_id=student.id) }}"
+                class="btn btn-sm btn-outline-success">Zarządzaj skierowaniem</a>
+
         </div>
     </div>
 

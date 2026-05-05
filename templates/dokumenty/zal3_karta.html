@@ -2,9 +2,21 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-        Karta Praktyki (Zał. 3)</h2>
-    <span class="badge bg-secondary">Dokument Informacyjny</span>
+    <div>
+        {% if current_user.rola == 'uopz' %}
+        <a href="{{ url_for('uopz.teczka', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary mb-2"><i
+                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
+        {% endif %}
+        <h2
+            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Karta Praktyki (Zał. 3)</h2>
+    </div>
+
+    {% if praktyka.status == 'SKIEROWANIE_WYDANE' %}
+    <span class="badge bg-success fs-6">Skierowanie Wydane</span>
+    {% else %}
+    <span class="badge bg-warning text-dark fs-6">Oczekuje na Skierowanie</span>
+    {% endif %}
 </div>
 
 <div class="card shadow-sm border-0 mb-5">
@@ -16,15 +28,9 @@
             <h5 class="fw-bold mt-2">SKIEROWANIE NA PRAKTYKĘ</h5>
         </div>
 
-        <p style="text-align: justify;">
-            Na podstawie porozumienia nr
-            <strong>{% if porozumienie and porozumienie.id %}{{ porozumienie.id }}{% else %}........{% endif
-                %}</strong>,
-            z dnia <strong>{% if porozumienie and porozumienie.data_podpisania %}{{ porozumienie.data_podpisania }}{%
-                else %}....................{% endif %}</strong> r.,
-            kieruję niżej wymienionego studenta na praktykę zawodową do zakładu pracy:
-        </p>
-
+        <p style="text-align: justify;">Na podstawie porozumienia nr <strong>{% if porozumienie and porozumienie.id %}{{
+                porozumienie.id }}{% else %}........{% endif %}</strong>, kieruję niżej wymienionego studenta na
+            praktykę zawodową do zakładu pracy:</p>
         <div class="bg-light p-3 mb-4 text-center rounded fw-bold border">
             {{ praktyka.zaklad.nazwa }}<br>
             <small class="fw-normal">{{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}</small>
@@ -33,8 +39,9 @@
         <table class="table table-borderless mb-4">
             <tbody>
                 <tr>
-                    <td style="width: 30%;" class="fw-bold">Imię i nazwisko:</td>
-                    <td class="border-bottom border-dark">{{ current_user.imie }} {{ current_user.nazwisko }}</td>
+                    <td style="width: 30%;" class="fw-bold">Student/ka:</td>
+                    <td class="border-bottom border-dark">{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko
+                        }}</td>
                 </tr>
                 <tr>
                     <td class="fw-bold">Numer albumu:</td>
@@ -45,100 +52,90 @@
                     <td class="border-bottom border-dark">inżynierskie {{ student.tryb_studiow }} / {{ student.kierunek
                         }}</td>
                 </tr>
-                <tr>
-                    <td class="fw-bold">Specjalność:</td>
-                    <td class="border-bottom border-dark">{{ student.specjalnosc or
-                        '...................................' }}</td>
-                </tr>
             </tbody>
         </table>
 
-        <p><strong>Czas trwania praktyki:</strong> 6 miesięcy (120 dni roboczych)</p>
         <p><strong>Termin praktyki:</strong> od {{ praktyka.data_start }} do {{ praktyka.data_end }}</p>
 
-        <p><strong>Uczelniany opiekun praktyki zawodowej:</strong>
-            <span class="border-bottom border-dark px-3">
-                {% if uopz %}{{ uopz.imie }} {{ uopz.nazwisko }}{% else %}Brak przypisanego opiekuna{% endif %}
-            </span>
-        </p>
-
-        <p class="mt-4"><strong>Zakładowy opiekun praktyki zawodowej:</strong>
-            <span class="border-bottom border-dark px-3">
-                {% if zopz %}{{ zopz.imie }} {{ zopz.nazwisko }}{% else
-                %}...................................................................{% endif %}
-            </span>
-        </p>
+        {% if current_user.rola == 'uopz' and praktyka.status != 'SKIEROWANIE_WYDANE' %}
+        <form method="POST" class="text-center mt-4 mb-5 p-3 bg-light border rounded">
+            <p class="text-muted small">Jako UOPZ po weryfikacji miejsca i programu możesz oficjalnie wydać skierowanie
+                na praktykę.</p>
+            <button type="submit" name="akcja" value="wydaj_skierowanie" class="btn btn-success"><i
+                    class="bi bi-file-earmark-check"></i> Wydaj Skierowanie na Praktykę</button>
+        </form>
+        {% endif %}
 
         <hr class="my-5">
 
-        <!-- Sekcja Potwierdzeń z Zakładu Pracy -->
         <h5 class="fw-bold mb-3">Zaświadczenie i potwierdzenia z Zakładu Pracy</h5>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <div class="p-3 border bg-light h-100">
-                    <p class="mb-5 fw-bold">Potwierdzam zgłoszenie się studenta na praktykę:</p>
-                    <div class="text-center text-muted" style="border-top: 1px dashed #ccc; padding-top: 5px;">
-                        <small>(data, pieczęć i podpis ZOPZ)</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-3">
-                <div class="p-3 border bg-light h-100">
-                    <p class="mb-5 fw-bold">Potwierdzam odbycie szkolenia BHP:</p>
-                    <div class="text-center text-muted" style="border-top: 1px dashed #ccc; padding-top: 5px;">
-                        <small>(data, pieczęć i podpis upoważnionego pracownika)</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-3 border bg-light mt-3">
+        <div class="p-3 border bg-light mb-4">
             <p class="fw-bold mb-2">Zaświadczenie odbycia praktyki zawodowej</p>
-            <p>Zaświadczam, że student <strong>{{ current_user.imie }} {{ current_user.nazwisko }}</strong> odbył
-                praktykę zawodową w <strong>{{ praktyka.zaklad.nazwa }}</strong> w okresie od <strong>{{
-                    praktyka.data_start }}</strong> do <strong>{{ praktyka.data_end }}</strong> zgodnie z przyjętym
-                programem.</p>
-            <p>Uwagi:
-                ....................................................................................................................................
-            </p>
-            <div class="text-end text-muted mt-4"
-                style="width: 40%; margin-left: auto; border-top: 1px dashed #ccc; padding-top: 5px;">
-                <small>(pieczęć i podpis kierownika zakładu)</small>
-            </div>
+            <p>Zaświadczam, że student <strong>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}</strong>
+                odbył praktykę zawodową zgodnie z przyjętym programem.</p>
+            <div class="text-end text-muted mt-3"><small>(Oczekuje na potwierdzenie Kierownika Zakładu)</small></div>
         </div>
 
         <hr class="my-5">
 
-        <!-- Sekcja Ocen -->
-        <h5 class="fw-bold mb-3 text-center">Ocena przebiegu praktyki zawodowej</h5>
+        <h5 class="fw-bold mb-4 text-center">Ocena przebiegu praktyki zawodowej</h5>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="p-3 border rounded border-primary">
-                    <h6 class="fw-bold text-primary">Ocena Zakładowego Opiekuna (ZOPZ)</h6>
-                    <p>Ocena parametryczna (2-5): <strong>{% if protokol and protokol.ocena_z %}{{ protokol.ocena_z }}{%
-                            else %}Brak{% endif %}</strong></p>
-                    <p>Ocena opisowa: <span
-                            class="text-muted">...................................................................................................</span>
-                    </p>
-                </div>
-            </div>
+        <div class="p-3 border rounded border-primary mb-4">
+            <h6 class="fw-bold text-primary">Ocena Zakładowego Opiekuna (ZOPZ)</h6>
+            <p>Ocena parametryczna (2-5): <strong>{% if protokol and protokol.ocena_z %}{{ protokol.ocena_z }}{% else
+                    %}Brak wpisu{% endif %}</strong></p>
         </div>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="p-3 border rounded border-success">
-                    <h6 class="fw-bold text-success">Ocena Uczelnianego Opiekuna (UOPZ)</h6>
-                    <p>Ocena parametryczna (2-5): <strong>{% if protokol and protokol.ocena_u %}{{ protokol.ocena_u }}{%
-                            else %}Brak{% endif %}</strong></p>
-                    <p>Ocena opisowa: <span
-                            class="text-muted">...................................................................................................</span>
-                    </p>
-                    <hr>
-                    <p class="mb-0">Ocena sprawozdania (2-5): <strong>{% if protokol and protokol.ocena_s %}{{
-                            protokol.ocena_s }}{% else %}Brak{% endif %}</strong></p>
+        <div class="p-3 border rounded border-success">
+            <h6 class="fw-bold text-success">Ocena Uczelnianego Opiekuna (UOPZ)</h6>
+
+            {% if current_user.rola == 'uopz' %}
+            <form method="POST">
+                <div class="row mb-3 mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Ocena parametryczna z przebiegu (U):</label>
+                        <select name="ocena_u" class="form-select">
+                            <option value="">Wybierz ocenę...</option>
+                            <option value="2.0" {% if protokol and protokol.ocena_u==2.0 %}selected{% endif %}>2.0 -
+                                Niedostateczny</option>
+                            <option value="3.0" {% if protokol and protokol.ocena_u==3.0 %}selected{% endif %}>3.0 -
+                                Dostateczny</option>
+                            <option value="3.5" {% if protokol and protokol.ocena_u==3.5 %}selected{% endif %}>3.5 -
+                                Dostateczny Plus</option>
+                            <option value="4.0" {% if protokol and protokol.ocena_u==4.0 %}selected{% endif %}>4.0 -
+                                Dobry</option>
+                            <option value="4.5" {% if protokol and protokol.ocena_u==4.5 %}selected{% endif %}>4.5 -
+                                Dobry Plus</option>
+                            <option value="5.0" {% if protokol and protokol.ocena_u==5.0 %}selected{% endif %}>5.0 -
+                                Bardzo Dobry</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Ocena sprawozdania studenta (S):</label>
+                        <select name="ocena_s" class="form-select">
+                            <option value="">Wybierz ocenę...</option>
+
+                            <option value="3.0" {% if protokol and protokol.ocena_s==3.0 %}selected{% endif %}>3.0
+                            </option>
+                            <option value="4.0" {% if protokol and protokol.ocena_s==4.0 %}selected{% endif %}>4.0
+                            </option>
+                            <option value="5.0" {% if protokol and protokol.ocena_s==5.0 %}selected{% endif %}>5.0
+                            </option>
+                        </select>
+                    </div>
                 </div>
-            </div>
+                <div class="text-end">
+                    <button type="submit" name="akcja" value="zapisz_ocene" class="btn btn-sm btn-success">Zapisz
+                        oceny</button>
+                </div>
+            </form>
+            {% else %}
+            <p>Ocena parametryczna z przebiegu (U): <strong>{% if protokol and protokol.ocena_u %}{{ protokol.ocena_u
+                    }}{% else %}Oczekuje...{% endif %}</strong></p>
+            <hr>
+            <p class="mb-0">Ocena sprawozdania (S): <strong>{% if protokol and protokol.ocena_s %}{{ protokol.ocena_s
+                    }}{% else %}Oczekuje...{% endif %}</strong></p>
+            {% endif %}
         </div>
 
     </div>

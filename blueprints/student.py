@@ -122,7 +122,6 @@ def dziennik():
     # 4. OBSŁUGA WYŚWIETLANIA (GET)
     wpisy = WpisDziennika.query.filter_by(dokument_id=dokument.id).order_by(WpisDziennika.numer_dnia).all()
 
-    # Przygotowanie danych do nagłówka HTML
     praktyka_info = {
         'zaklad_nazwa': praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak przypisanej firmy',
         'data_start': praktyka.data_start.strftime('%Y-%m-%d') if praktyka.data_start else '',
@@ -199,34 +198,34 @@ def zal2a_harmonogram():
 
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A').first()
     if not dokument:
+        # Jeśli UOPZ jeszcze nic nie stworzył, tworzymy pusty wgląd
         dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A', utworzony_przez=current_user.id)
         db.session.add(dokument)
         db.session.commit()
 
     if request.method == 'POST':
-        dzialy = request.form.getlist('dzial[]')
-        dni = request.form.getlist('dni[]')
+        akcja = request.form.get('akcja')
+        komentarz = request.form.get('komentarz')
 
-        HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).delete()
+        if akcja == 'akceptuj':
+            dokument.status = 'Approved'
+            dokument.uwagi_opiekuna = ""
+            if praktyka.status in ['OCZEKUJE_NA_ZAL9', 'ZAL9_PRZYJETY', 'POROZUMIENIE_PODPISANE']:
+                praktyka.status = 'PROGRAM_UZGODNIONY'
+            flash('Zatwierdziłeś harmonogram praktyki!', 'success')
 
-        for i in range(len(dzialy)):
-            if dzialy[i] and dni[i]:
-                nowa_pozycja = HarmonogramPraktyki(
-                    dokument_id=dokument.id,
-                    lp=i + 1,
-                    dzial_komorka=dzialy[i],
-                    planowana_liczba_dni=int(dni[i])
-                )
-                db.session.add(nowa_pozycja)
-        
+        elif akcja == 'odrzuc':
+            dokument.status = 'Rejected'
+            dokument.uwagi_opiekuna = f"UWAGA STUDENTA: {komentarz}" if komentarz else "Student odrzucił harmonogram bez komentarza."
+            flash('Odrzuciłeś harmonogram. UOPZ został o tym poinformowany.', 'warning')
+            
         db.session.commit()
-        flash('Harmonogram został zaktualizowany!', 'success')
         return redirect(url_for('student.zal2a_harmonogram'))
 
     pozycje = HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).order_by(HarmonogramPraktyki.lp).all()
     suma_dni = sum(p.planowana_liczba_dni for p in pozycje)
 
-    return render_template('dokumenty/zal2a_harmonogram.html', student=student, praktyka=praktyka, pozycje=pozycje, suma_dni=suma_dni)
+    return render_template('dokumenty/zal2a_harmonogram.html', student=student, praktyka=praktyka, pozycje=pozycje, suma_dni=suma_dni, dokument=dokument)
 
 @student_bp.route('/zal3_karta')
 @login_required

@@ -163,3 +163,12 @@ class Oswiadczenie(db.Model):
     osoba_upowazniona = db.Column(db.String(255))
     
     dokument = db.relationship('Dokument', backref=db.backref('oswiadczenie', uselist=False, cascade="all, delete-orphan"))
+
+class ProgramPraktyki(db.Model):
+    __tablename__ = 'program_praktyki'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
+    kod_efektu = db.Column(db.String(10), nullable=False) # np. '01', '02'
+    dzial_prace = db.Column(db.Text)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('programy', cascade="all, delete-orphan"))

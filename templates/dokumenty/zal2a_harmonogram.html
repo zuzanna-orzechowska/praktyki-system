@@ -2,38 +2,99 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-        Program i Harmonogram (Zał. 2a)</h2>
-    <span class="badge {% if suma_dni == 120 %}bg-success{% else %}bg-warning text-dark{% endif %}">Suma dni: <span
-            id="sumaBadge">{{ suma_dni }}</span> / 120</span>
+    <div>
+        {% if current_user.rola == 'uopz' %}
+        <a href="{{ url_for('uopz.teczka', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary mb-2"><i
+                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
+        {% endif %}
+        <h2
+            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Program i Harmonogram (Zał. 2a)</h2>
+    </div>
+
+    <!-- Status -->
+    {% if dokument.status == 'Approved' %}
+    <span class="badge bg-success fs-6">Zatwierdzony</span>
+    {% elif dokument.status == 'Under_Review' %}
+    <span class="badge bg-info text-dark fs-6">Oczekuje na akceptację Studenta</span>
+    {% elif dokument.status == 'Rejected' %}
+    <span class="badge bg-danger fs-6">Odrzucony przez Studenta</span>
+    {% else %}
+    <span class="badge bg-secondary fs-6">Szkic (W przygotowaniu)</span>
+    {% endif %}
 </div>
+
+{% if dokument.uwagi_opiekuna %}
+<div class="alert alert-warning shadow-sm border-0 mb-4">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Komentarz:</strong> {{ dokument.uwagi_opiekuna }}
+</div>
+{% endif %}
 
 <div class="card mb-4 shadow-sm border-0 p-3 bg-light">
     <div class="row">
         <div class="col-md-6">
-            <p class="mb-1"><strong>Student:</strong> {{ current_user.imie }} {{ current_user.nazwisko }} ({{
-                student.nr_albumu }})</p>
+            <p class="mb-1"><strong>Student:</strong> {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}
+                ({{ student.nr_albumu }})</p>
             <p class="mb-1"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
         </div>
         <div class="col-md-6 text-md-end">
-            <p class="mb-1"><strong>Firma:</strong> {{ praktyka.zaklad.nazwa }}</p>
+            <p class="mb-1"><strong>Miejsce praktyki:</strong> {{ praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak'
+                }}</p>
             <p class="mb-1"><strong>Termin:</strong> {{ praktyka.data_start }} do {{ praktyka.data_end }}</p>
         </div>
     </div>
 </div>
 
-<!-- Harmonogram Form -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white fw-bold">Twój Harmonogram (Plan pracy)</div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('student.zal2a_harmonogram') }}">
+<form method="POST">
+
+    <!-- CZĘŚĆ I: PROGRAM PRAKTYKI ZAWODOWEJ -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-white fw-bold text-center">PROGRAM PRAKTYKI ZAWODOWEJ</div>
+        <div class="card-body p-0">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%" class="text-center">Kod</th>
+                        <th style="width: 45%">Efekty kształcenia</th>
+                        <th style="width: 50%">Dział (komórka) / przykładowe prace wykonywane przez praktykanta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for kod, definicja in efekty_definicje %}
+                    <tr>
+                        <td class="text-center fw-bold">{{ kod }}</td>
+                        <td class="small">{{ definicja }}</td>
+                        <td>
+                            {% if current_user.rola == 'uopz' %}
+                            <textarea name="prace_{{ kod }}" class="form-control" rows="2"
+                                placeholder="Wpisz komórkę i zadania...">{{ zapisane_programy.get(kod, '') }}</textarea>
+                            {% else %}
+                            {{ zapisane_programy.get(kod, 'Brak wpisu') }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CZĘŚĆ II: HARMONOGRAM PRAKTYKI ZAWODOWEJ -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold text-center">HARMONOGRAM PRAKTYKI ZAWODOWEJ</div>
+        <div class="card-body">
             <table class="table table-bordered align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 5%">L.p.</th>
-                        <th style="width: 65%">Dział / komórka / przykładowe prace</th>
-                        <th style="width: 20%">Planowana liczba dni</th>
-                        <th style="width: 10%">Akcja</th>
+                        <th style="width: 5%" class="text-center">L.p.</th>
+                        {% if current_user.rola == 'uopz' %}
+                        <th style="width: 65%">Dział / komórka</th>
+                        {% else %}
+                        <th style="width: 75%">Dział / komórka</th>
+                        {% endif %}
+                        <th style="width: 20%" class="text-center">Liczba dni</th>
+                        {% if current_user.rola == 'uopz' %}<th style="width: 10%" class="text-center">Akcja</th>{%
+                        endif %}
                     </tr>
                 </thead>
                 <tbody id="harmonogramBody">
@@ -41,52 +102,81 @@
                     {% for p in pozycje %}
                     <tr>
                         <td class="text-center fw-bold row-num">{{ p.lp }}</td>
-                        <td><input type="text" name="dzial[]" class="form-control" value="{{ p.dzial_komorka }}"
-                                required></td>
-                        <td><input type="number" name="dni[]" class="form-control dni-input"
-                                value="{{ p.planowana_liczba_dni }}" min="1" max="120" onchange="calculateSum()"
-                                required></td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHRow(this)"><i
-                                    class="bi bi-trash"></i></button>
+                        <td>
+                            {% if current_user.rola == 'uopz' %}
+                            <input type="text" name="dzial[]" class="form-control" value="{{ p.dzial_komorka }}"
+                                required>
+                            {% else %}
+                            {{ p.dzial_komorka }}
+                            {% endif %}
                         </td>
+                        <td class="text-center">
+                            {% if current_user.rola == 'uopz' %}
+                            <input type="number" name="dni[]" class="form-control dni-input text-center"
+                                value="{{ p.planowana_liczba_dni }}" min="1" max="120" onchange="calculateSum()"
+                                required>
+                            {% else %}
+                            {{ p.planowana_liczba_dni }} dni
+                            {% endif %}
+                        </td>
+                        {% if current_user.rola == 'uopz' %}
+                        <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm"
+                                onclick="removeHRow(this)"><i class="bi bi-trash"></i></button></td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
-                    {% else %}
+                    {% elif current_user.rola == 'uopz' %}
                     <tr>
                         <td class="text-center fw-bold row-num">1</td>
-                        <td><input type="text" name="dzial[]" class="form-control" placeholder="np. Dział Wdrożeń IT"
-                                required></td>
-                        <td><input type="number" name="dni[]" class="form-control dni-input" value="120" min="1"
-                                max="120" onchange="calculateSum()" required></td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHRow(this)"><i
-                                    class="bi bi-trash"></i></button>
-                        </td>
+                        <td><input type="text" name="dzial[]" class="form-control" placeholder="Dział..." required></td>
+                        <td><input type="number" name="dni[]" class="form-control dni-input text-center" value="120"
+                                min="1" max="120" onchange="calculateSum()" required></td>
+                        <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm"
+                                onclick="removeHRow(this)"><i class="bi bi-trash"></i></button></td>
                     </tr>
                     {% endif %}
                 </tbody>
                 <tfoot>
                     <tr class="table-light fw-bold">
-                        <td colspan="2" class="text-end">Łącznie dni (wymagane 120):</td>
-                        <td class="text-center text-primary fs-5" id="totalDays">0</td>
-                        <td></td>
+                        <td colspan="2" class="text-end">Łącznie zaplanowanych dni (wymagane 120):</td>
+                        <td class="text-center text-primary fs-5" id="totalDays">{{ suma_dni }}</td>
+                        {% if current_user.rola == 'uopz' %}<td></td>{% endif %}
                     </tr>
                 </tfoot>
             </table>
 
-            <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-primary" onclick="addHRow()">
-                    <i class="bi bi-plus-circle"></i> Dodaj pozycję
-                </button>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Zapisz projekt harmonogramu
-                </button>
+            {% if current_user.rola == 'uopz' %}
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-primary" onclick="addHRow()"><i
+                        class="bi bi-plus-circle"></i> Dodaj wiersz</button>
+                <button type="submit" name="akcja" value="zapisz" class="btn btn-success"><i class="bi bi-send"></i>
+                    Zapisz całość i wyślij</button>
             </div>
-        </form>
+            {% endif %}
+        </div>
     </div>
-</div>
+</form>
 
+<!-- PANEL DECYZYJNY DLA STUDENTA -->
+{% if current_user.rola == 'student' and dokument.status in ['Under_Review', 'Rejected'] %}
+<h5 class="fw-bold mb-3 mt-5">Decyzja Studenta (Uzgodnienie programu)</h5>
+<form method="POST" class="p-4 border rounded bg-light">
+    <p class="text-muted small mb-3">Zgodnie z regulaminem, musisz uzgodnić i zaakceptować ten plan.</p>
+    <div class="mb-4">
+        <textarea class="form-control" name="komentarz" rows="2"
+            placeholder="Wpisz uwagi, jeśli odrzucasz..."></textarea>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+        <button type="submit" name="akcja" value="odrzuc" class="btn btn-outline-danger"><i class="bi bi-x-circle"></i>
+            Odrzuć (zgłoś uwagi)</button>
+        <button type="submit" name="akcja" value="akceptuj" class="btn btn-success"><i class="bi bi-check-circle"></i>
+            Akceptuję</button>
+    </div>
+</form>
+{% endif %}
+
+
+{% if current_user.rola == 'uopz' %}
 <script>
     function addHRow() {
         const tbody = document.getElementById('harmonogramBody');
@@ -96,7 +186,7 @@
         newRow.innerHTML = `
             <td class="text-center fw-bold row-num">${rowCount + 1}</td>
             <td><input type="text" name="dzial[]" class="form-control" placeholder="Kolejny dział..." required></td>
-            <td><input type="number" name="dni[]" class="form-control dni-input" value="10" min="1" max="120" onchange="calculateSum()" required></td>
+            <td><input type="number" name="dni[]" class="form-control dni-input text-center" value="10" min="1" max="120" onchange="calculateSum()" required></td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeHRow(this)"><i class="bi bi-trash"></i></button>
             </td>
@@ -119,7 +209,6 @@
         let sum = 0;
         inputs.forEach(input => sum += parseInt(input.value) || 0);
         document.getElementById('totalDays').innerText = sum;
-        document.getElementById('sumaBadge').innerText = sum;
 
         if (sum > 120) {
             alert('Uwaga: Przekroczyłeś wymaganą sumę 120 dni roboczych!');
@@ -128,4 +217,5 @@
 
     window.onload = calculateSum;
 </script>
+{% endif %}
 {% endblock %}
