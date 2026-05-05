@@ -143,7 +143,7 @@ def dziennik():
         {"kod": "EK_05", "opis": "Projektowanie interfejsów użytkownika"}
     ]
 
-    return render_template('student/zal6_dziennik.html', praktyka=praktyka_info, wpisy=wpisy, today_date=today_date, max_date=max_date, efekty_lista=efekty_lista)
+    return render_template('dokumenty/zal6_dziennik.html', praktyka=praktyka_info, wpisy=wpisy, today_date=today_date, max_date=max_date, efekty_lista=efekty_lista)
 
 
 @student_bp.route('/porozumienie')
@@ -167,7 +167,7 @@ def porozumienie():
     porozumienie_doc = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
 
     return render_template(
-        'student/zal1_porozumienie.html',
+        'dokumenty/zal1_porozumienie.html',
         student=student,
         praktyka=praktyka,
         porozumienie=porozumienie_doc
@@ -182,7 +182,7 @@ def zal2_program():
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
 
-    return render_template('student/zal2_program.html', student=student, praktyka=praktyka)
+    return render_template('dokumenty/zal2_program.html', student=student, praktyka=praktyka)
 
 @student_bp.route('/zal2a_harmonogram', methods=['GET', 'POST'])
 @login_required
@@ -226,7 +226,7 @@ def zal2a_harmonogram():
     pozycje = HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).order_by(HarmonogramPraktyki.lp).all()
     suma_dni = sum(p.planowana_liczba_dni for p in pozycje)
 
-    return render_template('student/zal2a_harmonogram.html', student=student, praktyka=praktyka, pozycje=pozycje, suma_dni=suma_dni)
+    return render_template('dokumenty/zal2a_harmonogram.html', student=student, praktyka=praktyka, pozycje=pozycje, suma_dni=suma_dni)
 
 @student_bp.route('/zal3_karta')
 @login_required
@@ -248,7 +248,7 @@ def zal3_karta():
     zopz = Uzytkownik.query.get(praktyka.zaklad.zopz_id) if praktyka.zaklad and praktyka.zaklad.zopz_id else None
 
     return render_template(
-        'student/zal3_karta.html', 
+        'dokumenty/zal3_karta.html', 
         student=student, 
         praktyka=praktyka, 
         uopz=uopz, 
@@ -299,7 +299,7 @@ def sprawozdanie():
             return redirect(url_for('student.sprawozdanie'))
 
     return render_template(
-        'student/zal7_sprawozdanie.html', 
+        'dokumenty/zal7_sprawozdanie.html', 
         student=student, 
         praktyka=praktyka, 
         sprawozdanie=sprawozdanie_doc
@@ -341,7 +341,7 @@ def zal4_efekty():
     ]
 
     return render_template(
-        'student/zal4_efekty.html', 
+        'dokumenty/zal4_efekty.html', 
         student=student, 
         praktyka=praktyka, 
         dokument=dokument,
@@ -364,7 +364,7 @@ def zal4a_decyzja():
 
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
 
-    return render_template('student/zal4a_decyzja.html', student=student, praktyka=praktyka, dokument=dokument)
+    return render_template('dokumenty/zal4a_decyzja.html', student=student, praktyka=praktyka, dokument=dokument)
 
 @student_bp.route('/zal4b_wniosek', methods=['GET', 'POST'])
 @login_required
@@ -452,7 +452,7 @@ def zal4b_wniosek():
     zalaczniki_lista = wniosek.zalaczniki_paths.split(',') if wniosek and wniosek.zalaczniki_paths else []
 
     return render_template(
-        'student/zal4b_wniosek.html', 
+        'dokumenty/zal4b_wniosek.html', 
         student=student, 
         praktyka=praktyka, 
         dokument=dokument,
@@ -502,7 +502,7 @@ def zal7a_sprawozdanie():
             return redirect(url_for('student.zal7a_sprawozdanie'))
 
     return render_template(
-        'student/zal7a_sprawozdanie.html', 
+        'dokumenty/zal7a_sprawozdanie.html', 
         student=student, 
         praktyka=praktyka, 
         sprawozdanie=sprawozdanie_doc
@@ -523,7 +523,7 @@ def zal8_protokol():
 
     protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
 
-    return render_template('student/zal8_protokol.html', student=student, praktyka=praktyka, protokol=protokol)
+    return render_template('dokumenty/zal8_protokol.html', student=student, praktyka=praktyka, protokol=protokol)
 
 
 @student_bp.route('/zal9_oswiadczenie', methods=['GET', 'POST'])
@@ -578,4 +578,4 @@ def zal9_oswiadczenie():
         flash('Dane z Oświadczenia zapisano pomyślnie!', 'success')
         return redirect(url_for('student.zal9_oswiadczenie'))
 
-    return render_template('student/zal9_oswiadczenie.html', student=student, praktyka=praktyka, oswiadczenie=oswiadczenie)
+    return render_template('dokumenty/zal9_oswiadczenie.html', student=student, praktyka=praktyka, oswiadczenie=oswiadczenie)
