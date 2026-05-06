@@ -41,13 +41,13 @@ def init_oauth(app):
     )
     
     # Konfiguracja Google
-    # oauth.register(
-    #     name='google',
-    #     client_id=os.getenv('GOOGLE_CLIENT_ID'),
-    #     client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
-    #     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    #     client_kwargs={'scope': 'openid email profile'}
-    # )
+    oauth.register(
+        name='google',
+        client_id=os.getenv('GOOGLE_CLIENT_ID'),
+        client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'}
+    )
 
 @auth_bp.route('/login')
 def login():
@@ -91,10 +91,13 @@ def auth_callback(provider):
         domain = email.split('@')[1] if '@' in email else ''
         nr_albumu = email.split('@')[0] if domain == 'student.ans-elblag.pl' else None
         
-        if domain == 'student.ans-elblag.pl':
+        if email == 'orzechosiaa.searchw@gmail.com': #EMAIL DO WYKASOWANIA W PRZYSZLOSCI TYLK ODO CELOW TESTOWYCH
+            rola = 'dziekanat'
+            aktywny = 1
+        elif domain == 'student.ans-elblag.pl': #TUTAJ MA BYĆ IF
             rola = 'student'
             aktywny = 1
-        elif domain == 'ans-elblag.pl':
+        elif domain == 'ans-elblag.pl': #TUTAJ PÓŹNIEJ ZAIMPLEMENTOWAĆ  ŻE TA ROLA JEST NAJPIERW OOCZEUKJACA I ADMIN MUSI ZATWIERDZIC
             rola = 'oczekujacy_pracownik' 
             aktywny = 0 
         else:
