@@ -5,22 +5,24 @@
 PRAGMA foreign_keys = ON;  -- wymagane w SQLite
 
 -- ------------------------------------------------------------
--- 1. UŻYTKOWNICY I ROLE
+-- 1. TABELA UŻYTKOWNIKA (Zmodyfikowana pod OAuth)
 -- ------------------------------------------------------------
 CREATE TABLE uzytkownik (
-    id          INTEGER     PRIMARY KEY AUTOINCREMENT,
-    email       TEXT        NOT NULL UNIQUE,
-    haslo_hash  TEXT        NOT NULL,
-    imie        TEXT        NOT NULL,
-    nazwisko    TEXT        NOT NULL,
-    rola        TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin')),
-    aktywny     INTEGER     NOT NULL DEFAULT 1,  -- 1 = aktywny, 0 = zablokowany
-    created_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id              INTEGER     PRIMARY KEY AUTOINCREMENT,
+    email           TEXT        NOT NULL UNIQUE,
+    haslo_hash      TEXT,                                -- Już nie jest NOT NULL
+    imie            TEXT        NOT NULL,
+    nazwisko        TEXT        NOT NULL,
+    rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik')),
+    aktywny         INTEGER     NOT NULL DEFAULT 1,      -- 1 = aktywny, 0 = zablokowany/oczekujący
+    auth_provider   TEXT        DEFAULT 'microsoft',     -- Z jakiego systemu pochodzi
+    external_id     TEXT        UNIQUE,                  -- Unikalny identyfikator z Azure/Google
+    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ------------------------------------------------------------
--- 2. PROFIL STUDENTA
+-- 2. PROFIL STUDENTA (Pozostaje bez zmian, ale tworzymy go ponownie)
 -- ------------------------------------------------------------
 CREATE TABLE student (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,

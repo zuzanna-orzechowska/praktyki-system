@@ -7,11 +7,14 @@ class Uzytkownik(db.Model, UserMixin):
     
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    haslo_hash = db.Column(db.String(255), nullable=False)
+    haslo_hash = db.Column(db.String(255), nullable=True) 
     imie = db.Column(db.String(50), nullable=False)
     nazwisko = db.Column(db.String(50), nullable=False)
-    rola = db.Column(db.String(20), nullable=False)
+    rola = db.Column(db.String(50), nullable=False)
     aktywny = db.Column(db.Integer, default=1)
+    
+    auth_provider = db.Column(db.String(50), default="microsoft")
+    external_id = db.Column(db.String(255), unique=True)
 
     @property
     def is_active(self):

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
             background-color: white;
             color: #333;
         }
-        
+
         .login-top-bar {
             background-color: #333333;
             color: white;
@@ -30,17 +31,12 @@
             margin-top: 50px;
             margin-bottom: 30px;
         }
-        
+
         .login-logo {
             font-size: 1.5rem;
             font-weight: bold;
             color: #004a99;
             margin-bottom: 10px;
-        }
-
-        .login-logo span {
-            color: #6c757d;
-            font-weight: normal;
         }
 
         .login-instruction {
@@ -52,58 +48,42 @@
 
         .login-box {
             background-color: #f4f5f7;
-            padding: 30px;
+            padding: 40px 30px;
             max-width: 450px;
             margin: 0 auto;
-            border-radius: 2px;
+            border-radius: 4px;
         }
 
-        .login-box .form-control {
-            border-radius: 0;
+        .btn-sso {
+            background-color: #ffffff;
+            color: #5e5e5e;
             border: 1px solid #ced4da;
-            padding: 10px;
-        }
-
-        .login-box .form-control:focus {
-            box-shadow: none;
-            border-color: #0088cc;
-        }
-        
-        .login-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .btn-login {
-            background-color: #0088cc;
-            color: white;
-            border: none;
-            border-radius: 0;
-            padding: 10px 25px;
+            border-radius: 2px;
+            padding: 12px 20px;
             font-weight: bold;
-        }
-
-        .btn-login:hover {
-            background-color: #006699;
-            color: white;
-        }
-
-        .link-secondary {
-            color: #0088cc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
             text-decoration: none;
+            width: 100%;
         }
-        
-        .link-secondary:hover {
-            text-decoration: underline;
+
+        .btn-sso:hover {
+            background-color: #f8f9fa;
+            color: #333;
         }
-        
+
+        .btn-sso i {
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
         .footer-links {
             text-align: center;
             margin-top: 20px;
         }
-        
+
         .footer-links a {
             color: #0088cc;
             text-decoration: none;
@@ -111,16 +91,17 @@
             line-height: 2;
             font-size: 0.9rem;
         }
-        
+
         .footer-links a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
+
 <body>
     <div class="login-top-bar">
         <div class="container d-flex justify-content-between align-items-center">
-            <div>Logowanie</div>
+            <div>Logowanie SSO</div>
             <div></div>
         </div>
     </div>
@@ -143,37 +124,49 @@
 
         <div class="login-header">
             <div class="login-logo mb-4">
-                <img src="{{ url_for('static', filename='header-logo.svg') }}" alt="Logo ANS Elbląg" style="height: 80px;">
+                <img src="{{ url_for('static', filename='header-logo.svg') }}" alt="Logo ANS Elbląg"
+                    style="height: 80px;">
             </div>
         </div>
 
         <div class="login-instruction">
-            Loginem do usług Uczelni jest adres e-mail<br>
-            <span style="font-weight: normal; font-size: 0.9rem;">(np. indeks@student.ans-elblag.pl lub i.nazwisko@ans-elblag.pl)</span>
+            Zaloguj się do Systemu Obsługi Praktyk<br>
+            <span style="font-weight: normal; font-size: 0.9rem;">(Autoryzacja za pomocą konta organizacyjnego)</span>
         </div>
 
-        <div class="login-box">
-            <form method="POST">
-                <div class="mb-3">
-                    <input type="email" name="email" class="form-control" placeholder="Identyfikator (E-mail)" required>
-                </div>
-                <div class="mb-3">
-                    <input type="password" name="password" class="form-control" placeholder="Hasło" required>
-                </div>
-                
-                <div class="login-actions">
-                    <button type="submit" class="btn btn-login">Zaloguj się</button>
-                    <a href="{{ url_for('auth.reset_hasla') }}" class="link-secondary">Ustaw nowe hasło</a>
-                </div>
-            </form>
+        <div class="login-box text-center">
+
+            <div class="d-grid gap-3">
+                <!-- Logowanie Microsoft -->
+                <a href="{{ url_for('auth.login_oauth', provider='microsoft') }}" class="btn-sso shadow-sm">
+                    <i class="bi bi-microsoft" style="color: #00a4ef;"></i> Zaloguj przez Microsoft
+                </a>
+
+                <!-- Logowanie Google -->
+                <!--
+                <a href="{{ url_for('auth.login_oauth', provider='google') }}" class="btn-sso shadow-sm">
+                    <i class="bi bi-google" style="color: #db4437;"></i> Zaloguj przez Google
+                </a>
+                -->
+            </div>
+
+            <div class="mt-4">
+                <span class="badge bg-light text-secondary border w-100 p-2"
+                    style="white-space: normal; font-size: 0.85rem; font-weight: normal;">
+                    <i class="bi bi-info-circle me-1"></i> Pierwsze logowanie kontem w domenie student.ans-elblag.pl
+                    automatycznie utworzy Twój profil w systemie.
+                </span>
+            </div>
+
         </div>
-        
+
         <div class="footer-links">
-            <a href="#">Pomoc</a><br>
+            <a href="#">Pomoc techniczna</a><br>
             <a href="#">Deklaracja dostępności</a>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
