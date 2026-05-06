@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from extensions import db
-from models import Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, ProgramPraktyki, Porozumienie
+from models import Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, ProgramPraktyki, Porozumienie, EfektUczenia
 
 uopz_bp = Blueprint('uopz', __name__, url_prefix='/uopz')
 
@@ -162,4 +162,60 @@ def zal2a_harmonogram(student_id):
         dokument=dokument,
         efekty_definicje=efekty_definicje,
         zapisane_programy=zapisane_programy
+    )
+
+@uopz_bp.route('/zal4_efekty/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal4_efekty(student_id):
+    if current_user.rola != 'uopz':
+        return redirect(url_for('index'))
+
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka:
+        flash('Brak przypisanej praktyki dla tego studenta.', 'warning')
+        return redirect(url_for('uopz.dashboard'))
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4').first()
+    efekty = []
+    
+    if dokument:
+        efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all()
+
+    if request.method == 'POST':
+        if not dokument:
+            dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL4', utworzony_przez=current_user.id)
+            db.session.add(dokument)
+        
+        opinia = request.form.get('opinia_uopz')
+        dokument.uwagi_opiekuna = opinia
+        db.session.commit()
+        
+        flash('Opinia opiekuna uczelnianego została zapisana.', 'success')
+        return redirect(url_for('uopz.zal4_efekty', student_id=student.id))
+
+    lista_statyczna = [
+        "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki...",
+        "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce",
+        "Zna ekonomiczne, prawne skutki własnych działań...",
+        "Zna zasady bezpieczeństwa pracy i ergonomii...",
+        "Pozyskuje informacje odnośnie technologii, metod, technik...",
+        "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje...",
+        "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań...",
+        "Potrafi zidentyfikować problem informatyczny...",
+        "Potrafi rozwiązać rzeczywiste zadanie inżynierskie...",
+        "Pracuje w zespole zajmującym się zawodowo branżą IT",
+        "Przestrzega zasad etyki zawodowej...",
+        "Kontaktując się z osobami spoza branży potrafi...",
+        "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej..."
+    ]
+
+    return render_template(
+        'dokumenty/zal4_efekty.html', 
+        student=student, 
+        praktyka=praktyka, 
+        dokument=dokument,
+        efekty=efekty,
+        lista_statyczna=lista_statyczna
     )

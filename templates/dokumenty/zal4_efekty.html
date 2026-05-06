@@ -2,15 +2,28 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-        Potwierdzenie Efektów Uczenia się (Zał. 4)</h2>
-    <span class="badge bg-secondary">Dokument Informacyjny</span>
+    <div>
+        {% if current_user.rola == 'uopz' %}
+        <a href="{{ url_for('uopz.teczka', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary mb-2"><i
+                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
+        {% endif %}
+        <h2
+            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Potwierdzenie Efektów Uczenia się (Zał. 4)
+        </h2>
+    </div>
+
+    {% if dokument and dokument.uwagi_opiekuna %}
+    <span class="badge bg-success fs-6">Zaopiniowano przez UOPZ</span>
+    {% else %}
+    <span class="badge bg-secondary fs-6">Dokument Informacyjny</span>
+    {% endif %}
 </div>
 
 <div class="alert alert-info border-0 shadow-sm mb-4">
     <i class="bi bi-info-circle-fill me-2"></i>
     <strong>Informacja:</strong> Ten dokument wypełnia Zakładowy Opiekun Praktyki (ZOPZ) na zakończenie Twojej praktyki.
-    Poniżej masz możliwość wglądu w aktualny stan zatwierdzenia efektów.
+    Poniżej znajduje się wgląd w aktualny stan zatwierdzenia efektów oraz opinię Opiekuna Uczelnianego.
 </div>
 
 <div class="card shadow-sm border-0 mb-5">
@@ -22,7 +35,8 @@
         <div class="bg-light p-3 mb-4 rounded border">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-1"><strong>Student/ka:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
+                    <p class="mb-1"><strong>Student/ka:</strong> {{ student.uzytkownik.imie }} {{
+                        student.uzytkownik.nazwisko }}</p>
                     <p class="mb-0"><strong>Kierunek studiów:</strong> {{ student.kierunek }}</p>
                 </div>
                 <div class="col-md-6 text-md-end">
@@ -48,7 +62,6 @@
             </thead>
             <tbody>
                 {% if efekty %}
-                <!-- Jeśli ZOPZ zaczął wypełniać dokument w bazie -->
                 {% for efekt in efekty %}
                 <tr>
                     <td class="text-center fw-bold">{{ loop.index }}</td>
@@ -67,7 +80,6 @@
                 </tr>
                 {% endfor %}
                 {% else %}
-                <!-- Wyświetlenie szkieletu, gdy dokument jeszcze fizycznie nie istnieje w bazie -->
                 {% for opis in lista_statyczna %}
                 <tr>
                     <td class="text-center fw-bold">{{ "%02d"|format(loop.index) }}</td>
@@ -82,15 +94,38 @@
         </table>
 
         <div class="row mt-5">
-            <div class="col-md-6 text-center">
+            <!-- SEKCJA ZOPZ -->
+            <div class="col-md-6 text-center border-end p-4">
+                <h6 class="fw-bold mb-5">Potwierdzenie bezpośredniego opiekuna zakładowego</h6>
+                <br><br>
                 <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
-                <small class="text-muted">Potwierdzenie bezpośredniego opiekuna zakładowego</small><br>
                 <small class="text-muted">(Data, podpis i pieczęć zakładu pracy)</small>
             </div>
-            <div class="col-md-6 text-center">
+
+            <!-- SEKCJA UOPZ -->
+            <div class="col-md-6 text-center p-4">
+                <h6 class="fw-bold mb-3">Opinia opiekuna uczelnianego</h6>
+
+                {% if current_user.rola == 'uopz' %}
+                <!-- Interaktywny formularz dla UOPZ -->
+                <form method="POST">
+                    <textarea name="opinia_uopz" class="form-control mb-3" rows="4"
+                        placeholder="Wpisz swoją opinię merytoryczną na temat osiągniętych efektów...">{{ dokument.uwagi_opiekuna if dokument and dokument.uwagi_opiekuna else '' }}</textarea>
+                    <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-save"></i> Zapisz opinię
+                        UOPZ</button>
+                </form>
+                {% else %}
+                <!-- Wgląd dla Studenta i ZOPZ -->
+                <div class="text-start fst-italic p-3 bg-light border rounded mb-4" style="min-height: 100px;">
+                    {% if dokument and dokument.uwagi_opiekuna %}
+                    {{ dokument.uwagi_opiekuna }}
+                    {% else %}
+                    <span class="text-muted">Oczekuje na opinię opiekuna uczelnianego...</span>
+                    {% endif %}
+                </div>
                 <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
-                <small class="text-muted">Opinia opiekuna uczelnianego</small><br>
                 <small class="text-muted">(Data, podpis opiekuna uczelnianego)</small>
+                {% endif %}
             </div>
         </div>
 
