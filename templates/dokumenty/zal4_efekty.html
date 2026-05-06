@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        {% if current_user.rola == 'uopz' %}
+        <a href="{{ url_for('uopz.teczka', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary mb-2"><i
+                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
+        {% endif %}
+        <h2
+            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Potwierdzenie Efektów Uczenia się (Zał. 4)
+        </h2>
+    </div>
+
+    {% if dokument and dokument.uwagi_opiekuna %}
+    <span class="badge bg-success fs-6">Zaopiniowano przez UOPZ</span>
+    {% else %}
+    <span class="badge bg-secondary fs-6">Dokument Informacyjny</span>
+    {% endif %}
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Ten dokument wypełnia Zakładowy Opiekun Praktyki (ZOPZ) na zakończenie Twojej praktyki.
+    Poniżej znajduje się wgląd w aktualny stan zatwierdzenia efektów oraz opinię Opiekuna Uczelnianego.
+</div>
+
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body p-4 bg-white">
+
+        <h4 class="text-center fw-bold mb-4">POTWIERDZENIE UZYSKANIA EFEKTÓW UCZENIA SIĘ<br>W RAMACH PRAKTYKI ZAWODOWEJ
+        </h4>
+
+        <div class="bg-light p-3 mb-4 rounded border">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Student/ka:</strong> {{ student.uzytkownik.imie }} {{
+                        student.uzytkownik.nazwisko }}</p>
+                    <p class="mb-0"><strong>Kierunek studiów:</strong> {{ student.kierunek }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-1"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
+                    <p class="mb-0"><strong>Specjalność:</strong> {{ student.specjalnosc or '........................'
+                        }}</p>
+                </div>
+            </div>
+        </div>
+
+        <p class="mb-4">
+            W ramach praktyki zawodowej zrealizowanej w wymiarze <strong>{{ praktyka.liczba_godzin }}</strong> godzin
+            student uzyskał/a (nie uzyskał/a) zakładane dla praktyki zawodowej efekty uczenia się:
+        </p>
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-light text-center">
+                <tr>
+                    <th style="width: 5%">Lp.</th>
+                    <th style="width: 75%">Efekty uczenia się</th>
+                    <th style="width: 20%">Potwierdzenie ZOPZ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if efekty %}
+                {% for efekt in efekty %}
+                <tr>
+                    <td class="text-center fw-bold">{{ loop.index }}</td>
+                    <td>{{ efekt.opis_efektu }}</td>
+                    <td class="text-center">
+                        {% if efekt.podpis_zopz %}
+                        {% if efekt.uzyskany == 1 %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Uzyskał/a</span>
+                        {% else %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Nie uzyskał/a</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="text-muted small">Oczekuje na weryfikację</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                {% for opis in lista_statyczna %}
+                <tr>
+                    <td class="text-center fw-bold">{{ "%02d"|format(loop.index) }}</td>
+                    <td>{{ opis }}</td>
+                    <td class="text-center text-muted small">
+                        <i class="bi bi-hourglass-split"></i> Oczekuje na ZOPZ
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+
+        <div class="row mt-5">
+            <!-- SEKCJA ZOPZ -->
+            <div class="col-md-6 text-center border-end p-4">
+                <h6 class="fw-bold mb-5">Potwierdzenie bezpośredniego opiekuna zakładowego</h6>
+                <br><br>
+                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
+                <small class="text-muted">(Data, podpis i pieczęć zakładu pracy)</small>
+            </div>
+
+            <!-- SEKCJA UOPZ -->
+            <div class="col-md-6 text-center p-4">
+                <h6 class="fw-bold mb-3">Opinia opiekuna uczelnianego</h6>
+
+                {% if current_user.rola == 'uopz' %}
+                <!-- Interaktywny formularz dla UOPZ -->
+                <form method="POST">
+                    <textarea name="opinia_uopz" class="form-control mb-3" rows="4"
+                        placeholder="Wpisz swoją opinię merytoryczną na temat osiągniętych efektów...">{{ dokument.uwagi_opiekuna if dokument and dokument.uwagi_opiekuna else '' }}</textarea>
+                    <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-save"></i> Zapisz opinię
+                        UOPZ</button>
+                </form>
+                {% else %}
+                <!-- Wgląd dla Studenta i ZOPZ -->
+                <div class="text-start fst-italic p-3 bg-light border rounded mb-4" style="min-height: 100px;">
+                    {% if dokument and dokument.uwagi_opiekuna %}
+                    {{ dokument.uwagi_opiekuna }}
+                    {% else %}
+                    <span class="text-muted">Oczekuje na opinię opiekuna uczelnianego...</span>
+                    {% endif %}
+                </div>
+                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
+                <small class="text-muted">(Data, podpis opiekuna uczelnianego)</small>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Wniosek o zaliczenie praktyki (Zał. 4b)</h2>
+    {% if dokument and dokument.status != 'Draft' %}
+    <span class="badge bg-primary">Wniosek Złożony</span>
+    {% else %}
+    <span class="badge bg-warning text-dark">Szkic Formularza</span>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <p class="mb-1"><strong>Wnioskodawca:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
+        <p class="mb-1"><strong>Nr albumu / Rok:</strong> {{ student.nr_albumu }} / {{ student.rok_studiow }}</p>
+        <p class="mb-0"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('student.zal4b_wniosek') }}" enctype="multipart/form-data">
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">Szczegóły wniosku</div>
+        <div class="card-body">
+
+            <p class="text-muted small mb-4">Zwracam się z prośbą o zaliczenie na poczet studenckiej praktyki zawodowej
+                zrealizowanej przeze mnie pracy zarobkowej (prowadzenia działalności), potwierdzonej stosownym
+                zaświadczeniem. Przedkładam odpowiednią dokumentację dotyczącą mojego zatrudnienia.</p>
+
+            <fieldset {% if dokument and dokument.status !='Draft' %}disabled{% endif %}>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="data_od" class="form-label">Zatrudnienie od:</label>
+                        <input type="date" class="form-control" id="data_od" name="data_od"
+                            value="{{ wniosek.okres_zatrudnienia_od if wniosek else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="data_do" class="form-label">Zatrudnienie do:</label>
+                        <input type="date" class="form-control" id="data_do" name="data_do"
+                            value="{{ wniosek.okres_zatrudnienia_do if wniosek else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="stanowisko" class="form-label">Zajmowane stanowisko / Charakter działalności:</label>
+                    <input type="text" class="form-control" id="stanowisko" name="stanowisko"
+                        value="{{ wniosek.stanowisko if wniosek else '' }}" placeholder="np. Młodszy Programista"
+                        required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="uzasadnienie" class="form-label">Uzasadnienie z przyporządkowaniem efektów uczenia
+                        się:</label>
+                    <textarea class="form-control" id="uzasadnienie" name="uzasadnienie" rows="6"
+                        placeholder="Wykazanie w jaki sposób wykonywane obowiązki pozwoliły na osiągnięcie efektów uczenia się..."
+                        required>{{ wniosek.uzasadnienie if wniosek else '' }}</textarea>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="mb-3">
+                    <label for="zalaczniki" class="form-label fw-bold">Załączniki dokumentujące zatrudnienie:</label>
+                    <p class="small text-muted mb-2">Możesz dodać pliki PDF, JPG, PNG lub DOCX (np. zaświadczenie z
+                        zakładu pracy, opis zakresu obowiązków).</p>
+                    <input class="form-control" type="file" id="zalaczniki" name="zalaczniki" multiple>
+                </div>
+            </fieldset>
+
+            {% if zalaczniki %}
+            <div class="mt-4">
+                <h6>Przesłane pliki:</h6>
+                <ul class="list-group">
+                    {% for path in zalaczniki %}
+                    {% if path %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ path.split('/')[-1] }}
+                        <!-- W przyszłości można dodać pobieranie plików -->
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    {% if not dokument or dokument.status == 'Draft' %}
+    <div class="d-flex justify-content-between mb-5">
+        <button type="submit" name="akcja" value="zapisz" class="btn btn-outline-primary">
+            <i class="bi bi-save"></i> Zapisz szkic
+        </button>
+        <button type="submit" name="akcja" value="wyslij" class="btn btn-success"
+            onclick="return confirm('Czy na pewno chcesz złożyć wniosek? Po złożeniu edycja nie będzie możliwa.');">
+            <i class="bi bi-send"></i> Złóż wniosek
+        </button>
+    </div>
+    {% endif %}
+
+</form>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('uopz.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Wróć do listy studentów
+    </a>
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Teczka Studenta: {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}
+    </h2>
+</div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Nr albumu / Kierunek</p>
+                <p class="fw-bold">{{ student.nr_albumu }} / {{ student.kierunek }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Miejsce praktyki</p>
+                <p class="fw-bold">{{ praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak' }}</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Status</p>
+                <span class="badge bg-primary">{{ praktyka.status }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3">Dokumentacja Praktyki</h4>
+<div class="row g-3">
+
+    <!-- Zał. 2a: Harmonogram (Akceptacja) -->
+    <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="fw-bold"><i class="bi bi-calendar-check text-primary"></i> Program i harmonogram (Zał. 2a)</h6>
+            <p class="text-muted small mb-3">Uzgadnianie programu praktyki ze studentem i ZOPZ.</p>
+
+            <a href="{{ url_for('uopz.zal2a_harmonogram', student_id=student.id) }}"
+                class="btn btn-sm btn-outline-primary">Opracuj Harmonogram</a>
+        </div>
+    </div>
+
+    <!-- Zał. 3: Skierowanie na praktykę -->
+    <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="fw-bold"><i class="bi bi-file-earmark-person text-success"></i> Skierowanie i Karta (Zał. 3)</h6>
+            <p class="text-muted small mb-3">Wydanie skierowania przed rozpoczęciem praktyki.</p>
+            <a href="{{ url_for('uopz.zal3_karta', student_id=student.id) }}"
+                class="btn btn-sm btn-outline-success">Zarządzaj skierowaniem</a>
+
+        </div>
+    </div>
+
+    <!-- Zał. 4: Efekty Uczenia się -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-list-check text-info"></i> Efekty Uczenia Się (Zał. 4)</h6>
+                <p class="text-muted small mb-3">Podgląd efektów zweryfikowanych przez ZOPZ i wprowadzanie opinii
+                    uczelnianej.</p>
+                <a href="{{ url_for('uopz.zal4_efekty', student_id=student.id) }}"
+                    class="btn btn-sm btn-outline-info text-dark">Zaopiniuj efekty</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 6: Dziennik Praktyki (Weryfikacja) -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-journal-text text-warning"></i> Dziennik Praktyki (Zał. 6)</h6>
+                    {% if 'ZAL6' in dokumenty and dokumenty['ZAL6'].status == 'Submitted' %}
+                    <span class="badge bg-danger">Oczekuje na ocenę</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-3">Nadzór nad codziennymi wpisami studenta.</p>
+                <button class="btn btn-sm btn-outline-warning text-dark" disabled>Sprawdź dziennik</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 7: Sprawozdanie Standardowe -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-file-text text-secondary"></i> Sprawozdanie (Zał. 7)</h6>
+                    {% if 'ZAL7' in dokumenty and dokumenty['ZAL7'].status == 'Submitted' %}
+                    <span class="badge bg-danger">Oczekuje na weryfikację</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-3">Weryfikacja merytoryczna sprawozdania z praktyki.</p>
+                <a href="{{ url_for('uopz.zal7_sprawozdanie', student_id=student.id) }}"
+                    class="btn btn-sm btn-outline-secondary">Weryfikuj Sprawozdanie</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 7a: Sprawozdanie Praca Zawodowa -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-briefcase text-secondary"></i> Sprawozdanie SN (Zał. 7a)</h6>
+                </div>
+                <p class="text-muted small mb-3">Ocena sprawozdania realizowanego na podst. pracy / działalności.</p>
+                <a href="{{ url_for('uopz.zal7a_sprawozdanie', student_id=student.id) }}"
+                    class="btn btn-sm btn-outline-secondary">Weryfikuj Sprawozdanie SN</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 8: Protokół Zaliczenia -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-award text-danger"></i> Protokół Egzaminu (Zał. 8)</h6>
+                <p class="text-muted small mb-3">Wystawienie ocen cząstkowych i wygenerowanie protokołu z egzaminu.</p>
+                <button class="btn btn-sm btn-outline-danger" disabled>Przeprowadź egzamin</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

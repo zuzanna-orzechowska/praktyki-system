@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Decyzja o uznaniu praktyki (Zał. 4a)</h2>
+    <span class="badge bg-secondary">Dokument Informacyjny</span>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Tutaj pojawią się decyzje Uczelnianego Opiekuna Praktyk oraz Dyrektora Instytutu, jeśli
+    złożyłeś wniosek o zaliczenie praktyki na poczet pracy zawodowej (Zał. 4b).
+</div>
+
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body p-5 bg-white">
+
+        <h4 class="text-center fw-bold mb-5">DECYZJA O UZNANIU EFEKTÓW UCZENIA SIĘ<br>Z TYTUŁU PRACY ZAWODOWEJ</h4>
+
+        <div class="bg-light p-3 mb-4 rounded border">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Student/ka:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
+                    <p class="mb-0"><strong>Kierunek studiów:</strong> {{ student.kierunek }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-1"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
+                    <p class="mb-0"><strong>Rok studiów:</strong> {{ student.rok_studiow }}</p>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2">Opinia Uczelnianego Opiekuna Praktyk Zawodowych (UOPZ)</h5>
+        <div
+            class="p-4 border rounded mb-4 {% if dokument and dokument.status == 'Zaakceptowany_UOPZ' %}bg-success text-white{% elif dokument and dokument.status == 'Odrzucony_UOPZ' %}bg-danger text-white{% else %}bg-light text-muted{% endif %}">
+            {% if dokument and dokument.status in ['Zaakceptowany_UOPZ', 'Zatwierdzony'] %}
+            <p><i class="bi bi-check-circle-fill"></i> Po zapoznaniu się z wnioskiem studenta i załączoną dokumentacją:
+                <strong>Opiniuję pozytywnie</strong>
+            </p>
+            {% elif dokument and dokument.status in ['Odrzucony_UOPZ', 'Odrzucony'] %}
+            <p><i class="bi bi-x-circle-fill"></i> Po zapoznaniu się z wnioskiem studenta i załączoną dokumentacją:
+                <strong>Opiniuję negatywnie</strong>
+            </p>
+            {% else %}
+            <p class="mb-0 text-center"><i class="bi bi-hourglass-split"></i> Oczekuje na opinię UOPZ</p>
+            {% endif %}
+        </div>
+
+        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2">Decyzja Dyrektora Instytutu</h5>
+        <div
+            class="p-4 border rounded {% if dokument and dokument.status == 'Zatwierdzony' %}border-success{% elif dokument and dokument.status == 'Odrzucony' %}border-danger{% else %}bg-light text-muted{% endif %}">
+            {% if dokument and dokument.status == 'Zatwierdzony' %}
+            <p class="text-success"><i class="bi bi-check-circle-fill"></i> Na podstawie § 9 ust 1 regulaminu:
+                <strong>Wyrażam zgodę</strong> na uznanie pracy zarobkowej (prowadzenia działalności) na poczet praktyki
+                zawodowej.
+            </p>
+            {% elif dokument and dokument.status == 'Odrzucony' %}
+            <p class="text-danger"><i class="bi bi-x-circle-fill"></i> Na podstawie § 9 ust 1 regulaminu: <strong>Nie
+                    wyrażam zgody</strong> na uznanie pracy zarobkowej (prowadzenia działalności) na poczet praktyki
+                zawodowej.</p>
+            {% else %}
+            <p class="mb-0 text-center"><i class="bi bi-hourglass-split"></i> Oczekuje na decyzję Dyrektora</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

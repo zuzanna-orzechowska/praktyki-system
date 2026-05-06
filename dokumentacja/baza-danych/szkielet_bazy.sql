@@ -218,6 +218,65 @@ CREATE TABLE harmonogram_praktyki (
     UNIQUE (dokument_id, lp)
 );
 
+-- ------------------------------------------------------------
+-- 12. SPRAWOZDANIE Z PRAKTYKI (Zał. 7)
+-- ------------------------------------------------------------
+CREATE TABLE sprawozdanie (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id         INTEGER NOT NULL UNIQUE,
+    charakterystyka     TEXT NOT NULL,
+    opis_prac           TEXT NOT NULL,
+    wiedza_umiejetnosci TEXT NOT NULL,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 13. WNIOSEK O ZALICZENIE PRAKTYKI (Zał. 4b)
+-- ------------------------------------------------------------
+CREATE TABLE wniosek_zaliczenie_praktyki (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id             INTEGER NOT NULL UNIQUE,
+    uzasadnienie            TEXT NOT NULL,
+    okres_zatrudnienia_od   DATE NOT NULL,
+    okres_zatrudnienia_do   DATE NOT NULL,
+    stanowisko              TEXT NOT NULL,
+    zalaczniki_paths        TEXT,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 14. OŚWIADCZENIE INSTYTUCJI (Zał. 9)
+-- ------------------------------------------------------------
+CREATE TABLE oswiadczenie (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id             INTEGER NOT NULL UNIQUE,
+    miejscowosc             TEXT,
+    data_oswiadczenia       DATE,
+    nazwa_instytucji        TEXT,
+    opiekun_imie_nazwisko   TEXT,
+    opiekun_stanowisko      TEXT,
+    opiekun_telefon         TEXT,
+    opiekun_email           TEXT,
+    osoba_upowazniona       TEXT,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 15. PROGRAM PRAKTYKI (Zał. 2a)
+-- ------------------------------------------------------------
+CREATE TABLE program_praktyki (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id     INTEGER NOT NULL,
+    kod_efektu      TEXT NOT NULL,
+    dzial_prace     TEXT,
+    
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE,
+    UNIQUE(dokument_id, kod_efektu)
+);
+
 -- ============================================================
 -- INDEKSY – przyspieszenie najczęstszych zapytań
 -- ============================================================

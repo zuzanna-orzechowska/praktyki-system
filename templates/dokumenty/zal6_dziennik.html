@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Dziennik Praktyki Zawodowej (Zał. 6)</h2>
+    <span class="badge bg-warning text-dark">Status: W trakcie (Szkic)</span>
+</div>
+
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Student:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
+                <p><strong>Miejsce praktyki:</strong> {{ praktyka.zaklad_nazwa }}</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p><strong>Data rozpoczęcia:</strong> {{ praktyka.data_start }}</p>
+                <p><strong>Data zakończenia:</strong> {{ praktyka.data_end }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-3">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Instrukcja:</strong> Wpisy powinny zawierać opis wykonywanych prac, z których wynika do nabycia których
+    efektów uczenia się prowadzą. Unikaj skrótowych opisów (minimum 200 znaków). Każdy dzień to jeden wpis (z puli 120
+    dni).
+</div>
+
+<div class="card mb-4 shadow-sm border-warning">
+    <div class="card-header bg-warning bg-opacity-10 py-2">
+        <h6 class="mb-0 text-dark"><i class="bi bi-lightbulb text-warning me-2"></i>Ściągawka: Efekty uczenia się</h6>
+    </div>
+    <div class="card-body py-2">
+        <ul class="list-unstyled mb-0" style="font-size: 0.85rem; column-count: 2;">
+            {% for efekt in efekty_lista %}
+            <li class="mb-1"><strong>{{ efekt.kod }}</strong>: {{ efekt.opis }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+<form method="POST" action="{{ url_for('student.dziennik') }}">
+    <div class="table-responsive mb-3">
+        <table class="table table-bordered table-hover align-middle" id="dziennikTable">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 5%">Dzień</th>
+                    <th style="width: 15%">Data</th>
+                    <th style="width: 45%">Opis wykonanych prac</th>
+                    <th style="width: 15%">Efekt uczenia się</th>
+                    <th style="width: 15%">Zatwierdzenie ZOPZ</th>
+                    <th style="width: 5%">Akcja</th>
+                </tr>
+            </thead>
+            <tbody id="dziennikBody">
+                {% if wpisy %}
+                <!-- Wyświetlamy zapisane wpisy z bazy -->
+                {% for wpis in wpisy %}
+                <tr>
+                    <td class="text-center fw-bold day-number">{{ loop.index }}</td>
+                    <td>
+                        <input type="hidden" name="wpis_id[]" value="{{ wpis.id }}">
+                        <input type="date" name="data[]" class="form-control form-control-sm"
+                            value="{{ wpis.data_wpisu }}" min="{{ praktyka.data_start }}" max="{{ max_date }}" required {% if wpis.potwierdzony_zopz %}readonly{% endif %}>
+                    </td>
+                    <td><textarea name="opis[]" class="form-control form-control-sm" rows="2" minlength="200"
+                            placeholder="Szczegółowy opis (min. 200 znaków)..." required {% if wpis.potwierdzony_zopz %}readonly{% endif %}>{{ wpis.opis_prac }}</textarea>
+                    </td>
+                    <td>
+                        <select name="efekty[]" class="form-select form-select-sm" required {% if wpis.potwierdzony_zopz %}style="pointer-events: none; opacity: 0.8;" tabindex="-1"{% endif %}>
+                            <option value="" disabled {% if not wpis.nr_efektu %}selected{% endif %}>Wybierz...</option>
+                            {% for efekt in efekty_lista %}
+                            <option value="{{ efekt.kod }}" {% if wpis.nr_efektu==efekt.kod %}selected{% endif %}>{{
+                                efekt.kod }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="text-center text-muted">
+                        {% if wpis.potwierdzony_zopz %}
+                        <span class="text-success"><i class="bi bi-check-circle"></i> Potwierdzone</span>
+                        {% else %}
+                        <small>Oczekuje...</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)" {% if
+                            wpis.potwierdzony_zopz %}disabled data-approved="true" title="Nie można usunąć zatwierdzonego wpisu"{% endif %}><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <!-- Pusty wiersz startowy, jeśli baza jest pusta -->
+                <tr>
+                    <td class="text-center fw-bold day-number">1</td>
+                    <td>
+                        <input type="hidden" name="wpis_id[]" value="">
+                        <input type="date" name="data[]" class="form-control form-control-sm"
+                            min="{{ praktyka.data_start }}" max="{{ max_date }}" required>
+                    </td>
+                    <td><textarea name="opis[]" class="form-control form-control-sm" rows="2" minlength="200"
+                            placeholder="Szczegółowy opis (min. 200 znaków)..." required></textarea></td>
+                    <td>
+                        <select name="efekty[]" class="form-select form-select-sm" required>
+                            <option value="" disabled selected>Wybierz...</option>
+                            {% for efekt in efekty_lista %}
+                            <option value="{{ efekt.kod }}">{{ efekt.kod }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="text-center text-muted"><small>Oczekuje...</small></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)"
+                            disabled><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between mb-2">
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary" onclick="addRow()">
+                <i class="bi bi-plus-circle"></i> Dodaj dzień
+            </button>
+            <div class="input-group" style="width: 250px;">
+                <input type="number" id="bulkAddCount" class="form-control" placeholder="Ilość" min="1" max="20" value="5">
+                <button class="btn btn-outline-secondary" type="button" onclick="addMultipleRows()">Dodaj hurtowo</button>
+            </div>
+        </div>
+        <div>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-save"></i> Zapisz wpisy (Szkic)
+            </button>
+            <button type="button" class="btn btn-primary" disabled>
+                <i class="bi bi-send"></i> Wyślij do ZOPZ
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Skrypt do dynamicznego zarządzania tabelą -->
+<script>
+    let hasUnsavedChanges = false;
+    let isSubmitting = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        
+        form.addEventListener('change', function() {
+            hasUnsavedChanges = true;
+        });
+        
+        form.addEventListener('input', function() {
+            hasUnsavedChanges = true;
+        });
+
+        form.addEventListener('submit', function() {
+            isSubmitting = true;
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnsavedChanges && !isSubmitting) {
+                const msg = 'Masz niezapisane zmiany. Czy na pewno chcesz opuścić tę stronę?';
+                e.returnValue = msg;
+                return msg;
+            }
+        });
+    });
+
+    function addRow() {
+        hasUnsavedChanges = true;
+        const tbody = document.getElementById('dziennikBody');
+        const rowCount = tbody.getElementsByTagName('tr').length;
+
+        if (rowCount >= 120) {
+            alert("Osiągnięto limit 120 dni roboczych praktyki.");
+            return;
+        }
+
+        const nextDay = rowCount + 1;
+        const newRow = document.createElement('tr');
+
+        const efektyOptions = `
+            <option value="" disabled selected>Wybierz...</option>
+            {% for efekt in efekty_lista %}
+            <option value="{{ efekt.kod }}">{{ efekt.kod }}</option>
+            {% endfor %}
+        `;
+
+        newRow.innerHTML = `
+            <td class="text-center fw-bold day-number">${nextDay}</td>
+            <td>
+                <input type="hidden" name="wpis_id[]" value="">
+                <input type="date" name="data[]" class="form-control form-control-sm" min="{{ praktyka.data_start }}" max="{{ max_date }}" required>
+            </td>
+            <td><textarea name="opis[]" class="form-control form-control-sm" rows="2" minlength="200" placeholder="Szczegółowy opis (min. 200 znaków)..." required></textarea></td>
+            <td><select name="efekty[]" class="form-select form-select-sm" required>${efektyOptions}</select></td>
+            <td class="text-center text-muted"><small>Oczekuje...</small></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+
+        tbody.appendChild(newRow);
+        updateDeleteButtons();
+    }
+
+    function removeRow(button) {
+        if (!confirm("Czy na pewno chcesz usunąć ten wpis? Zmiany zostaną zachowane po kliknięciu 'Zapisz wpisy'.")) {
+            return;
+        }
+        hasUnsavedChanges = true;
+        const row = button.closest('tr');
+        row.remove();
+        updateRowNumbers();
+        updateDeleteButtons();
+    }
+
+    function updateRowNumbers() {
+        const rows = document.getElementById('dziennikBody').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].querySelector('.day-number').innerText = i + 1;
+        }
+    }
+
+    function updateDeleteButtons() {
+        const rows = document.getElementById('dziennikBody').getElementsByTagName('tr');
+        if (rows.length === 1) {
+            const btn = rows[0].querySelector('.btn-outline-danger');
+            if (btn) btn.disabled = true;
+        } else {
+            for (let i = 0; i < rows.length; i++) {
+                const btn = rows[i].querySelector('.btn-outline-danger');
+                if (btn && btn.getAttribute('data-approved') !== 'true') {
+                    btn.disabled = false;
+                }
+            }
+        }
+    }
+
+    function addMultipleRows() {
+        const countInput = document.getElementById('bulkAddCount');
+        let count = parseInt(countInput.value);
+        if (isNaN(count) || count < 1) return;
+        
+        if (count > 20) {
+            alert("Jednorazowo możesz dodać maksymalnie 20 dni. Zmniejsz wartość i spróbuj ponownie.");
+            return;
+        }
+        
+        for (let i = 0; i < count; i++) {
+            const tbody = document.getElementById('dziennikBody');
+            const rowCount = tbody.getElementsByTagName('tr').length;
+            if (rowCount >= 120) {
+                alert("Osiągnięto limit 120 dni roboczych praktyki.");
+                break;
+            }
+            addRow();
+        }
+    }
+</script>
+{% endblock %}

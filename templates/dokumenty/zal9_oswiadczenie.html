@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Oświadczenie Instytucji (Zał. 9)</h2>
+    <span class="badge bg-primary">Dokument Edytowalny</span>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Wprowadź dane na podstawie oświadczenia otrzymanego z Zakładu Pracy[cite: 12]. Na ich
+    podstawie system zaktualizuje informacje o Twojej praktyce.
+</div>
+
+<form method="POST" action="{{ url_for('student.zal9_oswiadczenie') }}">
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body p-5 bg-white" style="border: 1px solid #dee2e6; max-width: 850px; margin: 0 auto;">
+
+            <div class="row mb-5">
+                <div class="col-md-7 text-center">
+                    <div class="border rounded p-4 text-muted d-inline-block"
+                        style="min-width: 250px; border-style: dashed !important;">
+                        <br>Pieczęć firmy<br><br>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="mb-2 d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2" name="miejscowosc"
+                            placeholder="Miejscowość" value="{{ oswiadczenie.miejscowosc if oswiadczenie else '' }}"
+                            required>, dnia
+                    </div>
+                    <div>
+                        <input type="date" class="form-control form-control-sm" name="data_oswiadczenia"
+                            value="{{ oswiadczenie.data_oswiadczenia if oswiadczenie else '' }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="text-center fw-bold mb-4">OŚWIADCZENIE INSTYTUCJI<br><small class="fs-6 fw-normal">w sprawie
+                    przyjęcia studenta na praktykę zawodową</small></h4>
+
+            <p style="text-align: justify; line-height: 2;">
+                W imieniu <input type="text" class="form-control d-inline-block"
+                    style="width: 80%; border-bottom: 1px solid #333; border-top:none; border-left:none; border-right:none; border-radius: 0; background: transparent;"
+                    name="nazwa_instytucji" placeholder="(nazwa instytucji)"
+                    value="{{ oswiadczenie.nazwa_instytucji if oswiadczenie else (praktyka.zaklad.nazwa if praktyka.zaklad else '') }}"
+                    required> oświadczam, że w terminie od
+                <input type="date" class="form-control d-inline-block w-auto border-bottom"
+                    style="border-top:none; border-left:none; border-right:none; border-radius: 0;" name="data_start"
+                    value="{{ praktyka.data_start if praktyka else '' }}" required>
+                do
+                <input type="date" class="form-control d-inline-block w-auto border-bottom"
+                    style="border-top:none; border-left:none; border-right:none; border-radius: 0;" name="data_end"
+                    value="{{ praktyka.data_end if praktyka else '' }}" required>
+                przyjmiemy na praktykę zawodową studenta Instytutu Informatyki Stosowanej im. Krzysztofa
+                Brzeskiego[cite: 12].
+            </p>
+
+            <div class="bg-light p-3 mb-4 rounded border text-center">
+                <span class="fs-5 fw-bold">{{ current_user.imie }} {{ current_user.nazwisko }}</span><br>
+                <small class="text-muted">(imię i nazwisko studenta)</small>
+            </div>
+
+            <p>
+                Akademii Nauk Stosowanych w Elblągu,<br>
+                kierunek: <strong>{{ student.kierunek }}</strong>, rok studiów: <strong>{{ student.rok_studiow
+                    }}</strong>, nr albumu: <strong>{{ student.nr_albumu }}</strong>[cite: 12].
+            </p>
+
+            <h6 class="fw-bold mt-5 mb-3">Zakładowym opiekunem praktyki będzie:</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" name="opiekun_imie_nazwisko" placeholder="Imię i nazwisko"
+                        value="{{ oswiadczenie.opiekun_imie_nazwisko if oswiadczenie else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" name="opiekun_stanowisko" placeholder="Stanowisko"
+                        value="{{ oswiadczenie.opiekun_stanowisko if oswiadczenie else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" name="opiekun_telefon" placeholder="Telefon"
+                        value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="email" class="form-control" name="opiekun_email" placeholder="E-mail"
+                        value="{{ oswiadczenie.opiekun_email if oswiadczenie else '' }}" required>
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-3 mt-4">Osobą upoważnioną do podpisania porozumienia dotyczącego prowadzenia praktyki
+                zawodowej jest ze strony naszej instytucji[cite: 12]:</h6>
+            <div class="row g-3 mb-5">
+                <div class="col-md-12">
+                    <input type="text" class="form-control" name="osoba_upowazniona"
+                        placeholder="Imię i nazwisko, stanowisko"
+                        value="{{ oswiadczenie.osoba_upowazniona if oswiadczenie else '' }}" required>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-md-6 offset-md-6 text-center">
+                    <hr style="width: 80%; margin: 0 auto; border-color: #6c757d;">
+                    <small class="text-muted">Pieczęć imienna i podpis[cite: 12]</small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="text-end mb-5">
+        <button type="submit" class="btn btn-success" id="submitBtn"><i class="bi bi-save"></i> Zapisz
+            Oświadczenie</button>
+    </div>
+</form>
+{% endblock %}

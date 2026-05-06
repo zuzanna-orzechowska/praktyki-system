@@ -36,11 +36,14 @@
             padding: 20px 0;
             position: relative;
         }
-        
+
         .main-header::after {
             content: '';
             position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
             background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="100" height="100" fill="none" /></svg>');
             opacity: 0.1;
             z-index: 1;
@@ -99,7 +102,7 @@
             list-style: none;
             padding-left: 0;
         }
-        
+
         .sidebar-section-title {
             text-transform: uppercase;
             font-size: 0.85rem;
@@ -120,7 +123,7 @@
             display: flex;
             align-items: center;
         }
-        
+
         .sidebar-menu a::before {
             content: "➔";
             color: #dc3545;
@@ -132,7 +135,7 @@
         .sidebar-menu a:hover {
             text-decoration: underline;
         }
-        
+
         .sidebar-menu a.active {
             font-weight: bold;
             color: #212529;
@@ -146,10 +149,10 @@
             border-right: 1px solid #e9ecef;
             border-bottom: 1px solid #e9ecef;
         }
-        
+
         .content-container {
             background-color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
             margin-top: 0;
         }
     </style>
@@ -165,10 +168,10 @@
             </div>
             <div>
                 {% if current_user.is_authenticated %}
-                Witaj, {{ current_user.email }} | 
+                Witaj, {{ current_user.email }} |
                 <a href="{{ url_for('auth.logout') }}">wyloguj się</a>
                 {% else %}
-                Nie jesteś zalogowany | 
+                Nie jesteś zalogowany |
                 <a href="{{ url_for('auth.login') }}">zaloguj się</a>
                 {% endif %}
             </div>
@@ -178,7 +181,8 @@
     <!-- Main Header -->
     <header class="main-header">
         <div class="container header-content">
-            <img src="{{ url_for('static', filename='header-logo.svg') }}" alt="Logo ANS Elbląg" style="height: 60px; margin-right: 20px;">
+            <img src="{{ url_for('static', filename='header-logo.svg') }}" alt="Logo ANS Elbląg"
+                style="height: 60px; margin-right: 20px;">
             <div>
                 <h1 class="header-title">Akademia Nauk Stosowanych w Elblągu</h1>
                 <p class="header-subtitle">System Obsługi Praktyk</p>
@@ -190,10 +194,16 @@
     {% block navbar %}
     <nav class="main-nav">
         <div class="container d-flex flex-wrap">
-            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/"><i class="bi bi-list"></i> AKTUALNOŚCI</a>
-            <a class="nav-link" href="#">DOKUMENTY I REGULAMINY</a>
+            <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/"><i class="bi bi-list"></i>
+                AKTUALNOŚCI</a>
+            <a class="nav-link {% if request.path == '/dokumenty' %}active{% endif %}" href="/dokumenty">DOKUMENTY I
+                REGULAMINY</a>
             {% if current_user.is_authenticated %}
-            <a class="nav-link" href="#">MOJE PRAKTYKI</a>
+            {% if current_user.rola == 'student' %}
+            <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL PRAKTYK</a>
+            {% elif current_user.rola == 'uopz' %}
+            <a class="nav-link {% if 'uopz' in request.path %}active{% endif %}" href="{{ url_for('uopz.dashboard') }}">PANEL STUDENTÓW</a>
+            {% endif %}
             {% endif %}
         </div>
     </nav>
@@ -208,11 +218,60 @@
                 <div class="sidebar-section-title">Menu Główne</div>
                 <ul class="sidebar-menu">
                     <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Strona główna</a></li>
-                    <li><a href="/pytania" class="{% if request.path == '/pytania' %}active{% endif %}">Pytania (FAQ)</a></li>
-                    <li><a href="/kontakt" class="{% if request.path == '/kontakt' %}active{% endif %}">Kontakt</a></li>
+                    <li><a href="/pytania" class="{% if request.path == '/pytania' %}active{% endif %}">Pytania
+                            (FAQ)</a></li>
                 </ul>
-                
 
+                {% if current_user.is_authenticated and current_user.rola == 'student' %}
+                <div class="sidebar-section-title mt-4">Panel Studenta</div>
+                <ul class="sidebar-menu">
+                    <li><a href="/student/dashboard" class="{% if 'dashboard' in request.path %}active{% endif %}">Panel praktyk</a></li>
+                    <li><a href="/student/porozumienie"
+                            class="{% if 'porozumienie' in request.path %}active{% endif %}">Porozumienie (Zał. 1)</a>
+                    </li>
+                    <li><a href="/student/zal2_program"
+                            class="{% if 'zal2_program' in request.path %}active{% endif %}">Zasady Praktyki (Zał. 2)"
+                        </a>
+                    </li>
+                    <li><a href="/student/zal2a_harmonogram"
+                            class="{% if 'zal2a_harmonogram' in request.path %}active{% endif %}">Harmonogram (Zał.
+                            2a)"</a>
+                    </li>
+                    <li><a href="/student/zal3_karta"
+                            class="{% if 'zal3_karta' in request.path %}active{% endif %}">Karta Praktyki (Zał. 3)</a>
+                    </li>
+                    <li><a href="/student/zal4_efekty"
+                            class="{% if 'zal4_efekty' in request.path %}active{% endif %}">Efekty Uczenia Się (Zał.
+                            4)</a></li>
+                    <li><a href="/student/zal4a_decyzja"
+                            class="{% if 'zal4a_decyzja' in request.path %}active{% endif %}">Decyzja (Zał. 4a)</a></li>
+                    <li><a href="/student/zal4b_wniosek"
+                            class="{% if 'zal4b_wniosek' in request.path %}active{% endif %}">Wniosek o zaliczenie (Zał.
+                            4b)</a></li>
+                    <li><a href="/student/dziennik"
+                            class="{% if 'dziennik' in request.path %}active{% endif %}">Dziennik Praktyki (Zał. 6)"</a>
+                    </li>
+                    <li><a href="/student/sprawozdanie"
+                            class="{% if 'sprawozdanie' in request.path %}active{% endif %}">Sprawozdanie (Zał. 7)</a>
+                    </li>
+                    <li><a href="/student/zal7a_sprawozdanie"
+                            class="{% if 'zal7a_sprawozdanie' in request.path %}active{% endif %}">Sprawozdanie Praca
+                            (Zał. 7a)</a></li>
+                    <li><a href="/student/zal8_protokol"
+                            class="{% if 'zal8_protokol' in request.path %}active{% endif %}">Protokół (Zał. 8)</a></li>
+                    <li><a href="/dokumenty">Wszystkie dokumenty</a></li>
+                </ul>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.rola == 'uopz' %}
+                <div class="sidebar-section-title mt-4">Panel UOPZ</div>
+                <ul class="sidebar-menu">
+                    <li><a href="{{ url_for('uopz.dashboard') }}"
+                            class="{% if 'uopz/dashboard' in request.path %}active{% endif %}">Moi Studenci</a></li>
+                    <li><a href="#">Wnioski do oceny (Zał. 4a)</a></li>
+                    <li><a href="#">Hospitacje</a></li>
+                </ul>
+                {% endif %}
             </div>
 
             <!-- Content Area -->
