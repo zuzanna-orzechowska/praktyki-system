@@ -200,9 +200,11 @@
                 REGULAMINY</a>
             {% if current_user.is_authenticated %}
             {% if current_user.rola == 'student' %}
-            <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL PRAKTYK</a>
+            <a class="nav-link {% if 'student' in request.path %}active{% endif %}" href="/student/dashboard">PANEL
+                PRAKTYK</a>
             {% elif current_user.rola == 'uopz' %}
-            <a class="nav-link {% if 'uopz' in request.path %}active{% endif %}" href="{{ url_for('uopz.dashboard') }}">PANEL STUDENTÓW</a>
+            <a class="nav-link {% if 'uopz' in request.path %}active{% endif %}"
+                href="{{ url_for('uopz.dashboard') }}">PANEL STUDENTÓW</a>
             {% endif %}
             {% endif %}
         </div>
@@ -222,43 +224,69 @@
                             (FAQ)</a></li>
                 </ul>
 
+                <!--ŚCIEŻKA STUDENTA -->
                 {% if current_user.is_authenticated and current_user.rola == 'student' %}
                 <div class="sidebar-section-title mt-4">Panel Studenta</div>
                 <ul class="sidebar-menu">
-                    <li><a href="/student/dashboard" class="{% if 'dashboard' in request.path %}active{% endif %}">Panel praktyk</a></li>
+                    <li><a href="/student/dashboard" class="{% if 'dashboard' in request.path %}active{% endif %}">Panel
+                            główny</a></li>
+
+                    <!-- czy student ma przypisaną pierwszą praktykę i jaki jest jej status -->
+                    {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki
+                    else none %}
+
+                    {% if not praktyka or praktyka.status == 'OCZEKUJE_NA_ZAL9' or praktyka.status == 'BRAK_ZGŁOSZENIA'
+                    %}
+                    <!-- POCZĄTEK: Wybór ścieżki -->
+                    <div class="sidebar-section-title mt-3 text-warning">Wybierz ścieżkę:</div>
+                    <li><a href="/student/zal9_oswiadczenie"
+                            class="{% if 'zal9' in request.path %}active{% endif %}">Oświadczenie ZOPZ (Zał. 9)</a></li>
+                    <li><a href="/student/zal4b_wniosek"
+                            class="{% if 'zal4b_wniosek' in request.path %}active{% endif %}">Wniosek o zaliczenie (Zał.
+                            4b)</a></li>
+
+                    {% elif praktyka.status == 'SCIEZKA_PRACA' %}
+                    <!-- ŚCIEŻKA 2: Zaliczenie na podst. pracy -->
+                    <div class="sidebar-section-title mt-3 text-primary">Ścieżka: Praca Zawodowa</div>
+                    <li><a href="/student/zal4b_wniosek"
+                            class="{% if 'zal4b_wniosek' in request.path %}active{% endif %}">Wniosek o zaliczenie (Zał.
+                            4b)</a></li>
+                    <li><a href="/student/zal4a_decyzja"
+                            class="{% if 'zal4a_decyzja' in request.path %}active{% endif %}">Decyzja Dyrektora (Zał.
+                            4a)</a></li>
+                    <li><a href="/student/zal7a_sprawozdanie"
+                            class="{% if 'zal7a_sprawozdanie' in request.path %}active{% endif %}">Sprawozdanie Praca
+                            (Zał. 7a)</a></li>
+
+                    {% else %}
+                    <!-- ŚCIEŻKA 1: Standardowa Praktyka -->
+                    <div class="sidebar-section-title mt-3 text-success">Ścieżka: Standardowa</div>
                     <li><a href="/student/porozumienie"
                             class="{% if 'porozumienie' in request.path %}active{% endif %}">Porozumienie (Zał. 1)</a>
                     </li>
                     <li><a href="/student/zal2_program"
-                            class="{% if 'zal2_program' in request.path %}active{% endif %}">Zasady Praktyki (Zał. 2)"
-                        </a>
-                    </li>
+                            class="{% if 'zal2_program' in request.path %}active{% endif %}">Zasady Praktyki (Zał.
+                            2)</a></li>
                     <li><a href="/student/zal2a_harmonogram"
                             class="{% if 'zal2a_harmonogram' in request.path %}active{% endif %}">Harmonogram (Zał.
-                            2a)"</a>
-                    </li>
+                            2a)</a></li>
                     <li><a href="/student/zal3_karta"
                             class="{% if 'zal3_karta' in request.path %}active{% endif %}">Karta Praktyki (Zał. 3)</a>
                     </li>
-                    <li><a href="/student/zal4_efekty"
-                            class="{% if 'zal4_efekty' in request.path %}active{% endif %}">Efekty Uczenia Się (Zał.
-                            4)</a></li>
-                    <li><a href="/student/zal4a_decyzja"
-                            class="{% if 'zal4a_decyzja' in request.path %}active{% endif %}">Decyzja (Zał. 4a)</a></li>
-                    <li><a href="/student/zal4b_wniosek"
-                            class="{% if 'zal4b_wniosek' in request.path %}active{% endif %}">Wniosek o zaliczenie (Zał.
-                            4b)</a></li>
                     <li><a href="/student/dziennik"
-                            class="{% if 'dziennik' in request.path %}active{% endif %}">Dziennik Praktyki (Zał. 6)"</a>
+                            class="{% if 'dziennik' in request.path %}active{% endif %}">Dziennik Praktyki (Zał. 6)</a>
                     </li>
                     <li><a href="/student/sprawozdanie"
                             class="{% if 'sprawozdanie' in request.path %}active{% endif %}">Sprawozdanie (Zał. 7)</a>
                     </li>
-                    <li><a href="/student/zal7a_sprawozdanie"
-                            class="{% if 'zal7a_sprawozdanie' in request.path %}active{% endif %}">Sprawozdanie Praca
-                            (Zał. 7a)</a></li>
+                    <li><a href="/student/zal4_efekty"
+                            class="{% if 'zal4_efekty' in request.path %}active{% endif %}">Efekty Uczenia Się (Zał.
+                            4)</a></li>
                     <li><a href="/student/zal8_protokol"
                             class="{% if 'zal8_protokol' in request.path %}active{% endif %}">Protokół (Zał. 8)</a></li>
+                    {% endif %}
+
+                    <div class="sidebar-section-title mt-3">Ogólne</div>
                     <li><a href="/dokumenty">Wszystkie dokumenty</a></li>
                 </ul>
                 {% endif %}

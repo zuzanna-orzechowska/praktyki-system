@@ -49,8 +49,8 @@ class Praktyka(db.Model):
     __tablename__ = 'praktyka'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
-    zaklad_id = db.Column(db.Integer, db.ForeignKey('zaklad_pracy.id'), nullable=False)
-    uopz_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
+    zaklad_id = db.Column(db.Integer, db.ForeignKey('zaklad_pracy.id'), nullable=True)
+    uopz_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=True)
     status = db.Column(db.String(50), default='OCZEKUJE_NA_ZAL9')
     data_start = db.Column(db.Date)
     data_end = db.Column(db.Date)
@@ -146,6 +146,8 @@ class WniosekZaliczeniePraktyki(db.Model):
     okres_zatrudnienia_od = db.Column(db.Date, nullable=False)
     okres_zatrudnienia_do = db.Column(db.Date, nullable=False)
     stanowisko = db.Column(db.String(255), nullable=False)
+    zakres_obowiazkow = db.Column(db.Text, nullable=True)
+
     
     #lista ścieżek do załączonych plików
     zalaczniki_paths = db.Column(db.Text) 

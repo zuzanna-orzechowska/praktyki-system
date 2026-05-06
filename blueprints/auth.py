@@ -89,6 +89,7 @@ def auth_callback(provider):
     # Obsługa PIERWSZEGO logowania
     if not user:
         domain = email.split('@')[1] if '@' in email else ''
+        nr_albumu = email.split('@')[0] if domain == 'student.ans-elblag.pl' else None
         
         if domain == 'student.ans-elblag.pl':
             rola = 'student'
@@ -100,7 +101,7 @@ def auth_callback(provider):
             flash('Brak dostępu dla tej domeny e-mail. Jeśli jesteś Opiekunem Zakładowym (ZOPZ), poproś uczelnię o wcześniejsze dodanie Twojego konta.', 'danger')
             return redirect(url_for('auth.login'))
 
-        #tworzenie nowego konta w bazie
+        #Tworzenie konta Użytkownika
         user = Uzytkownik(
             email=email,
             imie=imie,
@@ -113,16 +114,21 @@ def auth_callback(provider):
         db.session.add(user)
         db.session.commit()
         
+        #Tworzenie powiązanego profilu Studenta (tylko dla roli student)
+        if rola == 'student' and nr_albumu:
+            nowy_student = Student(
+                uzytkownik_id=user.id,
+                nr_albumu=nr_albumu,
+                kierunek='Informatyka',      #DOMYŚLNE WARTOŚCI - DO ZMIANY MOGĄ BYĆ
+                tryb_studiow='stacjonarne',  
+                rok_studiow=3                
+            )
+            db.session.add(nowy_student)
+            db.session.commit()
+        
         if aktywny == 0:
             flash('Utworzono konto pracownicze. Poczekaj na weryfikację i przypisanie roli przez Administratora.', 'warning')
             return redirect(url_for('auth.login'))
-
-    else:
-        if not user.external_id:
-            user.auth_provider = provider
-            user.external_id = external_id
-            db.session.commit()
-
     if user.aktywny == 0:
         flash('Twoje konto jest zablokowane lub oczekuje na weryfikację.', 'warning')
         return redirect(url_for('auth.login'))

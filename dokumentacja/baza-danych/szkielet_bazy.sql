@@ -59,34 +59,17 @@ CREATE TABLE zaklad_pracy (
 -- 4. PRAKTYKA ZAWODOWA (encja główna)
 -- ------------------------------------------------------------
 CREATE TABLE praktyka (
-    id              INTEGER     PRIMARY KEY AUTOINCREMENT,
-    student_id      INTEGER     NOT NULL,
-    zaklad_id       INTEGER     NOT NULL,
-    uopz_id         INTEGER     NOT NULL,
-    status          TEXT        NOT NULL DEFAULT 'OCZEKUJE_NA_ZAL9'
-                                CHECK (status IN (
-                                    'OCZEKUJE_NA_ZAL9',
-                                    'ZAL9_PRZYJETY',
-                                    'POROZUMIENIE_PODPISANE',
-                                    'PROGRAM_UZGODNIONY',
-                                    'SKIEROWANIE_WYDANE',
-                                    'PRAKTYKA_W_TOKU',
-                                    'DOKUMENTY_ZLOZONE',
-                                    'EGZAMIN',
-                                    'PROTOKOL_SPORZADZONY',
-                                    'ZALICZONA',
-                                    'ODRZUCONA',
-                                    'PRZEDLUZONA'
-                                )),
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id      INTEGER NOT NULL,
+    zaklad_id       INTEGER,
+    uopz_id         INTEGER,
+    status          TEXT DEFAULT 'BRAK_ZGŁOSZENIA',
     data_start      DATE,
     data_end        DATE,
-    liczba_godzin   INTEGER     DEFAULT 960,
-    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (student_id)    REFERENCES student(id)      ON DELETE RESTRICT,
-    FOREIGN KEY (zaklad_id)     REFERENCES zaklad_pracy(id) ON DELETE RESTRICT,
-    FOREIGN KEY (uopz_id)       REFERENCES uzytkownik(id)   ON DELETE RESTRICT
+    liczba_godzin   INTEGER DEFAULT 960,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+    FOREIGN KEY (zaklad_id) REFERENCES zaklad_pracy(id) ON DELETE SET NULL,
+    FOREIGN KEY (uopz_id) REFERENCES uzytkownik(id) ON DELETE SET NULL
 );
 
 -- ------------------------------------------------------------

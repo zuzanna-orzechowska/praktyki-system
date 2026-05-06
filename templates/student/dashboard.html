@@ -6,7 +6,7 @@
         display: flex;
         align-items: center;
         background-color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         border-radius: 4px;
         padding: 20px;
         text-decoration: none;
@@ -15,11 +15,13 @@
         height: 100%;
         border: 1px solid #f0f0f0;
     }
+
     .usos-tile:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         text-decoration: none;
         color: inherit;
     }
+
     .usos-tile-icon {
         font-size: 2.5rem;
         color: #004a99;
@@ -27,12 +29,14 @@
         min-width: 60px;
         text-align: center;
     }
+
     .usos-tile-content h5 {
         color: #004a99;
         font-weight: 600;
         margin-bottom: 5px;
         font-size: 1.1rem;
     }
+
     .usos-tile-content p {
         font-size: 0.85rem;
         color: #6c757d;
@@ -43,16 +47,55 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">Panel Studenta</h2>
+<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">Panel
+    Studenta</h2>
 
 <div class="alert alert-light border mb-4 d-flex justify-content-between align-items-center">
     <div>
         <strong>Witaj, {{ current_user.imie }} {{ current_user.nazwisko }}!</strong>
-        <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-warning text-dark">Oczekuje na zgłoszenie (Zał. 9)</span></span>
+        <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-warning text-dark">Oczekuje na
+                zgłoszenie (Zał. 9)</span></span>
     </div>
 </div>
 
 <div class="row g-4">
+
+    {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki else none %}
+
+    {% if not praktyka or praktyka.status == 'OCZEKUJE_NA_ZAL9' or praktyka.status == 'BRAK_ZGŁOSZENIA' %}
+
+    <div class="col-12 mb-2">
+        <h5 class="fw-bold text-center mt-3">Wybierz sposób realizacji praktyki:</h5>
+    </div>
+
+    <!-- Opcja 1: Standardowa -->
+    <div class="col-md-6 col-lg-6">
+        <a href="/student/zal9_oswiadczenie" class="usos-tile border-success border-2">
+            <div class="usos-tile-icon text-success">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5 class="text-success">Ścieżka Standardowa (Zał. 9)</h5>
+                <p>Znalazłem firmę, która przyjmie mnie na praktykę. Wypełnij oświadczenie od firmy, aby wygenerować
+                    porozumienie.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Opcja 2: Praca Zawodowa -->
+    <div class="col-md-6 col-lg-6">
+        <a href="/student/zal4b_wniosek" class="usos-tile border-primary border-2">
+            <div class="usos-tile-icon text-primary">
+                <i class="bi bi-briefcase"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5 class="text-primary">Zaliczenie na podst. Pracy (Zał. 4b)</h5>
+                <p>Pracuję lub prowadzę własną działalność. Złóż wniosek, aby zaliczyć ją jako praktykę studencką.</p>
+            </div>
+        </a>
+    </div>
+
+    {% else %}
     <!-- Profil i status -->
     <div class="col-md-6 col-lg-6">
         <a href="/student/dashboard" class="usos-tile">
@@ -61,12 +104,13 @@
             </div>
             <div class="usos-tile-content">
                 <h5>Panel praktyk</h5>
-                <p>Sprawdź swoje dane oraz szczegóły procesu zaliczania praktyk (Zał. 9).</p>
+                <p>Sprawdź swoje dane oraz szczegóły procesu zaliczania praktyk.</p>
             </div>
         </a>
     </div>
 
-    <!-- Dziennik Praktyki -->
+    <!-- Warunkowy kafelek np. dla Dziennika (tylko w standardowej) -->
+    {% if praktyka.status != 'SCIEZKA_PRACA' %}
     <div class="col-md-6 col-lg-6">
         <a href="/student/dziennik" class="usos-tile">
             <div class="usos-tile-icon">
@@ -78,8 +122,8 @@
             </div>
         </a>
     </div>
+    {% endif %}
 
-    <!-- Wszystkie dokumenty -->
     <div class="col-md-6 col-lg-6">
         <a href="/dokumenty" class="usos-tile">
             <div class="usos-tile-icon">
@@ -91,5 +135,7 @@
             </div>
         </a>
     </div>
+    {% endif %}
+
 </div>
 {% endblock %}
