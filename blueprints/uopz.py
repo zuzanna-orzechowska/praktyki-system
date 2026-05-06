@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from extensions import db
 from models import Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, ProgramPraktyki, Porozumienie, EfektUczenia, Sprawozdanie
+from datetime import datetime
 
 uopz_bp = Blueprint('uopz', __name__, url_prefix='/uopz')
 

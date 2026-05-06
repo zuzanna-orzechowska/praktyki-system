@@ -1,9 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- WYLICZANIE WSTECZNE OCENY E NA POTRZEBY WIDOKU (Skoro jej nie przechowujemy w bazie) -->
+{% set ocena_e = none %}
+{% if protokol and protokol.ocena_koncowa and protokol.ocena_s and protokol.ocena_u and protokol.ocena_z %}
+{% set ocena_e = ((protokol.ocena_koncowa - (0.1 * protokol.ocena_s) - (0.2 * protokol.ocena_u) - (0.3 *
+protokol.ocena_z)) / 0.4) | round(1) %}
+{% endif %}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-        Protokół Zaliczenia (Zał. 8)</h2>
+    <div>
+        {% if current_user.rola == 'uopz' %}
+        <a href="{{ url_for('uopz.teczka', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary mb-2"><i
+                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
+        {% endif %}
+        <h2
+            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Protokół Zaliczenia (Zał. 8)</h2>
+    </div>
+
     {% if protokol and protokol.ocena_koncowa %}
     <span class="badge bg-success fs-6">Praktyka Zaliczona</span>
     {% else %}
@@ -13,8 +28,7 @@
 
 <div class="alert alert-secondary border-0 shadow-sm mb-4">
     <i class="bi bi-info-circle-fill me-2"></i>
-    <strong>Informacja:</strong> Protokół wystawia komisja po odbytym egzaminie weryfikującym. Masz do niego wyłącznie
-    wgląd.
+    <strong>Informacja:</strong> Protokół wystawia komisja po odbytym egzaminie weryfikującym[cite: 11].
 </div>
 
 <div class="card shadow-sm border-0 mb-5">
@@ -25,8 +39,8 @@
         <div class="row mb-5 text-center">
             <div class="col-md-6 border-end">
                 <p class="text-muted mb-1">Student / Nr albumu:</p>
-                <p class="fw-bold fs-5">{{ current_user.imie }} {{ current_user.nazwisko }} ({{ student.nr_albumu }})
-                </p>
+                <p class="fw-bold fs-5">{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }} ({{
+                    student.nr_albumu }})</p>
             </div>
             <div class="col-md-6">
                 <p class="text-muted mb-1">Data egzaminu:</p>
@@ -36,43 +50,92 @@
         </div>
 
         <h5 class="fw-bold border-bottom pb-2 mb-3">Zestawienie Ocen Cząstkowych</h5>
-        <table class="table table-bordered text-center align-middle mb-5">
+        <table class="table table-bordered text-center align-middle mb-4">
             <thead class="table-light">
                 <tr>
                     <th style="width: 25%">Ocena za sprawozdanie (S)</th>
                     <th style="width: 25%">Ocena UOPZ (U)</th>
                     <th style="width: 25%">Ocena ZOPZ (Z)</th>
-                    <th style="width: 25%">Egzamin (E)</th>
+                    <th style="width: 25%">Ocena z Egzaminu (E)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td class="fs-4">{% if protokol and protokol.ocena_s %}{{ protokol.ocena_s }}{% else %} - {% endif
-                        %}</td>
-                    <td class="fs-4">{% if protokol and protokol.ocena_u %}{{ protokol.ocena_u }}{% else %} - {% endif
-                        %}</td>
-                    <td class="fs-4">{% if protokol and protokol.ocena_z %}{{ protokol.ocena_z }}{% else %} - {% endif
-                        %}</td>
-                    <td class="fs-4 text-muted"><small><i>Na podstawie pytań komisji</i></small></td>
+                    <td class="fs-4 {% if not protokol or not protokol.ocena_s %}text-danger{% endif %}">
+                        {% if protokol and protokol.ocena_s %}{{ protokol.ocena_s }}{% else %} Brak {% endif %}
+                    </td>
+                    <td class="fs-4 {% if not protokol or not protokol.ocena_u %}text-danger{% endif %}">
+                        {% if protokol and protokol.ocena_u %}{{ protokol.ocena_u }}{% else %} Brak {% endif %}
+                    </td>
+                    <td class="fs-4 {% if not protokol or not protokol.ocena_z %}text-danger{% endif %}">
+                        {% if protokol and protokol.ocena_z %}{{ protokol.ocena_z }}{% else %} Brak {% endif %}
+                    </td>
+                    <td class="fs-4 fw-bold text-primary">
+                        {% if ocena_e %}{{ ocena_e }}{% else %} Brak {% endif %}
+                    </td>
                 </tr>
             </tbody>
         </table>
 
+        {% if not protokol or not protokol.ocena_s or not protokol.ocena_u or not protokol.ocena_z %}
+        <div class="alert alert-warning text-center small py-2 mb-5">
+            <i class="bi bi-exclamation-triangle"></i> Brakuje niektórych ocen cząstkowych! Uzupełnij je w Karcie
+            Praktyki (Zał. 3), aby móc wyliczyć ocenę końcową.
+        </div>
+        {% endif %}
+
+        <!-- WYLICZENIE OCENY -->
         <div class="p-4 bg-light border rounded text-center mb-5">
-            <p class="text-muted mb-2">Algorytm wyliczania oceny końcowej:</p>
+            <p class="text-muted mb-2">Algorytm wyliczania oceny końcowej[cite: 11]:</p>
             <p class="fw-bold mb-3" style="font-family: monospace; font-size: 1.2rem;">0,4·E + 0,1·S + 0,2·U + 0,3·Z = K
             </p>
-            <h4 class="fw-bold mb-0 text-primary">
+            <h4 class="fw-bold mb-0 text-success">
                 Ocena Końcowa (K):
                 {% if protokol and protokol.ocena_koncowa %}
                 {{ protokol.ocena_koncowa }}
                 {% else %}
-                <span class="text-muted">Brak oceny</span>
+                <span class="text-muted">Brak wyliczenia</span>
                 {% endif %}
             </h4>
         </div>
 
-        <div class="row mt-5">
+        <!-- PANEL EDYCJI DLA UOPZ -->
+        {% if current_user.rola == 'uopz' %}
+        <form method="POST" class="p-4 border border-primary rounded bg-white shadow-sm mb-5">
+            <h5 class="fw-bold text-primary mb-3"><i class="bi bi-pencil-square"></i> Panel Egzaminacyjny UOPZ</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Data egzaminu:</label>
+                    <input type="date" class="form-control" name="data_egzaminu"
+                        value="{{ protokol.data_egzaminu if protokol else '' }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Przewodniczący Komisji:</label>
+                    <input type="text" class="form-control" name="przewodniczacy" placeholder="Imię i nazwisko"
+                        value="{{ protokol.przewodniczacy if protokol else current_user.imie ~ ' ' ~ current_user.nazwisko }}"
+                        required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Ocena z Egzaminu (E):</label>
+                    <select name="ocena_e" class="form-select" required>
+                        <option value="">Wybierz...</option>
+                        <option value="2.0" {% if ocena_e==2.0 %}selected{% endif %}>2.0 - Niedostateczny</option>
+                        <option value="3.0" {% if ocena_e==3.0 %}selected{% endif %}>3.0 - Dostateczny</option>
+                        <option value="3.5" {% if ocena_e==3.5 %}selected{% endif %}>3.5 - Dostateczny Plus</option>
+                        <option value="4.0" {% if ocena_e==4.0 %}selected{% endif %}>4.0 - Dobry</option>
+                        <option value="4.5" {% if ocena_e==4.5 %}selected{% endif %}>4.5 - Dobry Plus</option>
+                        <option value="5.0" {% if ocena_e==5.0 %}selected{% endif %}>5.0 - Bardzo Dobry</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-end mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-calculator"></i> Zapisz i przelicz ocenę
+                    końcową</button>
+            </div>
+        </form>
+        {% endif %}
+
+        <div class="row mt-4">
             <div class="col-md-6 text-center">
                 <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
                 <small class="text-muted">Przewodniczący Komisji</small><br>
