@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie
@@ -374,7 +374,7 @@ def zal4b_wniosek():
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
-    # MAGICZNY PUNKT: TWORZYMY PRAKTYKĘ, JEŚLI JESZCZE NIE ISTNIEJE
+    # stworzenie parktyki jeśli nie istnieje
     if not praktyka:
         praktyka = Praktyka(student_id=student.id, status='BRAK_ZGŁOSZENIA')
         db.session.add(praktyka)
@@ -405,7 +405,7 @@ def zal4b_wniosek():
         akcja = request.form.get('akcja')
         if akcja == 'wyslij':
             dokument.status = 'Submitted'
-            praktyka.status = 'SCIEZKA_PRACA' # WŁĄCZAMY ŚCIEŻKĘ PRACY W MENU
+            praktyka.status = 'SCIEZKA_PRACA'
             flash('Wniosek został złożony. Uruchomiono ścieżkę zaliczenia na podstawie pracy zawodowej.', 'success')
         else:
             flash('Szkic wniosku został zapisany.', 'info')
@@ -413,7 +413,7 @@ def zal4b_wniosek():
         db.session.commit()
         return redirect(url_for('student.zal4b_wniosek'))
         
-    return render_template('dokumenty/zal4b_wniosek.html', student=student, dokument=dokument, wniosek=wniosek)
+    return render_template('dokumenty/zal4b_wniosek.html', student=student, dokument=dokument, wniosek=wniosek, praktyka=praktyka)
 
 @student_bp.route('/zal7a_sprawozdanie', methods=['GET', 'POST'])
 @login_required
@@ -510,18 +510,44 @@ def zal9_oswiadczenie():
             db.session.add(oswiadczenie)
             
         oswiadczenie.miejscowosc = request.form.get('miejscowosc')
-        oswiadczenie.data_oswiadczenia = datetime.strptime(request.form.get('data_oswiadczenia'), '%Y-%m-%d').date()
+        data_str = request.form.get('data_oswiadczenia')
+        if data_str:
+            try:
+                oswiadczenie.data_oswiadczenia = datetime.strptime(data_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
         oswiadczenie.nazwa_instytucji = request.form.get('nazwa_instytucji')
         oswiadczenie.opiekun_imie_nazwisko = request.form.get('opiekun_imie_nazwisko')
         oswiadczenie.opiekun_stanowisko = request.form.get('opiekun_stanowisko')
         oswiadczenie.opiekun_telefon = request.form.get('opiekun_telefon')
         oswiadczenie.opiekun_email = request.form.get('opiekun_email')
         oswiadczenie.osoba_upowazniona = request.form.get('osoba_upowazniona')
-        
+        plik = request.files.get('skan_dokumentu')
+        if plik and plik.filename != '':
+            #czyszczenie nazwy pliku
+            oryginalna_nazwa = secure_filename(plik.filename)
+            #tworzenie unikalnej nazwy
+            unikalna_nazwa = f"{student.nr_albumu}_ZAL9_{oryginalna_nazwa}"
+            #zbudowanie pełnej ścieżki
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unikalna_nazwa)
+            #fizyczny zapis pliku na dysku
+            plik.save(filepath)
+            #zapisanie ścieżki w bazie danych
+            oswiadczenie.skan_path = f"uploads/{unikalna_nazwa}"
+
         akcja = request.form.get('akcja')
-        if akcja == 'wyslij':
+        if akcja == 'usun_plik':
+            if oswiadczenie.skan_path:
+                try:
+                    nazwa_pliku = oswiadczenie.skan_path.replace('uploads/', '')
+                    os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], nazwa_pliku))
+                except Exception:
+                    pass
+                oswiadczenie.skan_path = ""
+            flash('Zapisany plik został usunięty ze szkicu.', 'info')
+        elif akcja == 'wyslij':
             dokument.status = 'Submitted'
-            praktyka.status = 'SCIEZKA_STANDARD'  # WŁĄCZAMY ŚCIEŻKĘ STANDARDOWĄ W MENU
+            praktyka.status = 'SCIEZKA_STANDARD' 
             flash('Oświadczenie zostało złożone. Uruchomiono standardową ścieżkę praktyki.', 'success')
         else:
             flash('Szkic oświadczenia został zapisany.', 'info')
@@ -529,4 +555,5 @@ def zal9_oswiadczenie():
         db.session.commit()
         return redirect(url_for('student.zal9_oswiadczenie'))
         
-    return render_template('dokumenty/zal9_oswiadczenie.html', student=student, dokument=dokument, oswiadczenie=oswiadczenie)
+    dzisiaj = datetime.today().strftime('%Y-%m-%d')
+    return render_template('dokumenty/zal9_oswiadczenie.html', student=student, dokument=dokument, oswiadczenie=oswiadczenie, praktyka=praktyka, dzisiaj=dzisiaj)

@@ -237,14 +237,15 @@ CREATE TABLE wniosek_zaliczenie_praktyki (
 CREATE TABLE oswiadczenie (
     id                      INTEGER PRIMARY KEY AUTOINCREMENT,
     dokument_id             INTEGER NOT NULL UNIQUE,
-    miejscowosc             TEXT,
-    data_oswiadczenia       DATE,
-    nazwa_instytucji        TEXT,
-    opiekun_imie_nazwisko   TEXT,
-    opiekun_stanowisko      TEXT,
-    opiekun_telefon         TEXT,
-    opiekun_email           TEXT,
-    osoba_upowazniona       TEXT,
+    miejscowosc             TEXT NOT NULL,
+    data_oswiadczenia       DATE NOT NULL,
+    nazwa_instytucji        TEXT NOT NULL,
+    opiekun_imie_nazwisko   TEXT NOT NULL,
+    opiekun_stanowisko      TEXT NOT NULL,
+    opiekun_telefon         TEXT NOT NULL,
+    opiekun_email           TEXT NOT NULL,
+    osoba_upowazniona       TEXT NOT NULL,
+    skan_path               TEXT NOT NULL,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );

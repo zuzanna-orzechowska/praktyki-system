@@ -4,113 +4,166 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
         Oświadczenie Instytucji (Zał. 9)</h2>
-    <span class="badge bg-primary">Dokument Edytowalny</span>
+    {% if dokument and dokument.status != 'Draft' %}
+    <span class="badge bg-success">Złożone - Oczekuje na Dziekanat</span>
+    {% else %}
+    <span class="badge bg-warning text-dark">Szkic</span>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <p class="mb-1"><strong>Student:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
+        <p class="mb-1"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
+        <p class="mb-0"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
+    </div>
 </div>
 
 <div class="alert alert-info border-0 shadow-sm mb-4">
     <i class="bi bi-info-circle-fill me-2"></i>
-    <strong>Informacja:</strong> Wprowadź dane na podstawie oświadczenia otrzymanego z Zakładu Pracy[cite: 12]. Na ich
-    podstawie system zaktualizuje informacje o Twojej praktyce.
+    <strong>Instrukcja:</strong>
+    <ol class="mb-0 mt-2">
+        <li>Pobierz, wydrukuj i uzyskaj podpis oraz pieczątkę firmy na papierowym oświadczeniu.</li>
+        <li>Przepisz uważnie dane z uzyskanego dokumentu do poniższego formularza.</li>
+        <li>Załącz czytelny skan lub zdjęcie podpisanego dokumentu.</li>
+    </ol>
+    <div class="mt-3">
+        <!-- TU ZMIENIĆ W PRZYSZŁOSCI -->
+        <a href="/static/wzory/Zal_9.pdf" class="btn btn-sm btn-outline-primary" target="_blank">
+            <i class="bi bi-download"></i> Pobierz pusty druk (Zał. 9)
+        </a>
+    </div>
 </div>
 
-<form method="POST" action="{{ url_for('student.zal9_oswiadczenie') }}">
-    <div class="card shadow-sm border-0 mb-5">
-        <div class="card-body p-5 bg-white" style="border: 1px solid #dee2e6; max-width: 850px; margin: 0 auto;">
+<!-- DODANE: enctype="multipart/form-data" niezbędne do obsługi plików -->
+<form method="POST" action="{{ url_for('student.zal9_oswiadczenie') }}" enctype="multipart/form-data">
 
-            <div class="row mb-5">
-                <div class="col-md-7 text-center">
-                    <div class="border rounded p-4 text-muted d-inline-block"
-                        style="min-width: 250px; border-style: dashed !important;">
-                        <br>Pieczęć firmy<br><br>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">Dane Zakładu Pracy i Opiekuna (ZOPZ)</div>
+        <div class="card-body">
+
+            <fieldset {% if dokument and dokument.status !='Draft' %}disabled{% endif %}>
+
+                <h6 class="fw-bold mb-3 mt-2 text-primary">Informacje ogólne z dokumentu</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="miejscowosc" class="form-label">Miejscowość:</label>
+                        <input type="text" class="form-control" id="miejscowosc" name="miejscowosc"
+                            value="{{ oswiadczenie.miejscowosc if oswiadczenie else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="data_oswiadczenia" class="form-label">Data sporządzenia widniejąca na
+                            dokumencie:</label>
+                        <input type="date" class="form-control" id="data_oswiadczenia" name="data_oswiadczenia"
+                            value="{{ oswiadczenie.data_oswiadczenia if oswiadczenie else '' }}" max="{{ dzisiaj }}"
+                            required>
                     </div>
                 </div>
-                <div class="col-md-5">
-                    <div class="mb-2 d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2" name="miejscowosc"
-                            placeholder="Miejscowość" value="{{ oswiadczenie.miejscowosc if oswiadczenie else '' }}"
-                            required>, dnia
+
+                <div class="mb-4">
+                    <label for="nazwa_instytucji" class="form-label">Pełna nazwa instytucji/firmy:</label>
+                    <input type="text" class="form-control" id="nazwa_instytucji" name="nazwa_instytucji"
+                        value="{{ oswiadczenie.nazwa_instytucji if oswiadczenie else '' }}" required>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3 text-primary">Wskazany Zakładowy Opiekun Praktyki (ZOPZ)</h6>
+                <div class="alert alert-secondary small py-2">
+                    Na podstawie tych danych Dziekanat utworzy konto dostępowe dla Twojego opiekuna w zakładzie pracy.
+                    Upewnij się, że adres e-mail jest poprawny.
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="opiekun_imie_nazwisko" class="form-label">Imię i nazwisko ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_imie_nazwisko" name="opiekun_imie_nazwisko"
+                            value="{{ oswiadczenie.opiekun_imie_nazwisko if oswiadczenie else '' }}" required>
                     </div>
-                    <div>
-                        <input type="date" class="form-control form-control-sm" name="data_oswiadczenia"
-                            value="{{ oswiadczenie.data_oswiadczenia if oswiadczenie else '' }}" required>
+                    <div class="col-md-6">
+                        <label for="opiekun_stanowisko" class="form-label">Stanowisko ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_stanowisko" name="opiekun_stanowisko"
+                            value="{{ oswiadczenie.opiekun_stanowisko if oswiadczenie else '' }}" required>
                     </div>
                 </div>
-            </div>
-
-            <h4 class="text-center fw-bold mb-4">OŚWIADCZENIE INSTYTUCJI<br><small class="fs-6 fw-normal">w sprawie
-                    przyjęcia studenta na praktykę zawodową</small></h4>
-
-            <p style="text-align: justify; line-height: 2;">
-                W imieniu <input type="text" class="form-control d-inline-block"
-                    style="width: 80%; border-bottom: 1px solid #333; border-top:none; border-left:none; border-right:none; border-radius: 0; background: transparent;"
-                    name="nazwa_instytucji" placeholder="(nazwa instytucji)"
-                    value="{{ oswiadczenie.nazwa_instytucji if oswiadczenie else (praktyka.zaklad.nazwa if praktyka.zaklad else '') }}"
-                    required> oświadczam, że w terminie od
-                <input type="date" class="form-control d-inline-block w-auto border-bottom"
-                    style="border-top:none; border-left:none; border-right:none; border-radius: 0;" name="data_start"
-                    value="{{ praktyka.data_start if praktyka else '' }}" required>
-                do
-                <input type="date" class="form-control d-inline-block w-auto border-bottom"
-                    style="border-top:none; border-left:none; border-right:none; border-radius: 0;" name="data_end"
-                    value="{{ praktyka.data_end if praktyka else '' }}" required>
-                przyjmiemy na praktykę zawodową studenta Instytutu Informatyki Stosowanej im. Krzysztofa
-                Brzeskiego[cite: 12].
-            </p>
-
-            <div class="bg-light p-3 mb-4 rounded border text-center">
-                <span class="fs-5 fw-bold">{{ current_user.imie }} {{ current_user.nazwisko }}</span><br>
-                <small class="text-muted">(imię i nazwisko studenta)</small>
-            </div>
-
-            <p>
-                Akademii Nauk Stosowanych w Elblągu,<br>
-                kierunek: <strong>{{ student.kierunek }}</strong>, rok studiów: <strong>{{ student.rok_studiow
-                    }}</strong>, nr albumu: <strong>{{ student.nr_albumu }}</strong>[cite: 12].
-            </p>
-
-            <h6 class="fw-bold mt-5 mb-3">Zakładowym opiekunem praktyki będzie:</h6>
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <input type="text" class="form-control" name="opiekun_imie_nazwisko" placeholder="Imię i nazwisko"
-                        value="{{ oswiadczenie.opiekun_imie_nazwisko if oswiadczenie else '' }}" required>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="opiekun_telefon" class="form-label">Telefon kontaktowy ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_telefon" name="opiekun_telefon"
+                            value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="opiekun_email" class="form-label">Adres e-mail ZOPZ:</label>
+                        <input type="email" class="form-control" id="opiekun_email" name="opiekun_email"
+                            value="{{ oswiadczenie.opiekun_email if oswiadczenie else '' }}" required>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <input type="text" class="form-control" name="opiekun_stanowisko" placeholder="Stanowisko"
-                        value="{{ oswiadczenie.opiekun_stanowisko if oswiadczenie else '' }}" required>
-                </div>
-                <div class="col-md-6">
-                    <input type="text" class="form-control" name="opiekun_telefon" placeholder="Telefon"
-                        value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}" required>
-                </div>
-                <div class="col-md-6">
-                    <input type="email" class="form-control" name="opiekun_email" placeholder="E-mail"
-                        value="{{ oswiadczenie.opiekun_email if oswiadczenie else '' }}" required>
-                </div>
-            </div>
 
-            <h6 class="fw-bold mb-3 mt-4">Osobą upoważnioną do podpisania porozumienia dotyczącego prowadzenia praktyki
-                zawodowej jest ze strony naszej instytucji[cite: 12]:</h6>
-            <div class="row g-3 mb-5">
-                <div class="col-md-12">
-                    <input type="text" class="form-control" name="osoba_upowazniona"
-                        placeholder="Imię i nazwisko, stanowisko"
-                        value="{{ oswiadczenie.osoba_upowazniona if oswiadczenie else '' }}" required>
-                </div>
-            </div>
+                <hr class="my-4">
 
-            <div class="row mt-5">
-                <div class="col-md-6 offset-md-6 text-center">
-                    <hr style="width: 80%; margin: 0 auto; border-color: #6c757d;">
-                    <small class="text-muted">Pieczęć imienna i podpis[cite: 12]</small>
+                <h6 class="fw-bold mb-3 text-primary">Reprezentacja Firmy</h6>
+                <div class="mb-3">
+                    <label for="osoba_upowazniona" class="form-label">Osoba upoważniona do podpisania Porozumienia (Zał.
+                        1) - imię, nazwisko, stanowisko:</label>
+                    <input type="text" class="form-control" id="osoba_upowazniona" name="osoba_upowazniona"
+                        value="{{ oswiadczenie.osoba_upowazniona if oswiadczenie else '' }}"
+                        placeholder="np. Jan Kowalski, Prezes Zarządu" pattern=".*,.*"
+                        title="Wymagane wpisanie stanowiska po przecinku, np. Jan Kowalski, Prezes" required>
                 </div>
-            </div>
+
+                <hr class="my-4">
+
+                <!-- SEKCJA UPLOADU SKANU -->
+                <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-file-earmark-arrow-up"></i> Skan podpisanego
+                    dokumentu</h6>
+                <div class="mb-3">
+                    {% if oswiadczenie and oswiadczenie.skan_path %}
+                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3 py-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                            <div>
+                                <strong>Aktualnie zapisany plik:</strong><br>
+                                <a href="{{ url_for('static', filename=oswiadczenie.skan_path) }}" target="_blank"
+                                    class="alert-link">
+                                    <i class="bi bi-file-earmark-text"></i> {{ oswiadczenie.skan_path.split('/')[-1] }}
+                                </a>
+                            </div>
+                        </div>
+                        {% if not dokument or dokument.status == 'Draft' %}
+                        <button type="submit" name="akcja" value="usun_plik"
+                            class="btn btn-sm btn-outline-danger bg-white" formnovalidate
+                            onclick="return confirm('Czy na pewno chcesz trwale usunąć ten załącznik ze szkicu?');">
+                            <i class="bi bi-trash"></i> Usuń
+                        </button>
+                        {% endif %}
+                    </div>
+                    <label for="skan_dokumentu" class="form-label text-muted small">Wybierz nowy plik, jeśli chcesz
+                        nadpisać obecny (opcjonalnie):</label>
+                    <input class="form-control form-control-sm" type="file" id="skan_dokumentu" name="skan_dokumentu"
+                        accept=".pdf,.jpg,.jpeg,.png">
+                    {% else %}
+                    <label for="skan_dokumentu" class="form-label">Załącz skan oświadczenia z pieczątką (PDF, JPG,
+                        PNG):</label>
+                    <input class="form-control" type="file" id="skan_dokumentu" name="skan_dokumentu"
+                        accept=".pdf,.jpg,.jpeg,.png" required>
+                    {% endif %}
+                </div>
+
+            </fieldset>
 
         </div>
     </div>
 
-    <div class="text-end mb-5">
-        <button type="submit" class="btn btn-success" id="submitBtn"><i class="bi bi-save"></i> Zapisz
-            Oświadczenie</button>
+    {% if not dokument or dokument.status == 'Draft' %}
+    <div class="d-flex justify-content-between mb-5">
+        <button type="submit" name="akcja" value="zapisz" class="btn btn-outline-primary">
+            <i class="bi bi-save"></i> Zapisz jako szkic
+        </button>
+        <button type="submit" name="akcja" value="wyslij" class="btn btn-success"
+            onclick="return confirm('Złożenie oświadczenia przekazuje je do weryfikacji Dziekanatu. Upewnij się, że załączyłeś skan. Czy chcesz kontynuować?');">
+            <i class="bi bi-send"></i> Wyślij do weryfikacji (Zał. 9)
+        </button>
     </div>
+    {% endif %}
+
 </form>
 {% endblock %}

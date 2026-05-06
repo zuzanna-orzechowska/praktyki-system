@@ -156,16 +156,19 @@ class WniosekZaliczeniePraktyki(db.Model):
 
 class Oswiadczenie(db.Model):
     __tablename__ = 'oswiadczenie'
+    
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
-    miejscowosc = db.Column(db.String(100))
-    data_oswiadczenia = db.Column(db.Date)
-    nazwa_instytucji = db.Column(db.String(255))
-    opiekun_imie_nazwisko = db.Column(db.String(255))
-    opiekun_stanowisko = db.Column(db.String(255))
-    opiekun_telefon = db.Column(db.String(50))
-    opiekun_email = db.Column(db.String(120))
-    osoba_upowazniona = db.Column(db.String(255))
+    miejscowosc = db.Column(db.String(100), nullable=False)
+    data_oswiadczenia = db.Column(db.Date, nullable=False)
+    nazwa_instytucji = db.Column(db.String(255), nullable=False)
+    opiekun_imie_nazwisko = db.Column(db.String(255), nullable=False)
+    opiekun_stanowisko = db.Column(db.String(255), nullable=False)
+    opiekun_telefon = db.Column(db.String(50), nullable=False)
+    opiekun_email = db.Column(db.String(120), nullable=False)
+    osoba_upowazniona = db.Column(db.String(255), nullable=False)
+
+    skan_path = db.Column(db.String(255), nullable=False) 
     
     dokument = db.relationship('Dokument', backref=db.backref('oswiadczenie', uselist=False, cascade="all, delete-orphan"))
 

@@ -18,6 +18,10 @@ def create_app():
     basedir = os.path.abspath(os.path.dirname(__file__))
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
     
+    upload_folder = os.path.join(basedir, 'static', 'uploads')
+    app.config['UPLOAD_FOLDER'] = upload_folder
+    os.makedirs(upload_folder, exist_ok=True)
+    
     db.init_app(app)
     login_manager.init_app(app)
     
