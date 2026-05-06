@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from extensions import db
-from models import Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, ProgramPraktyki, Porozumienie, EfektUczenia
+from models import Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, ProgramPraktyki, Porozumienie, EfektUczenia, Sprawozdanie
 
 uopz_bp = Blueprint('uopz', __name__, url_prefix='/uopz')
 
@@ -218,4 +218,84 @@ def zal4_efekty(student_id):
         dokument=dokument,
         efekty=efekty,
         lista_statyczna=lista_statyczna
+    )
+
+@uopz_bp.route('/zal7_sprawozdanie/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal7_sprawozdanie(student_id):
+    if current_user.rola != 'uopz':
+        return redirect(url_for('index'))
+
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka:
+        flash('Brak przypisanej praktyki dla tego studenta.', 'warning')
+        return redirect(url_for('uopz.dashboard'))
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first()
+    sprawozdanie_doc = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        uwagi = request.form.get('uwagi_opiekuna', '')
+
+        if dokument:
+            dokument.uwagi_opiekuna = uwagi
+            if akcja == 'zatwierdz':
+                dokument.status = 'Approved'
+                flash('Sprawozdanie zostało zatwierdzone.', 'success')
+            elif akcja == 'odrzuc':
+                dokument.status = 'Rejected'
+                flash('Sprawozdanie zostało odrzucone i odesłane do poprawy.', 'danger')
+            db.session.commit()
+            
+        return redirect(url_for('uopz.zal7_sprawozdanie', student_id=student.id))
+
+    return render_template(
+        'dokumenty/zal7_sprawozdanie.html', 
+        student=student, 
+        praktyka=praktyka, 
+        dokument=dokument,
+        sprawozdanie=sprawozdanie_doc
+    )
+
+@uopz_bp.route('/zal7a_sprawozdanie/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal7a_sprawozdanie(student_id):
+    if current_user.rola != 'uopz':
+        return redirect(url_for('index'))
+
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka:
+        flash('Brak przypisanej praktyki dla tego studenta.', 'warning')
+        return redirect(url_for('uopz.dashboard'))
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    sprawozdanie_doc = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        uwagi = request.form.get('uwagi_opiekuna', '')
+
+        if dokument:
+            dokument.uwagi_opiekuna = uwagi
+            if akcja == 'zatwierdz_i_podpisz':
+                dokument.status = 'Approved'
+                flash('Sprawozdanie SN zostało zatwierdzone (i opatrzone podpisem UOPZ).', 'success')
+            elif akcja == 'odrzuc':
+                dokument.status = 'Rejected'
+                flash('Sprawozdanie SN zostało odrzucone do poprawy.', 'danger')
+            db.session.commit()
+            
+        return redirect(url_for('uopz.zal7a_sprawozdanie', student_id=student.id))
+
+    return render_template(
+        'dokumenty/zal7a_sprawozdanie.html', 
+        student=student, 
+        praktyka=praktyka, 
+        dokument=dokument,
+        sprawozdanie=sprawozdanie_doc
     )

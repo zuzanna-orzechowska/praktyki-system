@@ -83,6 +83,37 @@
         </div>
     </div>
 
+    <!-- Zał. 7: Sprawozdanie Standardowe -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-file-text text-secondary"></i> Sprawozdanie (Zał. 7)</h6>
+                    {% if 'ZAL7' in dokumenty and dokumenty['ZAL7'].status == 'Submitted' %}
+                    <span class="badge bg-danger">Oczekuje na weryfikację</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-3">Weryfikacja merytoryczna sprawozdania z praktyki.</p>
+                <a href="{{ url_for('uopz.zal7_sprawozdanie', student_id=student.id) }}"
+                    class="btn btn-sm btn-outline-secondary">Weryfikuj Sprawozdanie</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 7a: Sprawozdanie Praca Zawodowa -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-briefcase text-secondary"></i> Sprawozdanie SN (Zał. 7a)</h6>
+                </div>
+                <p class="text-muted small mb-3">Ocena sprawozdania realizowanego na podst. pracy / działalności.</p>
+                <a href="{{ url_for('uopz.zal7a_sprawozdanie', student_id=student.id) }}"
+                    class="btn btn-sm btn-outline-secondary">Weryfikuj Sprawozdanie SN</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Zał. 8: Protokół Zaliczenia -->
     <div class="col-md-6">
         <div class="card h-100 border-0 shadow-sm">
