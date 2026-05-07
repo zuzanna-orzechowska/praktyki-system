@@ -3,6 +3,7 @@ from extensions import db, login_manager
 from blueprints.auth import auth_bp, init_oauth
 from blueprints.student import student_bp 
 from blueprints.uopz import uopz_bp
+from blueprints.dziekanat import dziekanat_bp
 from flask_login import login_required
 import os
 from dotenv import load_dotenv
@@ -28,6 +29,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(student_bp) 
     app.register_blueprint(uopz_bp)
+    app.register_blueprint(dziekanat_bp)
     
     init_oauth(app)
     

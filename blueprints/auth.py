@@ -138,6 +138,14 @@ def auth_callback(provider):
 
     login_user(user)
     flash(f'Zalogowano pomyślnie przez {provider.capitalize()}!', 'success')
+    
+    if user.rola == 'dziekanat':
+        return redirect(url_for('dziekanat.dashboard'))
+    elif user.rola == 'student':
+        return redirect(url_for('student.dashboard'))
+    elif user.rola == 'uopz':
+        return redirect(url_for('uopz.dashboard'))
+        
     return redirect(url_for('index'))
 
 @auth_bp.route('/logout')

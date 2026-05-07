@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+    <i class="bi bi-clipboard-check text-primary"></i> Weryfikacja Oświadczeń (Zał. 9)
+</h2>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Student</th>
+                        <th>Instytucja / Firma</th>
+                        <th>Opiekun (ZOPZ)</th>
+                        <th>Data złożenia</th>
+                        <th class="text-center">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in oswiadczenia %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong>{{ o.dokument.praktyka.student.uzytkownik.imie }} {{
+                                o.dokument.praktyka.student.uzytkownik.nazwisko }}</strong><br>
+                            <small class="text-muted">Album: {{ o.dokument.praktyka.student.nr_albumu }}</small>
+                        </td>
+                        <td>{{ o.nazwa_instytucji }}</td>
+                        <td>{{ o.opiekun_imie_nazwisko }}</td>
+                        <td>{{ o.data_oswiadczenia }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('dziekanat.weryfikuj_zal9', id=o.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-search"></i> Sprawdź
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Brak nowych oświadczeń do weryfikacji.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

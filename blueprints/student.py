@@ -547,8 +547,8 @@ def zal9_oswiadczenie():
             flash('Zapisany plik został usunięty ze szkicu.', 'info')
         elif akcja == 'wyslij':
             dokument.status = 'Submitted'
-            praktyka.status = 'SCIEZKA_STANDARD' 
-            flash('Oświadczenie zostało złożone. Uruchomiono standardową ścieżkę praktyki.', 'success')
+            praktyka.status = 'OCZEKUJE_NA_ZAL9' 
+            flash('Oświadczenie zostało złożone. Oczekuje na zatwierdzenie przez Dziekanat.', 'success')
         else:
             flash('Szkic oświadczenia został zapisany.', 'info')
             

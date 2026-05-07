@@ -205,6 +205,9 @@
             {% elif current_user.rola == 'uopz' %}
             <a class="nav-link {% if 'uopz' in request.path %}active{% endif %}"
                 href="{{ url_for('uopz.dashboard') }}">PANEL STUDENTÓW</a>
+            {% elif current_user.rola == 'dziekanat' %}
+            <a class="nav-link {% if 'dziekanat' in request.path %}active{% endif %}"
+                href="{{ url_for('dziekanat.dashboard') }}">PANEL STUDENTÓW</a>
             {% endif %}
             {% endif %}
         </div>
@@ -240,7 +243,8 @@
                     <!-- POCZĄTEK: Wybór ścieżki -->
                     <div class="sidebar-section-title mt-3 text-warning">Wybierz ścieżkę:</div>
                     <li><a href="/student/zal9_oswiadczenie"
-                            class="{% if 'zal9' in request.path %}active{% endif %}">Oświadczenie ZOPZ (Zał. 9)</a></li>
+                            class="{% if 'zal9' in request.path %}active{% endif %}">Oświadczenie instytucji (Zał.
+                            9)</a></li>
                     <li><a href="/student/zal4b_wniosek"
                             class="{% if 'zal4b_wniosek' in request.path %}active{% endif %}">Wniosek o zaliczenie (Zał.
                             4b)</a></li>
@@ -298,6 +302,20 @@
                             class="{% if 'uopz/dashboard' in request.path %}active{% endif %}">Moi Studenci</a></li>
                     <li><a href="#">Wnioski do oceny (Zał. 4a)</a></li>
                     <li><a href="#">Hospitacje</a></li>
+                </ul>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.rola == 'dziekanat' %}
+                <div class="sidebar-section-title mt-4">Panel Dziekanatu</div>
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="{{ url_for('dziekanat.dashboard') }}"
+                            class="{% if 'dziekanat' in request.path %}active{% endif %}">
+                            Oświadczenia (Zał. 9)
+                        </a>
+                    </li>
+                    <li><a href="#">Porozumienia (Zał. 1)</a></li>
+                    <li><a href="#">Protokoły (Zał. 8)</a></li>
                 </ul>
                 {% endif %}
             </div>

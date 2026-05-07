@@ -91,6 +91,7 @@ CREATE TABLE dokument (
                                 )),
     plik_path       TEXT,                   -- ścieżka do wygenerowanego PDF
     uwagi_opiekuna  TEXT,                   -- uwagi UOPZ przy odrzuceniu
+    komentarz       TEXT,                   -- komentarz (np. z Dziekanatu) przy odrzuceniu
     utworzony_przez INTEGER     NOT NULL,   -- id użytkownika
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,

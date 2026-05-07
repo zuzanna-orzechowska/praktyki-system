@@ -67,6 +67,9 @@ class Dokument(db.Model):
     typ_zalacznika = db.Column(db.String(20), nullable=False) # np. 'ZAL6'
     status = db.Column(db.String(50), default='Draft')
     utworzony_przez = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
+    komentarz = db.Column(db.Text, nullable=True)
+    
+    praktyka = db.relationship('Praktyka', backref=db.backref('dokumenty', lazy=True))
 
 class WpisDziennika(db.Model):
     __tablename__ = 'wpis_dziennika'
