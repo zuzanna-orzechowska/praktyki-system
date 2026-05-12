@@ -1,10 +1,10 @@
-# plik: blueprints/auth.py
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from functools import wraps
 import os
 from extensions import login_manager, db, oauth
 from models import Uzytkownik, Student
+from werkzeug.security import check_password_hash
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -49,10 +49,33 @@ def init_oauth(app):
         client_kwargs={'scope': 'openid email profile'}
     )
 
-@auth_bp.route('/login')
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = Uzytkownik.query.filter_by(email=email).first()
+        
+        # Logika dla kont lokalnych (ZOPZ)
+        if user and user.auth_provider == 'local':
+            if user.check_password(password):
+                if user.aktywny == 1:
+                    login_user(user)
+                    flash('Zalogowano pomyślnie.', 'success')
+                    return redirect(url_for('index'))
+                else:
+                    flash('Twoje konto jest nieaktywne.', 'warning')
+            else:
+                flash('Błędne hasło.', 'danger')
+        elif user and user.auth_provider != 'local':
+            flash('To konto wymaga logowania przez Microsoft/Google.', 'info')
+        else:
+            flash('Użytkownik nie istnieje lub nie ma uprawnień do logowania lokalnego.', 'danger')
+            
     return render_template('login.html')
 
 @auth_bp.route('/login/<provider>')

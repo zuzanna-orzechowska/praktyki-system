@@ -1,6 +1,7 @@
 from extensions import db
 from flask_login import UserMixin
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Uzytkownik(db.Model, UserMixin):
     __tablename__ = 'uzytkownik'
@@ -22,6 +23,14 @@ class Uzytkownik(db.Model, UserMixin):
 
     def get_id(self):
         return str(self.id)
+    
+    def set_password(self, password):
+        self.haslo_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if not self.haslo_hash:
+            return False
+        return check_password_hash(self.haslo_hash, password)
 
 class Student(db.Model):
     __tablename__ = 'student'
