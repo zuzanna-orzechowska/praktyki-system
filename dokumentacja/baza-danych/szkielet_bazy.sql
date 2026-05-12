@@ -241,11 +241,14 @@ CREATE TABLE oswiadczenie (
     miejscowosc             TEXT NOT NULL,
     data_oswiadczenia       DATE NOT NULL,
     nazwa_instytucji        TEXT NOT NULL,
-    opiekun_imie_nazwisko   TEXT NOT NULL,
+    opiekun_imie            TEXT NOT NULL,
+    opiekun_nazwisko        TEXT NOT NULL,
     opiekun_stanowisko      TEXT NOT NULL,
     opiekun_telefon         TEXT NOT NULL,
     opiekun_email           TEXT NOT NULL,
-    osoba_upowazniona       TEXT NOT NULL,
+    osoba_upowazniona_imie          TEXT NOT NULL,
+    osoba_upowazniona_nazwisko      TEXT NOT NULL,
+    osoba_upowazniona_stanowisko    TEXT NOT NULL,
     skan_path               TEXT NOT NULL,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE

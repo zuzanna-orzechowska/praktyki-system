@@ -93,10 +93,15 @@
                     Upewnij się, że adres e-mail jest poprawny.
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="opiekun_imie_nazwisko" class="form-label">Imię i nazwisko ZOPZ:</label>
-                        <input type="text" class="form-control" id="opiekun_imie_nazwisko" name="opiekun_imie_nazwisko"
-                            value="{{ oswiadczenie.opiekun_imie_nazwisko if oswiadczenie else '' }}" required>
+                    <div class="col-md-3">
+                        <label for="opiekun_imie" class="form-label">Imię ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_imie" name="opiekun_imie"
+                            value="{{ oswiadczenie.opiekun_imie if oswiadczenie else '' }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="opiekun_nazwisko" class="form-label">Nazwisko ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_nazwisko" name="opiekun_nazwisko"
+                            value="{{ oswiadczenie.opiekun_nazwisko if oswiadczenie else '' }}" required>
                     </div>
                     <div class="col-md-6">
                         <label for="opiekun_stanowisko" class="form-label">Stanowisko ZOPZ:</label>
@@ -107,8 +112,10 @@
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <label for="opiekun_telefon" class="form-label">Telefon kontaktowy ZOPZ:</label>
-                        <input type="text" class="form-control" id="opiekun_telefon" name="opiekun_telefon"
-                            value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}" required>
+                        <input type="tel" class="form-control" id="opiekun_telefon" name="opiekun_telefon"
+                            value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}" 
+                            pattern="[\+]?[0-9\s\-]{9,15}"
+                            title="Podaj prawidłowy numer telefonu, np. 123456789, 123-456-789 lub +48 123 456 789" required>
                     </div>
                     <div class="col-md-6">
                         <label for="opiekun_email" class="form-label">Adres e-mail ZOPZ:</label>
@@ -120,13 +127,22 @@
                 <hr class="my-4">
 
                 <h6 class="fw-bold mb-3 text-primary">Reprezentacja Firmy</h6>
-                <div class="mb-3">
-                    <label for="osoba_upowazniona" class="form-label">Osoba upoważniona do podpisania Porozumienia (Zał.
-                        1) - imię, nazwisko, stanowisko:</label>
-                    <input type="text" class="form-control" id="osoba_upowazniona" name="osoba_upowazniona"
-                        value="{{ oswiadczenie.osoba_upowazniona if oswiadczenie else '' }}"
-                        placeholder="np. Jan Kowalski, Prezes Zarządu" pattern=".*,.*"
-                        title="Wymagane wpisanie stanowiska po przecinku, np. Jan Kowalski, Prezes" required>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="osoba_upowazniona_imie" class="form-label">Imię osoby upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_imie" name="osoba_upowazniona_imie"
+                            value="{{ oswiadczenie.osoba_upowazniona_imie if oswiadczenie else '' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="osoba_upowazniona_nazwisko" class="form-label">Nazwisko osoby upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_nazwisko" name="osoba_upowazniona_nazwisko"
+                            value="{{ oswiadczenie.osoba_upowazniona_nazwisko if oswiadczenie else '' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="osoba_upowazniona_stanowisko" class="form-label">Stanowisko osoby upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_stanowisko" name="osoba_upowazniona_stanowisko"
+                            value="{{ oswiadczenie.osoba_upowazniona_stanowisko if oswiadczenie else '' }}" required>
+                    </div>
                 </div>
 
                 <hr class="my-4">

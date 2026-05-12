@@ -517,11 +517,14 @@ def zal9_oswiadczenie():
             except ValueError:
                 pass
         oswiadczenie.nazwa_instytucji = request.form.get('nazwa_instytucji')
-        oswiadczenie.opiekun_imie_nazwisko = request.form.get('opiekun_imie_nazwisko')
+        oswiadczenie.opiekun_imie = request.form.get('opiekun_imie')
+        oswiadczenie.opiekun_nazwisko = request.form.get('opiekun_nazwisko')
         oswiadczenie.opiekun_stanowisko = request.form.get('opiekun_stanowisko')
         oswiadczenie.opiekun_telefon = request.form.get('opiekun_telefon')
         oswiadczenie.opiekun_email = request.form.get('opiekun_email')
-        oswiadczenie.osoba_upowazniona = request.form.get('osoba_upowazniona')
+        oswiadczenie.osoba_upowazniona_imie = request.form.get('osoba_upowazniona_imie')
+        oswiadczenie.osoba_upowazniona_nazwisko = request.form.get('osoba_upowazniona_nazwisko')
+        oswiadczenie.osoba_upowazniona_stanowisko = request.form.get('osoba_upowazniona_stanowisko')
         plik = request.files.get('skan_dokumentu')
         if plik and plik.filename != '':
             #czyszczenie nazwy pliku

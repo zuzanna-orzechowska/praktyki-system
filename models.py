@@ -174,11 +174,14 @@ class Oswiadczenie(db.Model):
     miejscowosc = db.Column(db.String(100), nullable=False)
     data_oswiadczenia = db.Column(db.Date, nullable=False)
     nazwa_instytucji = db.Column(db.String(255), nullable=False)
-    opiekun_imie_nazwisko = db.Column(db.String(255), nullable=False)
+    opiekun_imie = db.Column(db.String(100), nullable=False)
+    opiekun_nazwisko = db.Column(db.String(150), nullable=False)
     opiekun_stanowisko = db.Column(db.String(255), nullable=False)
     opiekun_telefon = db.Column(db.String(50), nullable=False)
     opiekun_email = db.Column(db.String(120), nullable=False)
-    osoba_upowazniona = db.Column(db.String(255), nullable=False)
+    osoba_upowazniona_imie = db.Column(db.String(100), nullable=False)
+    osoba_upowazniona_nazwisko = db.Column(db.String(150), nullable=False)
+    osoba_upowazniona_stanowisko = db.Column(db.String(255), nullable=False)
 
     skan_path = db.Column(db.String(255), nullable=False) 
     

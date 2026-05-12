@@ -27,7 +27,7 @@
                             <small class="text-muted">Album: {{ o.dokument.praktyka.student.nr_albumu }}</small>
                         </td>
                         <td>{{ o.nazwa_instytucji }}</td>
-                        <td>{{ o.opiekun_imie_nazwisko }}</td>
+                        <td>{{ o.opiekun_imie }} {{ o.opiekun_nazwisko }}</td>
                         <td>{{ o.data_oswiadczenia }}</td>
                         <td class="text-center">
                             <a href="{{ url_for('dziekanat.weryfikuj_zal9', id=o.id) }}" class="btn btn-sm btn-primary">

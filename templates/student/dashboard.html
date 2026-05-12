@@ -55,7 +55,7 @@
         <strong>Witaj, {{ current_user.imie }} {{ current_user.nazwisko }}!</strong>
         {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki else none %}
         <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-primary">{{ praktyka.status if
-                praktyka else 'BRAK_ZGŁOSZENIA' }}</span></span>
+                praktyka else 'Praktyka nie został jeszcze zgłoszona' }}</span></span>
     </div>
 </div>
 
