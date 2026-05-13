@@ -5,6 +5,7 @@ from blueprints.student import student_bp
 from blueprints.uopz import uopz_bp
 from blueprints.dziekanat import dziekanat_bp
 from blueprints.admin import admin_bp
+from blueprints.zopz import zopz_bp
 from flask_login import login_required
 import os
 from dotenv import load_dotenv
@@ -54,6 +55,7 @@ def create_app():
     app.register_blueprint(uopz_bp)
     app.register_blueprint(dziekanat_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(zopz_bp)
     
     init_oauth(app)
     

@@ -208,6 +208,9 @@
             {% elif current_user.rola == 'dziekanat' %}
             <a class="nav-link {% if 'dziekanat' in request.path %}active{% endif %}"
                 href="{{ url_for('dziekanat.dashboard') }}">PANEL STUDENTÓW</a>
+            {% elif current_user.rola == 'zopz' %}
+            <a class="nav-link {% if 'zopz' in request.path %}active{% endif %}"
+                href="{{ url_for('zopz.dashboard') }}">PANEL FIRMY</a>
             {% endif %}
             {% endif %}
         </div>
@@ -328,6 +331,16 @@
                 <div class="sidebar-section-title mt-4">Panel Administratora</div>
                 <ul class="sidebar-menu">
                     <li><a href="{{ url_for('admin.dashboard') }}">Zarządzaj kontami</a></li>
+                </ul>
+                {% endif %}
+
+                {% if current_user.is_authenticated and current_user.rola == 'zopz' %}
+                <div class="sidebar-section-title mt-4">Panel Zakładu Pracy</div>
+                <ul class="sidebar-menu">
+                    <li><a href="{{ url_for('zopz.dashboard') }}"
+                            class="{% if 'zopz/dashboard' in request.path %}active{% endif %}">Moi Praktykanci</a></li>
+                    <li><a href="#" class="text-muted">Porozumienia (Zał. 1)</a></li>
+                    <li><a href="#" class="text-muted">Dzienniki praktyk</a></li>
                 </ul>
                 {% endif %}
             </div>
