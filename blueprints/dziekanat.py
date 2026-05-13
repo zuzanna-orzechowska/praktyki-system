@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from models import Praktyka, Dokument, Oswiadczenie, Uzytkownik, ZakladPracy, Student
 from extensions import db
@@ -36,6 +36,7 @@ def zal9_lista():
                            oswiadczenia=oswiadczenia_do_weryfikacji,
                            oswiadczenia_zatwierdzone=oswiadczenia_zatwierdzone)
 
+
 @dziekanat_bp.route('/weryfikuj_zal9/<int:id>', methods=['GET', 'POST'])
 @login_required
 def weryfikuj_zal9(id):
@@ -70,3 +71,17 @@ def weryfikuj_zal9(id):
             return redirect(url_for('dziekanat.zal9_lista'))
             
     return render_template('dokumenty/zal9_oswiadczenie.html', oswiadczenie=oswiadczenie, student=student, dokument=dokument)
+
+@dziekanat_bp.route('/przekaz_do_it/<int:oswiadczenie_id>', methods=['POST'])
+@login_required
+def przekaz_do_it(oswiadczenie_id):
+    if current_user.rola != 'dziekanat':
+        abort(403)
+    
+    oswiadczenie = Oswiadczenie.query.get_or_404(oswiadczenie_id)
+    #zmiana statusu, żeby dokument pojawił się w panelu Admina
+    oswiadczenie.dokument.status = 'AwaitingAccount'
+    db.session.commit()
+    
+    flash('Dane przekazane do Administratora IT w celu utworzenia konta.', 'info')
+    return redirect(url_for('dziekanat.dashboard'))

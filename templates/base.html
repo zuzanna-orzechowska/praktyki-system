@@ -324,6 +324,12 @@
                     <li><a href="#">Protokoły (Zał. 8)</a></li>
                 </ul>
                 {% endif %}
+                {% if current_user.rola == 'admin' %}
+                <div class="sidebar-section-title mt-4">Panel Administratora</div>
+                <ul class="sidebar-menu">
+                    <li><a href="{{ url_for('admin.dashboard') }}">Zarządzaj kontami</a></li>
+                </ul>
+                {% endif %}
             </div>
 
             <!-- Content Area -->

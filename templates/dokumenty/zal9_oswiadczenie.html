@@ -52,7 +52,6 @@
 </div>
 {% endif %}
 
-<!-- DODANE: enctype="multipart/form-data" niezbędne do obsługi plików -->
 <form method="POST"
     action="{% if current_user.rola == 'dziekanat' %}{{ url_for('dziekanat.weryfikuj_zal9', id=oswiadczenie.id) }}{% else %}{{ url_for('student.zal9_oswiadczenie') }}{% endif %}"
     enctype="multipart/form-data">
@@ -256,6 +255,18 @@
         <button type="submit" name="akcja" value="zatwierdz" class="btn btn-success flex-grow-1"
             onclick="return confirm('Czy na pewno chcesz zatwierdzić to oświadczenie?');">
             <i class="bi bi-check-circle"></i> Zatwierdź oświadczenie
+        </button>
+    </div>
+
+    {% elif current_user.rola == 'dziekanat' and dokument.status == 'Approved' %}
+    <div class="alert alert-success mt-3 mb-5 border-0 shadow-sm">
+        <h5 class="alert-heading fw-bold"><i class="bi bi-check-circle-fill"></i> Oświadczenie zatwierdzone</h5>
+        <p>Dokument został pomyślnie zweryfikowany. Możesz teraz przekazać dane wyznaczonego opiekuna (ZOPZ) do
+            Administratora, aby wygenerował mu konto dostępowe w systemie.</p>
+        <hr>
+        <button type="submit" formaction="{{ url_for('dziekanat.przekaz_do_it', oswiadczenie_id=oswiadczenie.id) }}"
+            class="btn btn-primary">
+            <i class="bi bi-person-lines-fill"></i> Przekaż dane do Administratora IT
         </button>
     </div>
     {% endif %}

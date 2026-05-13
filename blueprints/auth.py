@@ -66,6 +66,8 @@ def login():
                 if user.aktywny == 1:
                     login_user(user)
                     flash('Zalogowano pomyślnie.', 'success')
+                    if user.rola == 'admin':
+                        return redirect(url_for('admin.dashboard'))
                     return redirect(url_for('index'))
                 else:
                     flash('Twoje konto jest nieaktywne.', 'warning')
@@ -114,7 +116,10 @@ def auth_callback(provider):
         domain = email.split('@')[1] if '@' in email else ''
         nr_albumu = email.split('@')[0] if domain == 'student.ans-elblag.pl' else None
         
-        if email == 'orzechosiaa.searchw@gmail.com': #EMAIL DO WYKASOWANIA W PRZYSZLOSCI TYLK ODO CELOW TESTOWYCH
+        if email == 'Kaprulcia@outlook.com': #DO TESTOW KONTO ADMINA POZNIEJ TO ZMIENIC
+            rola = 'admin'
+            aktywny = 1
+        elif email == 'orzechosiaa.searchw@gmail.com': #EMAIL DO WYKASOWANIA W PRZYSZLOSCI TYLK ODO CELOW TESTOWYCH
             rola = 'dziekanat'
             aktywny = 1
         elif domain == 'student.ans-elblag.pl': #TUTAJ MA BYĆ IF
@@ -168,6 +173,8 @@ def auth_callback(provider):
         return redirect(url_for('student.dashboard'))
     elif user.rola == 'uopz':
         return redirect(url_for('uopz.dashboard'))
+    elif user.rola == 'admin':
+        return redirect(url_for('admin.dashboard'))
         
     return redirect(url_for('index'))
 
