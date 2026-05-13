@@ -525,6 +525,33 @@ def zal9_oswiadczenie():
         oswiadczenie.osoba_upowazniona_imie = request.form.get('osoba_upowazniona_imie')
         oswiadczenie.osoba_upowazniona_nazwisko = request.form.get('osoba_upowazniona_nazwisko')
         oswiadczenie.osoba_upowazniona_stanowisko = request.form.get('osoba_upowazniona_stanowisko')
+        
+        # Nowe pola: terminy praktyki i rok studiów
+        data_start_str = request.form.get('data_start')
+        data_end_str = request.form.get('data_end')
+        if data_start_str:
+            try:
+                praktyka.data_start = datetime.strptime(data_start_str, '%Y-%m-%d').date()
+                oswiadczenie.termin_od = praktyka.data_start
+            except ValueError:
+                pass
+        if data_end_str:
+            try:
+                praktyka.data_end = datetime.strptime(data_end_str, '%Y-%m-%d').date()
+                oswiadczenie.termin_do = praktyka.data_end
+            except ValueError:
+                pass
+        
+        rok = request.form.get('rok_studiow')
+        if rok and rok.isdigit():
+            student.rok_studiow = int(rok)
+            oswiadczenie.rok_studiow = int(rok)
+            
+        kierunek = request.form.get('kierunek')
+        if kierunek:
+            student.kierunek = kierunek
+            oswiadczenie.kierunek = kierunek
+
         plik = request.files.get('skan_dokumentu')
         if plik and plik.filename != '':
             #czyszczenie nazwy pliku
@@ -549,6 +576,11 @@ def zal9_oswiadczenie():
                 oswiadczenie.skan_path = ""
             flash('Zapisany plik został usunięty ze szkicu.', 'info')
         elif akcja == 'wyslij':
+            if not (praktyka.data_start and praktyka.data_end):
+                flash('Błąd: Podaj datę rozpoczęcia i zakończenia praktyki przed wysłaniem formularza.', 'danger')
+                db.session.commit()
+                return redirect(url_for('student.zal9_oswiadczenie'))
+
             dokument.status = 'Submitted'
             praktyka.status = 'OCZEKUJE_NA_ZAL9' 
             flash('Oświadczenie zostało złożone. Oczekuje na zatwierdzenie przez Dziekanat.', 'success')

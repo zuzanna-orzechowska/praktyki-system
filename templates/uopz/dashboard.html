@@ -29,15 +29,8 @@
                     <td>{{ p.student.nr_albumu }}</td>
                     <td>{{ p.zaklad.nazwa if p.zaklad else 'Brak' }}</td>
                     <td>
-                        {% if p.status == 'OCZEKUJE_NA_ZAL9' or p.status == 'PRAKTYKA_W_TOKU' %}
-                        <span class="badge bg-warning text-dark">{{ p.status }}</span>
-                        {% elif p.status == 'DOKUMENTY_ZLOZONE' or p.status == 'EGZAMIN' %}
-                        <span class="badge bg-info text-dark">{{ p.status }}</span>
-                        {% elif p.status == 'ZALICZONA' %}
-                        <span class="badge bg-success">{{ p.status }}</span>
-                        {% else %}
-                        <span class="badge bg-secondary">{{ p.status }}</span>
-                        {% endif %}
+                        {% set status_text, status_color = format_status(p.status) %}
+                        <span class="badge bg-{{ status_color }}">{{ status_text }}</span>
                     </td>
                     <td class="text-end pe-4">
                         <a href="{{ url_for('uopz.teczka', student_id=p.student.id) }}"

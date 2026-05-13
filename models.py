@@ -77,6 +77,8 @@ class Dokument(db.Model):
     status = db.Column(db.String(50), default='Draft')
     utworzony_przez = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
     komentarz = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     praktyka = db.relationship('Praktyka', backref=db.backref('dokumenty', lazy=True))
 
@@ -171,6 +173,10 @@ class Oswiadczenie(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    termin_od = db.Column(db.Date)
+    termin_do = db.Column(db.Date)
+    rok_studiow = db.Column(db.Integer)
+    kierunek = db.Column(db.String(100))
     miejscowosc = db.Column(db.String(100), nullable=False)
     data_oswiadczenia = db.Column(db.Date, nullable=False)
     nazwa_instytucji = db.Column(db.String(255), nullable=False)

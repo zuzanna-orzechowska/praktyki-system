@@ -238,6 +238,10 @@ CREATE TABLE wniosek_zaliczenie_praktyki (
 CREATE TABLE oswiadczenie (
     id                      INTEGER PRIMARY KEY AUTOINCREMENT,
     dokument_id             INTEGER NOT NULL UNIQUE,
+    termin_od               DATE,
+    termin_do               DATE,
+    rok_studiow             INTEGER,
+    kierunek                TEXT,
     miejscowosc             TEXT NOT NULL,
     data_oswiadczenia       DATE NOT NULL,
     nazwa_instytucji        TEXT NOT NULL,

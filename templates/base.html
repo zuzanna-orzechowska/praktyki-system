@@ -310,7 +310,13 @@
                 <ul class="sidebar-menu">
                     <li>
                         <a href="{{ url_for('dziekanat.dashboard') }}"
-                            class="{% if 'dziekanat' in request.path %}active{% endif %}">
+                            class="{% if request.endpoint == 'dziekanat.dashboard' %}active{% endif %}">
+                            Panel Główny
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.zal9_lista') }}"
+                            class="{% if request.endpoint == 'dziekanat.zal9_lista' %}active{% endif %}">
                             Oświadczenia (Zał. 9)
                         </a>
                     </li>

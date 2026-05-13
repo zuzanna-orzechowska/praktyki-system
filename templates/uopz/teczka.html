@@ -23,7 +23,8 @@
             </div>
             <div class="col-md-4">
                 <p class="mb-1 text-muted small">Status</p>
-                <span class="badge bg-primary">{{ praktyka.status }}</span>
+                {% set status_text, status_color = format_status(praktyka.status) %}
+                <span class="badge bg-{{ status_color }}">{{ status_text }}</span>
             </div>
         </div>
     </div>

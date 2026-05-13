@@ -26,6 +26,28 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     
+    @app.context_processor
+    def utility_processor():
+        def format_status(status):
+            if not status:
+                return ('Brak zgłoszenia', 'secondary')
+            
+            status_map = {
+                'BRAK_ZGŁOSZENIA': ('Brak zgłoszenia', 'secondary'),
+                'OCZEKUJE_NA_ZAL9': ('Oczekuje na załącznik 9', 'warning text-dark'),
+                'ZAL9_ZATWIERDZONE': ('Zał. 9 zatwierdzony', 'success'),
+                'SCIEZKA_PRACA': ('Zaliczenie z pracy', 'info text-dark'),
+                'PROGRAM_UZGODNIONY': ('Program uzgodniony', 'primary'),
+                'SKIEROWANIE_WYDANE': ('Skierowanie wydane', 'success'),
+                'PRAKTYKA_W_TOKU': ('Praktyka w toku', 'warning text-dark'),
+                'DOKUMENTY_ZLOZONE': ('Dokumenty złożone', 'info text-dark'),
+                'EGZAMIN': ('Egzamin', 'info text-dark'),
+                'ZALICZONA': ('Praktyka zaliczona', 'success')
+            }
+            return status_map.get(status, (status.replace('_', ' ').capitalize(), 'secondary'))
+            
+        return dict(format_status=format_status)
+
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(student_bp) 
     app.register_blueprint(uopz_bp)

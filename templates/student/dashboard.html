@@ -54,8 +54,8 @@
     <div>
         <strong>Witaj, {{ current_user.imie }} {{ current_user.nazwisko }}!</strong>
         {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki else none %}
-        <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-primary">{{ praktyka.status if
-                praktyka else 'Praktyka nie został jeszcze zgłoszona' }}</span></span>
+        {% set status_text, status_color = format_status(praktyka.status if praktyka else none) %}
+        <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-{{ status_color }}">{{ status_text }}</span></span>
     </div>
 </div>
 

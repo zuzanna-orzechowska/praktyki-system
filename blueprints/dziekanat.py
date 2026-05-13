@@ -12,12 +12,29 @@ def dashboard():
         flash('Brak uprawnień do panelu dziekanatu.', 'danger')
         return redirect(url_for('index'))
     
-    # pobranie oświadczenia (Zał. 9), które mają status 'Submitted'
+    # pobranie liczby oświadczeń (Zał. 9) oczekujących na weryfikację
+    zal9_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL9').count()
+    
+    # w przyszłości można dodać zal1_count, zal8_count itp.
+    return render_template('dziekanat/dashboard.html', zal9_count=zal9_count)
+
+@dziekanat_bp.route('/zal9')
+@login_required
+def zal9_lista():
+    if current_user.rola != 'dziekanat':
+        return redirect(url_for('index'))
+        
     oswiadczenia_do_weryfikacji = db.session.query(Oswiadczenie)\
         .join(Dokument)\
         .filter(Dokument.status == 'Submitted', Dokument.typ_zalacznika == 'ZAL9').all()
-    
-    return render_template('dziekanat/dashboard.html', oswiadczenia=oswiadczenia_do_weryfikacji)
+        
+    oswiadczenia_zatwierdzone = db.session.query(Oswiadczenie)\
+        .join(Dokument)\
+        .filter(Dokument.status == 'Approved', Dokument.typ_zalacznika == 'ZAL9').order_by(Dokument.updated_at.desc()).all()
+        
+    return render_template('dziekanat/zal9_lista.html', 
+                           oswiadczenia=oswiadczenia_do_weryfikacji,
+                           oswiadczenia_zatwierdzone=oswiadczenia_zatwierdzone)
 
 @dziekanat_bp.route('/weryfikuj_zal9/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -41,7 +58,7 @@ def weryfikuj_zal9(id):
             
             db.session.commit()
             flash(f'Oświadczenie studenta {student.uzytkownik.nazwisko} zostało zatwierdzone.', 'success')
-            return redirect(url_for('dziekanat.dashboard'))
+            return redirect(url_for('dziekanat.zal9_lista'))
             
         elif akcja == 'odrzuc':
             dokument.status = 'Draft'
@@ -50,6 +67,6 @@ def weryfikuj_zal9(id):
             praktyka.status = 'OCZEKUJE_NA_ZAL9'
             db.session.commit()
             flash('Oświadczenie odrzucone do poprawy przez studenta.', 'warning')
-            return redirect(url_for('dziekanat.dashboard'))
+            return redirect(url_for('dziekanat.zal9_lista'))
             
     return render_template('dokumenty/zal9_oswiadczenie.html', oswiadczenie=oswiadczenie, student=student, dokument=dokument)

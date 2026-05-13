@@ -87,6 +87,41 @@
 
                 <hr class="my-4">
 
+                <h6 class="fw-bold mb-3 text-primary">Informacje o praktyce i studencie</h6>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="kierunek" class="form-label">Kierunek:</label>
+                        <input type="text" class="form-control" id="kierunek" name="kierunek"
+                            value="{{ student.kierunek if student.kierunek else 'informatyka' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="rok_studiow" class="form-label">Rok studiów (np. 1, 2, 3, 4):</label>
+                        <input type="number" class="form-control" id="rok_studiow" name="rok_studiow" min="1" max="5"
+                            value="{{ student.rok_studiow if student.rok_studiow else '' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="nr_albumu_readonly" class="form-label">Nr albumu:</label>
+                        <input type="text" class="form-control bg-light" id="nr_albumu_readonly"
+                            value="{{ student.nr_albumu }}" readonly>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="data_start" class="form-label">Termin praktyki (od):</label>
+                        <input type="date" class="form-control" id="data_start" name="data_start"
+                            value="{{ praktyka.data_start.strftime('%Y-%m-%d') if praktyka and praktyka.data_start else '' }}"
+                            required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="data_end" class="form-label">Termin praktyki (do):</label>
+                        <input type="date" class="form-control" id="data_end" name="data_end"
+                            value="{{ praktyka.data_end.strftime('%Y-%m-%d') if praktyka and praktyka.data_end else '' }}"
+                            required>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
                 <h6 class="fw-bold mb-3 text-primary">Wskazany Zakładowy Opiekun Praktyki (ZOPZ)</h6>
                 <div class="alert alert-secondary small py-2">
                     Na podstawie tych danych Dziekanat utworzy konto dostępowe dla Twojego opiekuna w zakładzie pracy.
@@ -113,9 +148,10 @@
                     <div class="col-md-6">
                         <label for="opiekun_telefon" class="form-label">Telefon kontaktowy ZOPZ:</label>
                         <input type="tel" class="form-control" id="opiekun_telefon" name="opiekun_telefon"
-                            value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}" 
+                            value="{{ oswiadczenie.opiekun_telefon if oswiadczenie else '' }}"
                             pattern="[\+]?[0-9\s\-]{9,15}"
-                            title="Podaj prawidłowy numer telefonu, np. 123456789, 123-456-789 lub +48 123 456 789" required>
+                            title="Podaj prawidłowy numer telefonu, np. 123456789, 123-456-789 lub +48 123 456 789"
+                            required>
                     </div>
                     <div class="col-md-6">
                         <label for="opiekun_email" class="form-label">Adres e-mail ZOPZ:</label>
@@ -130,17 +166,21 @@
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="osoba_upowazniona_imie" class="form-label">Imię osoby upoważnionej:</label>
-                        <input type="text" class="form-control" id="osoba_upowazniona_imie" name="osoba_upowazniona_imie"
+                        <input type="text" class="form-control" id="osoba_upowazniona_imie"
+                            name="osoba_upowazniona_imie"
                             value="{{ oswiadczenie.osoba_upowazniona_imie if oswiadczenie else '' }}" required>
                     </div>
                     <div class="col-md-4">
                         <label for="osoba_upowazniona_nazwisko" class="form-label">Nazwisko osoby upoważnionej:</label>
-                        <input type="text" class="form-control" id="osoba_upowazniona_nazwisko" name="osoba_upowazniona_nazwisko"
+                        <input type="text" class="form-control" id="osoba_upowazniona_nazwisko"
+                            name="osoba_upowazniona_nazwisko"
                             value="{{ oswiadczenie.osoba_upowazniona_nazwisko if oswiadczenie else '' }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label for="osoba_upowazniona_stanowisko" class="form-label">Stanowisko osoby upoważnionej:</label>
-                        <input type="text" class="form-control" id="osoba_upowazniona_stanowisko" name="osoba_upowazniona_stanowisko"
+                        <label for="osoba_upowazniona_stanowisko" class="form-label">Stanowisko osoby
+                            upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_stanowisko"
+                            name="osoba_upowazniona_stanowisko"
                             value="{{ oswiadczenie.osoba_upowazniona_stanowisko if oswiadczenie else '' }}" required>
                     </div>
                 </div>
@@ -196,8 +236,7 @@
         <button type="submit" name="akcja" value="zapisz" class="btn btn-outline-primary">
             <i class="bi bi-save"></i> Zapisz jako szkic
         </button>
-        <button type="submit" name="akcja" value="wyslij" class="btn btn-success"
-            onclick="return confirm('Złożenie oświadczenia przekazuje je do weryfikacji Dziekanatu. Upewnij się, że załączyłeś skan. Czy chcesz kontynuować?');">
+        <button type="submit" name="akcja" value="wyslij" class="btn btn-success" onclick="return confirmSubmit();">
             <i class="bi bi-send"></i> Wyślij do weryfikacji (Zał. 9)
         </button>
     </div>
@@ -222,4 +261,44 @@
     {% endif %}
 
 </form>
+
+<script>
+    function confirmSubmit() {
+        let dataStart = document.getElementById('data_start').value;
+        let dataEnd = document.getElementById('data_end').value;
+        let rokStudiow = document.getElementById('rok_studiow').value;
+
+        let ostrzezenia = [];
+
+
+        if (dataStart) {
+            let dStart = new Date(dataStart);
+            if (dStart.getMonth() >= 9) {
+                ostrzezenia.push("- Praktyka powinna rozpocząć się przed 1 października (semestr 7).");
+            }
+        }
+
+        if (dataStart && dataEnd) {
+            let dStart = new Date(dataStart);
+            let dEnd = new Date(dataEnd);
+            let months = (dEnd.getFullYear() - dStart.getFullYear()) * 12 + dEnd.getMonth() - dStart.getMonth();
+            if (dEnd.getDate() < dStart.getDate()) {
+                months--;
+            }
+            if (months < 6) {
+                ostrzezenia.push("- Praktyka jest krótsza niż wymagane 6 miesięcy.");
+            }
+        }
+
+        let baseMsg = "Złożenie oświadczenia przekazuje je do weryfikacji Dziekanatu. Upewnij się, że załączyłeś skan.\n\n";
+
+        if (ostrzezenia.length > 0) {
+            let warnMsg = baseMsg + "UWAGA! Twoje dane odbiegają od regulaminu:\n" + ostrzezenia.join("\n") + "\n\nCzy na pewno chcesz wysłać wniosek mimo to? Dziekanat będzie o tym wiedział i może go odrzucić.";
+            return confirm(warnMsg);
+        } else {
+            return confirm(baseMsg + "Czy chcesz kontynuować?");
+        }
+    }
+</script>
+
 {% endblock %}
