@@ -30,7 +30,7 @@ def zal9_lista():
         
     oswiadczenia_zatwierdzone = db.session.query(Oswiadczenie)\
         .join(Dokument)\
-        .filter(Dokument.status == 'Approved', Dokument.typ_zalacznika == 'ZAL9').order_by(Dokument.updated_at.desc()).all()
+        .filter(Dokument.status.in_(['Approved', 'AwaitingAccount', 'AccountCreated']), Dokument.typ_zalacznika == 'ZAL9').order_by(Dokument.updated_at.desc()).all()
         
     return render_template('dziekanat/zal9_lista.html', 
                            oswiadczenia=oswiadczenia_do_weryfikacji,
@@ -52,13 +52,12 @@ def weryfikuj_zal9(id):
         akcja = request.form.get('akcja')
         
         if akcja == 'zatwierdz':
-            # TYLKO ZMIANA STATUSÓW - bez tworzenia kont
-            dokument.status = 'Approved'
+            dokument.status = 'AwaitingAccount'
             dokument.komentarz = None
             praktyka.status = 'ZAL9_ZATWIERDZONE'
             
             db.session.commit()
-            flash(f'Oświadczenie studenta {student.uzytkownik.nazwisko} zostało zatwierdzone.', 'success')
+            flash(f'Oświadczenie studenta {student.uzytkownik.nazwisko} zostało zatwierdzone. Dane przekazano do IT.', 'success')
             return redirect(url_for('dziekanat.zal9_lista'))
             
         elif akcja == 'odrzuc':

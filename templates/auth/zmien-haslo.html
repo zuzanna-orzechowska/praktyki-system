@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-warning text-dark fw-bold py-3">
+                <i class="bi bi-shield-lock-fill me-2"></i> Wymagana zmiana hasła
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">
+                    Zalogowałeś się przy użyciu hasła tymczasowego wygenerowanego przez system.
+                    Ze względów bezpieczeństwa musisz ustawić własne, silne hasło dostępu przed przejściem do panelu.
+                </p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show small" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('auth.zmien_haslo') }}">
+                    <div class="mb-3">
+                        <label for="nowe_haslo" class="form-label small fw-bold">Nowe hasło:</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="nowe_haslo" name="nowe_haslo"
+                                placeholder="Minimum 8 znaków" required minlength="8">
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="nowe_haslo" title="Pokaż/ukryj hasło">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="potwierdz_haslo" class="form-label small fw-bold">Potwierdź nowe hasło:</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="potwierdz_haslo" name="potwierdz_haslo"
+                                placeholder="Wpisz hasło ponownie" required minlength="8">
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="potwierdz_haslo" title="Pokaż/ukryj hasło">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div id="password-match-message" class="small mt-1 d-none fw-bold"></div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn btn-primary w-100 py-2 fw-bold">
+                        <i class="bi bi-check-circle-fill me-1"></i> Zapisz nowe hasło i przejdź do systemu
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    const toggleButtons = document.querySelectorAll('.toggle-password');
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    });
+
+    // Password match validation
+    const noweHaslo = document.getElementById('nowe_haslo');
+    const potwierdzHaslo = document.getElementById('potwierdz_haslo');
+    const matchMessage = document.getElementById('password-match-message');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function checkPasswords() {
+        // If confirm field is empty, don't show validation
+        if (potwierdzHaslo.value === '') {
+            matchMessage.classList.add('d-none');
+            potwierdzHaslo.classList.remove('is-invalid', 'is-valid');
+            submitBtn.disabled = false;
+            return;
+        }
+
+        matchMessage.classList.remove('d-none');
+        
+        if (noweHaslo.value !== potwierdzHaslo.value) {
+            matchMessage.textContent = 'Hasła nie są identyczne.';
+            matchMessage.className = 'small mt-1 text-danger fw-bold';
+            potwierdzHaslo.classList.add('is-invalid');
+            potwierdzHaslo.classList.remove('is-valid');
+            submitBtn.disabled = true;
+        } else {
+            matchMessage.textContent = 'Hasła są identyczne.';
+            matchMessage.className = 'small mt-1 text-success fw-bold';
+            potwierdzHaslo.classList.remove('is-invalid');
+            potwierdzHaslo.classList.add('is-valid');
+            submitBtn.disabled = false;
+        }
+    }
+
+    noweHaslo.addEventListener('input', checkPasswords);
+    potwierdzHaslo.addEventListener('input', checkPasswords);
+    
+    // Check on form submit just to be safe
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (noweHaslo.value !== potwierdzHaslo.value) {
+            e.preventDefault();
+            checkPasswords();
+        }
+    });
+});
+</script>
+{% endblock %}

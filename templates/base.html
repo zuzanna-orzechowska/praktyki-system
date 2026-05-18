@@ -330,7 +330,12 @@
                 {% if current_user.rola == 'admin' %}
                 <div class="sidebar-section-title mt-4">Panel Administratora</div>
                 <ul class="sidebar-menu">
-                    <li><a href="{{ url_for('admin.dashboard') }}">Zarządzaj kontami</a></li>
+                    <li><a href="{{ url_for('admin.dashboard') }}">Zarządzaj kontami
+                    {% set pending = pending_accounts_count() %}
+                    {% if pending > 0 %}
+                    <span class="badge bg-danger ms-2">{{ pending }}</span>
+                    {% endif %}
+                    </a></li>
                 </ul>
                 {% endif %}
 

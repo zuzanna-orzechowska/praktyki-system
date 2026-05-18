@@ -5,7 +5,7 @@
 
 <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#oczekujacy">Oczekujący
-            ({{ oczekujacy|length }})</button></li>
+            <span class="badge bg-danger">{{ oczekujacy|length + zgloszenia_zopz|length }}</span></button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pracownicy">Pracownicy
             Uczelni</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#zopz">Opiekunowie ZOPZ</button>
@@ -41,16 +41,14 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
 
-    <div class="tab-pane fade" id="zopz">
         {% if zgloszenia_zopz %}
-        <div class="card mb-4 border-warning">
+        <div class="card mt-4 border-warning">
             <div class="card-header bg-warning text-dark">
-                Zgłoszenia z Dziekanatu (Oczekujące na założenie konta)
+                Zgłoszenia z Dziekanatu (Oczekujące na założenie konta ZOPZ)
             </div>
             <div class="card-body">
-                <table class="table">
+                <table class="table align-middle">
                     <thead>
                         <tr>
                             <th>Opiekun</th>
@@ -67,7 +65,7 @@
                             <td>{{ zgl.opiekun_email }}</td>
                             <td>
                                 <form method="POST" action="{{ url_for('admin.stworz_zopz_z_zal9', oswiadczenie_id=zgl.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-success">Generuj konto</button>
+                                    <button type="submit" class="btn btn-sm btn-success">Generuj konto i wyślij e-mail</button>
                                 </form>
                             </td>
                         </tr>
@@ -77,6 +75,9 @@
             </div>
         </div>
         {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="zopz">
 
         <div class="card mb-4 border-primary">
             <div class="card-header bg-primary text-white">Dodaj nowego Opiekuna Zakładowego (Lokalnie)</div>

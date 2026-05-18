@@ -13,6 +13,7 @@ class Uzytkownik(db.Model, UserMixin):
     nazwisko = db.Column(db.String(50), nullable=False)
     rola = db.Column(db.String(50), nullable=False)
     aktywny = db.Column(db.Integer, default=1)
+    wymaga_zmiany_hasla = db.Column(db.Boolean, default=False)
     
     auth_provider = db.Column(db.String(50), default="microsoft")
     external_id = db.Column(db.String(255), unique=True)

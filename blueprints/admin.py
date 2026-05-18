@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from models import Uzytkownik, Oswiadczenie, Dokument, db
+from extensions import mail
+from flask_mail import Message
 import string
 import random
 
@@ -72,7 +74,8 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
         nazwisko=oswiadczenie.opiekun_nazwisko,
         rola='zopz',
         aktywny=1,
-        auth_provider=provider
+        auth_provider=provider,
+        wymaga_zmiany_hasla=True if temp_password else False
     )
     
     if temp_password:
@@ -83,7 +86,13 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
     db.session.commit()
 
     if provider == 'local':
-        flash(f'Utworzono konto ZOPZ z logowaniem LOKALNYM. Przekaż opiekunowi hasło: {temp_password}', 'success')
+        msg = Message('Utworzono konto w Systemie Obsługi Praktyk', recipients=[email_zopz])
+        msg.body = f"Witaj {oswiadczenie.opiekun_imie} {oswiadczenie.opiekun_nazwisko},\n\nTwoje konto Opiekuna Zakładowego (ZOPZ) zostało utworzone.\n\nE-mail: {email_zopz}\nTymczasowe hasło: {temp_password}\n\nPrzy pierwszym logowaniu zostaniesz poproszony o zmianę hasła na własne."
+        try:
+            mail.send(msg)
+            flash(f'Utworzono konto ZOPZ z logowaniem lokalnym. Wysłano e-mail z hasłem do {email_zopz}.', 'success')
+        except Exception as e:
+            flash(f'Utworzono konto ZOPZ z logowaniem lokalnym, ale wystąpił błąd przy wysyłaniu e-maila: {e}', 'warning')
     elif provider == 'google':
         flash(f'Utworzono konto ZOPZ z logowaniem GOOGLE. Opiekun ({email_zopz}) może zalogować się jednym kliknięciem bez hasła.', 'success')
 
@@ -110,11 +119,19 @@ def stworz_zopz():
         nazwisko=nazwisko,
         rola='zopz',
         aktywny=1,
-        auth_provider='local'
+        auth_provider='local',
+        wymaga_zmiany_hasla=True
     )
     nowy_zopz.set_password(haslo)
     db.session.add(nowy_zopz)
     db.session.commit()
     
-    flash(f'Utworzono konto ZOPZ! E-mail: {email}, Hasło: {haslo}', 'success')
+    msg = Message('Utworzono konto w Systemie Obsługi Praktyk', recipients=[email])
+    msg.body = f"Witaj {imie} {nazwisko},\n\nTwoje konto Opiekuna Zakładowego (ZOPZ) zostało utworzone.\n\nE-mail: {email}\nTymczasowe hasło: {haslo}\n\nPrzy pierwszym logowaniu zostaniesz poproszony o zmianę hasła na własne."
+    try:
+        mail.send(msg)
+        flash(f'Utworzono konto ZOPZ! Wysłano e-mail z tymczasowym hasłem na adres {email}.', 'success')
+    except Exception as e:
+        flash(f'Utworzono konto ZOPZ, ale wystąpił błąd przy wysyłaniu e-maila: {e}', 'warning')
+        
     return redirect(url_for('admin.dashboard'))

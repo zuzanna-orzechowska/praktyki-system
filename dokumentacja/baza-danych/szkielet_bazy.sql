@@ -15,6 +15,7 @@ CREATE TABLE uzytkownik (
     nazwisko        TEXT        NOT NULL,
     rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik')),
     aktywny         INTEGER     NOT NULL DEFAULT 1,      -- 1 = aktywny, 0 = zablokowany/oczekujący
+    wymaga_zmiany_hasla BOOLEAN DEFAULT 0,
     auth_provider   TEXT        DEFAULT 'microsoft',     -- Z jakiego systemu pochodzi
     external_id     TEXT        UNIQUE,                  -- Unikalny identyfikator z Azure/Google
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,

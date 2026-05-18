@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from extensions import db, login_manager
+from extensions import db, login_manager, mail
 from blueprints.auth import auth_bp, init_oauth
 from blueprints.student import student_bp 
 from blueprints.uopz import uopz_bp
@@ -25,8 +25,18 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = upload_folder
     os.makedirs(upload_folder, exist_ok=True)
     
+    #konfiguracja poczty
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+    
     db.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)
     
     @app.context_processor
     def utility_processor():
@@ -48,7 +58,16 @@ def create_app():
             }
             return status_map.get(status, (status.replace('_', ' ').capitalize(), 'secondary'))
             
-        return dict(format_status=format_status)
+        def pending_accounts_count():
+            from models import Uzytkownik, Oswiadczenie, Dokument
+            try:
+                oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').count()
+                zgloszenia_zopz = Oswiadczenie.query.join(Dokument).filter(Dokument.status == 'AwaitingAccount').count()
+                return oczekujacy + zgloszenia_zopz
+            except Exception:
+                return 0
+
+        return dict(format_status=format_status, pending_accounts_count=pending_accounts_count)
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(student_bp) 
@@ -62,18 +81,6 @@ def create_app():
     @app.route('/')
     def index():
         return render_template('index.html')
-
-    @app.route('/pytania')
-    def pytania():
-        return render_template('index.html')
-
-    @app.route('/kontakt')
-    def kontakt():
-        return render_template('index.html')
-
-    @app.route('/dokumenty')
-    def dokumenty():
-        return render_template('dokumenty.html')
 
     return app
 

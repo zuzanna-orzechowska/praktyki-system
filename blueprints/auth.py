@@ -12,6 +12,14 @@ auth_bp = Blueprint('auth', __name__)
 def load_user(user_id):
     return Uzytkownik.query.get(int(user_id))
 
+@auth_bp.before_app_request
+def check_password_change():
+    if current_user.is_authenticated:
+        if request.endpoint and not request.endpoint.startswith('static'):
+            if getattr(current_user, 'wymaga_zmiany_hasla', False):
+                if request.endpoint not in ['auth.zmien_haslo', 'auth.logout']:
+                    return redirect(url_for('auth.zmien_haslo'))
+
 # system ról i uprawnień
 def role_required(*roles):
     def wrapper(fn):
@@ -66,6 +74,8 @@ def login():
                 if user.aktywny == 1:
                     login_user(user)
                     flash('Zalogowano pomyślnie.', 'success')
+                    if user.wymaga_zmiany_hasla:
+                        return redirect(url_for('auth.zmien_haslo'))
                     if user.rola == 'admin':
                         return redirect(url_for('admin.dashboard'))
                     return redirect(url_for('index'))
@@ -183,3 +193,42 @@ def auth_callback(provider):
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
+
+@auth_bp.route('/zmien-haslo', methods=['GET', 'POST'])
+@login_required
+def zmien_haslo():
+    if not current_user.wymaga_zmiany_hasla:
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        nowe_haslo = request.form.get('nowe_haslo')
+        potwierdz_haslo = request.form.get('potwierdz_haslo')
+        
+        if len(nowe_haslo) < 8:
+            flash('Hasło musi mieć co najmniej 8 znaków.', 'danger')
+            return render_template('auth/zmien-haslo.html')
+            
+        if nowe_haslo != potwierdz_haslo:
+            flash('Hasła nie są identyczne.', 'danger')
+            return render_template('auth/zmien-haslo.html')
+            
+        current_user.set_password(nowe_haslo)
+        current_user.wymaga_zmiany_hasla = False
+        db.session.commit()
+        
+        flash('Hasło zostało pomyślnie zmienione. Możesz korzystać z systemu.', 'success')
+        
+        if current_user.rola == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        elif current_user.rola == 'zopz':
+            return redirect(url_for('zopz.dashboard'))
+        elif current_user.rola == 'dziekanat':
+            return redirect(url_for('dziekanat.dashboard'))
+        elif current_user.rola == 'student':
+            return redirect(url_for('student.dashboard'))
+        elif current_user.rola == 'uopz':
+            return redirect(url_for('uopz.dashboard'))
+            
+        return redirect(url_for('index'))
+        
+    return render_template('auth/zmien-haslo.html')
