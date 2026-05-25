@@ -1,34 +1,86 @@
 from flask import Flask, render_template
-from extensions import db, login_manager
-from blueprints.auth import auth_bp
+from extensions import db, login_manager, mail
+from blueprints.auth import auth_bp, init_oauth
 from blueprints.student import student_bp 
 from blueprints.uopz import uopz_bp
+from blueprints.dziekanat import dziekanat_bp
+from blueprints.admin import admin_bp
+from blueprints.zopz import zopz_bp
 from flask_login import login_required
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = 'twoj-bardzo-tajny-klucz-123'
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['SERVER_NAME'] = 'localhost:5001' #TO ZMIENIĆ W PRZYSZŁOŚCI!!!!!!!!!!
+    
     basedir = os.path.abspath(os.path.dirname(__file__))
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
     
+    upload_folder = os.path.join(basedir, 'static', 'uploads')
+    app.config['UPLOAD_FOLDER'] = upload_folder
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    #konfiguracja poczty
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+    
     db.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)
     
-    app.register_blueprint(auth_bp)
+    @app.context_processor
+    def utility_processor():
+        def format_status(status):
+            if not status:
+                return ('Brak zgłoszenia', 'secondary')
+            
+            status_map = {
+                'BRAK_ZGŁOSZENIA': ('Brak zgłoszenia', 'secondary'),
+                'OCZEKUJE_NA_ZAL9': ('Oczekuje na załącznik 9', 'warning text-dark'),
+                'ZAL9_ZATWIERDZONE': ('Zał. 9 zatwierdzony', 'success'),
+                'SCIEZKA_PRACA': ('Zaliczenie z pracy', 'info text-dark'),
+                'PROGRAM_UZGODNIONY': ('Program uzgodniony', 'primary'),
+                'SKIEROWANIE_WYDANE': ('Skierowanie wydane', 'success'),
+                'PRAKTYKA_W_TOKU': ('Praktyka w toku', 'warning text-dark'),
+                'DOKUMENTY_ZLOZONE': ('Dokumenty złożone', 'info text-dark'),
+                'EGZAMIN': ('Egzamin', 'info text-dark'),
+                'ZALICZONA': ('Praktyka zaliczona', 'success')
+            }
+            return status_map.get(status, (status.replace('_', ' ').capitalize(), 'secondary'))
+            
+        def pending_accounts_count():
+            from models import Uzytkownik, Oswiadczenie, Dokument
+            try:
+                oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').count()
+                zgloszenia_zopz = Oswiadczenie.query.join(Dokument).filter(Dokument.status == 'AwaitingAccount').count()
+                return oczekujacy + zgloszenia_zopz
+            except Exception:
+                return 0
+
+        return dict(format_status=format_status, pending_accounts_count=pending_accounts_count)
+
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(student_bp) 
     app.register_blueprint(uopz_bp)
+    app.register_blueprint(dziekanat_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(zopz_bp)
+    
+    init_oauth(app)
     
     @app.route('/')
-    @app.route('/pytania')
-    @app.route('/kontakt')
     def index():
         return render_template('index.html')
-
-    @app.route('/dokumenty')
-    def dokumenty():
-        return render_template('dokumenty.html')
 
     return app
 

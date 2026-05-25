@@ -1,17 +1,22 @@
 from extensions import db
 from flask_login import UserMixin
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Uzytkownik(db.Model, UserMixin):
     __tablename__ = 'uzytkownik'
     
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    haslo_hash = db.Column(db.String(255), nullable=False)
+    haslo_hash = db.Column(db.String(255), nullable=True) 
     imie = db.Column(db.String(50), nullable=False)
     nazwisko = db.Column(db.String(50), nullable=False)
-    rola = db.Column(db.String(20), nullable=False)
+    rola = db.Column(db.String(50), nullable=False)
     aktywny = db.Column(db.Integer, default=1)
+    wymaga_zmiany_hasla = db.Column(db.Boolean, default=False)
+    
+    auth_provider = db.Column(db.String(50), default="microsoft")
+    external_id = db.Column(db.String(255), unique=True)
 
     @property
     def is_active(self):
@@ -19,6 +24,14 @@ class Uzytkownik(db.Model, UserMixin):
 
     def get_id(self):
         return str(self.id)
+    
+    def set_password(self, password):
+        self.haslo_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if not self.haslo_hash:
+            return False
+        return check_password_hash(self.haslo_hash, password)
 
 class Student(db.Model):
     __tablename__ = 'student'
@@ -46,8 +59,8 @@ class Praktyka(db.Model):
     __tablename__ = 'praktyka'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
-    zaklad_id = db.Column(db.Integer, db.ForeignKey('zaklad_pracy.id'), nullable=False)
-    uopz_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
+    zaklad_id = db.Column(db.Integer, db.ForeignKey('zaklad_pracy.id'), nullable=True)
+    uopz_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=True)
     status = db.Column(db.String(50), default='OCZEKUJE_NA_ZAL9')
     data_start = db.Column(db.Date)
     data_end = db.Column(db.Date)
@@ -64,6 +77,11 @@ class Dokument(db.Model):
     typ_zalacznika = db.Column(db.String(20), nullable=False) # np. 'ZAL6'
     status = db.Column(db.String(50), default='Draft')
     utworzony_przez = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
+    komentarz = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    praktyka = db.relationship('Praktyka', backref=db.backref('dokumenty', lazy=True))
 
 class WpisDziennika(db.Model):
     __tablename__ = 'wpis_dziennika'
@@ -143,6 +161,8 @@ class WniosekZaliczeniePraktyki(db.Model):
     okres_zatrudnienia_od = db.Column(db.Date, nullable=False)
     okres_zatrudnienia_do = db.Column(db.Date, nullable=False)
     stanowisko = db.Column(db.String(255), nullable=False)
+    zakres_obowiazkow = db.Column(db.Text, nullable=True)
+
     
     #lista ścieżek do załączonych plików
     zalaczniki_paths = db.Column(db.Text) 
@@ -151,16 +171,26 @@ class WniosekZaliczeniePraktyki(db.Model):
 
 class Oswiadczenie(db.Model):
     __tablename__ = 'oswiadczenie'
+    
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
-    miejscowosc = db.Column(db.String(100))
-    data_oswiadczenia = db.Column(db.Date)
-    nazwa_instytucji = db.Column(db.String(255))
-    opiekun_imie_nazwisko = db.Column(db.String(255))
-    opiekun_stanowisko = db.Column(db.String(255))
-    opiekun_telefon = db.Column(db.String(50))
-    opiekun_email = db.Column(db.String(120))
-    osoba_upowazniona = db.Column(db.String(255))
+    termin_od = db.Column(db.Date)
+    termin_do = db.Column(db.Date)
+    rok_studiow = db.Column(db.Integer)
+    kierunek = db.Column(db.String(100))
+    miejscowosc = db.Column(db.String(100), nullable=False)
+    data_oswiadczenia = db.Column(db.Date, nullable=False)
+    nazwa_instytucji = db.Column(db.String(255), nullable=False)
+    opiekun_imie = db.Column(db.String(100), nullable=False)
+    opiekun_nazwisko = db.Column(db.String(150), nullable=False)
+    opiekun_stanowisko = db.Column(db.String(255), nullable=False)
+    opiekun_telefon = db.Column(db.String(50), nullable=False)
+    opiekun_email = db.Column(db.String(120), nullable=False)
+    osoba_upowazniona_imie = db.Column(db.String(100), nullable=False)
+    osoba_upowazniona_nazwisko = db.Column(db.String(150), nullable=False)
+    osoba_upowazniona_stanowisko = db.Column(db.String(255), nullable=False)
+
+    skan_path = db.Column(db.String(255), nullable=False) 
     
     dokument = db.relationship('Dokument', backref=db.backref('oswiadczenie', uselist=False, cascade="all, delete-orphan"))
 

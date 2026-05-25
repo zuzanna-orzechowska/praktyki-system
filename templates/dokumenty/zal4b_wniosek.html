@@ -11,23 +11,43 @@
     {% endif %}
 </div>
 
+<form method="POST" action="{{ url_for('student.zal4b_wniosek') }}" enctype="multipart/form-data">
+
 <div class="card shadow-sm border-0 mb-4 bg-light">
     <div class="card-body">
         <p class="mb-1"><strong>Wnioskodawca:</strong> {{ current_user.imie }} {{ current_user.nazwisko }}</p>
-        <p class="mb-1"><strong>Nr albumu / Rok:</strong> {{ student.nr_albumu }} / {{ student.rok_studiow }}</p>
-        <p class="mb-0"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
+        <p class="mb-2"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
+        <div class="row align-items-center mb-2">
+            <div class="col-auto">
+                <strong>Kierunek:</strong> {{ student.kierunek }}
+            </div>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <label for="specjalnosc" class="col-form-label fw-bold mb-0" style="padding-top: 0; padding-bottom: 0;">Specjalność:</label>
+            </div>
+            <div class="col-md-8 col-lg-6">
+                <input class="form-control form-control-sm" list="specjalnosciOptions" id="specjalnosc" name="specjalnosc" value="{{ student.specjalnosc or '' }}" placeholder="Wpisz lub wybierz..." {% if dokument and dokument.status != 'Draft' %}disabled{% endif %}>
+                <datalist id="specjalnosciOptions">
+                    <option value="PBDiOU / Programowanie baz danych i oprogramowanie użytkowe">
+                    <option value="ASiSK / Administracja systemów i sieci komputerowych">
+                    <option value="M3D / Modelowanie 3D w zastosowaniach medycznych, prototypowaniu i mediach interaktywnych">
+                </datalist>
+            </div>
+        </div>
     </div>
 </div>
 
-<form method="POST" action="{{ url_for('student.zal4b_wniosek') }}" enctype="multipart/form-data">
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white fw-bold">Szczegóły wniosku</div>
         <div class="card-body">
 
-            <p class="text-muted small mb-4">Zwracam się z prośbą o zaliczenie na poczet studenckiej praktyki zawodowej
-                zrealizowanej przeze mnie pracy zarobkowej (prowadzenia działalności), potwierdzonej stosownym
-                zaświadczeniem. Przedkładam odpowiednią dokumentację dotyczącą mojego zatrudnienia.</p>
+            <p class="text-muted small mb-4">Na podstawie § 4, ustęp 1 i 2 Regulaminu praktyk zawodowych w Instytucie Informatyki Stosowanej im. Krzysztofa Brzeskiego ANS w Elblągu proszę o uznanie efektów uczenia się przewidzianych dla praktyki zawodowej na podstawie pracy zawodowej/stażu/działalności gospodarczej*.<br><br>Dla potwierdzenia uzyskania zakładanych dla praktyki zawodowej efektów uczenia się załączam n/w dokumenty potwierdzające zakres realizowanych czynności zawodowych oraz czas ich realizacji w tym w szczególności:<br>
+            1. Umowę o pracę, zaświadczenie o odbyciu stażu lub wolontariatu<br>
+            2. Kartę stanowiskową<br>
+            3. Zaświadczenie z CEIDG lub KRS<br>
+            4. Inne dokumenty potwierdzające uzyskanie efektów uczenia się przewidzianych dla praktyki zawodowej</p>
 
             <fieldset {% if dokument and dokument.status !='Draft' %}disabled{% endif %}>
                 <div class="row mb-3">
@@ -44,16 +64,22 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="stanowisko" class="form-label">Zajmowane stanowisko / Charakter działalności:</label>
+                    <label for="stanowisko" class="form-label">Opis zajmowanego stanowiska pracy / karta stanowiskowa:</label>
                     <input type="text" class="form-control" id="stanowisko" name="stanowisko"
                         value="{{ wniosek.stanowisko if wniosek else '' }}" placeholder="np. Młodszy Programista"
                         required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="uzasadnienie" class="form-label">Uzasadnienie z przyporządkowaniem efektów uczenia
-                        się:</label>
-                    <textarea class="form-control" id="uzasadnienie" name="uzasadnienie" rows="6"
+                    <label for="zakres_obowiazkow" class="form-label">Zakres obowiązków realizowany w ramach stażu/wolontariatu:</label>
+                    <textarea class="form-control" id="zakres_obowiazkow" name="zakres_obowiazkow" rows="4"
+                        placeholder="Opisz swoje główne obowiązki..."
+                        required>{{ wniosek.zakres_obowiazkow if wniosek else '' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="uzasadnienie" class="form-label">Uzasadnienie:</label>
+                    <textarea class="form-control" id="uzasadnienie" name="uzasadnienie" rows="4"
                         placeholder="Wykazanie w jaki sposób wykonywane obowiązki pozwoliły na osiągnięcie efektów uczenia się..."
                         required>{{ wniosek.uzasadnienie if wniosek else '' }}</textarea>
                 </div>
@@ -62,8 +88,8 @@
 
                 <div class="mb-3">
                     <label for="zalaczniki" class="form-label fw-bold">Załączniki dokumentujące zatrudnienie:</label>
-                    <p class="small text-muted mb-2">Możesz dodać pliki PDF, JPG, PNG lub DOCX (np. zaświadczenie z
-                        zakładu pracy, opis zakresu obowiązków).</p>
+                    <p class="small text-muted mb-2">Możesz dodać pliki PDF, JPG, PNG lub DOCX (np. umowa o pracę, zaświadczenie z
+                        zakładu pracy, karta stanowiskowa).</p>
                     <input class="form-control" type="file" id="zalaczniki" name="zalaczniki" multiple>
                 </div>
             </fieldset>

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie
@@ -370,94 +370,50 @@ def zal4a_decyzja():
 def zal4b_wniosek():
     if current_user.rola != 'student':
         return redirect(url_for('index'))
-
+        
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
+    
+    # stworzenie parktyki jeśli nie istnieje
     if not praktyka:
-        flash('Brak przypisanej praktyki.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
+        praktyka = Praktyka(student_id=student.id, status='BRAK_ZGŁOSZENIA')
+        db.session.add(praktyka)
+        db.session.commit()
+        
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B').first()
-    wniosek = None
-
-    if dokument:
-         wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first()
-
+    wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    
     if request.method == 'POST':
-        if dokument and dokument.status != 'Draft':
-             flash('Wniosek został już złożony i nie może być edytowany.', 'warning')
-             return redirect(url_for('student.zal4b_wniosek'))
-
         if not dokument:
             dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B', utworzony_przez=current_user.id)
             db.session.add(dokument)
             db.session.commit()
             
-        uzasadnienie = request.form.get('uzasadnienie')
-        data_od_str = request.form.get('data_od')
-        data_do_str = request.form.get('data_do')
-        stanowisko = request.form.get('stanowisko')
-
-        try:
-             data_od = datetime.strptime(data_od_str, '%Y-%m-%d').date()
-             data_do = datetime.strptime(data_do_str, '%Y-%m-%d').date()
-        except ValueError:
-             flash('Błędny format daty.', 'danger')
-             return redirect(url_for('student.zal4b_wniosek'))
-
-        #obsługa plików
-        uploaded_files = request.files.getlist('zalaczniki')
-        saved_file_paths = []
-        
-        if not os.path.exists(UPLOAD_FOLDER):
-            os.makedirs(UPLOAD_FOLDER)
-
-        for file in uploaded_files:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(f"{current_user.id}_{int(datetime.now().timestamp())}_{file.filename}")
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(file_path)
-                saved_file_paths.append(file_path)
-            elif file.filename != '':
-                flash(f'Niedozwolony format pliku: {file.filename}', 'danger')
-
-        paths_string = ",".join(saved_file_paths)
-
         if not wniosek:
-             wniosek = WniosekZaliczeniePraktyki(dokument_id=dokument.id)
-             db.session.add(wniosek)
+            wniosek = WniosekZaliczeniePraktyki(dokument_id=dokument.id)
+            db.session.add(wniosek)
+            
+        if 'specjalnosc' in request.form:
+            student.specjalnosc = request.form.get('specjalnosc')
 
-        wniosek.uzasadnienie = uzasadnienie
-        wniosek.okres_zatrudnienia_od = data_od
-        wniosek.okres_zatrudnienia_do = data_do
-        wniosek.stanowisko = stanowisko
+        wniosek.okres_zatrudnienia_od = datetime.strptime(request.form.get('data_od'), '%Y-%m-%d').date()
+        wniosek.okres_zatrudnienia_do = datetime.strptime(request.form.get('data_do'), '%Y-%m-%d').date()
+        wniosek.stanowisko = request.form.get('stanowisko')
+        wniosek.zakres_obowiazkow = request.form.get('zakres_obowiazkow')
+        wniosek.uzasadnienie = request.form.get('uzasadnienie')
         
-        if wniosek.zalaczniki_paths and paths_string:
-             wniosek.zalaczniki_paths += "," + paths_string
-        elif paths_string:
-             wniosek.zalaczniki_paths = paths_string
-
-        if request.form.get('akcja') == 'wyslij':
+        akcja = request.form.get('akcja')
+        if akcja == 'wyslij':
             dokument.status = 'Submitted'
-            flash('Wniosek został złożony i oczekuje na decyzję.', 'success')
+            praktyka.status = 'SCIEZKA_PRACA'
+            flash('Wniosek został złożony. Uruchomiono ścieżkę zaliczenia na podstawie pracy zawodowej.', 'success')
         else:
-             flash('Szkic wniosku został zapisany.', 'success')
-
+            flash('Szkic wniosku został zapisany.', 'info')
+            
         db.session.commit()
         return redirect(url_for('student.zal4b_wniosek'))
-
-    # lista załączników do wyświetlenia
-    zalaczniki_lista = wniosek.zalaczniki_paths.split(',') if wniosek and wniosek.zalaczniki_paths else []
-
-    return render_template(
-        'dokumenty/zal4b_wniosek.html', 
-        student=student, 
-        praktyka=praktyka, 
-        dokument=dokument,
-        wniosek=wniosek,
-        zalaczniki=zalaczniki_lista
-    )
+        
+    return render_template('dokumenty/zal4b_wniosek.html', student=student, dokument=dokument, wniosek=wniosek, praktyka=praktyka)
 
 @student_bp.route('/zal7a_sprawozdanie', methods=['GET', 'POST'])
 @login_required
@@ -530,51 +486,109 @@ def zal8_protokol():
 def zal9_oswiadczenie():
     if current_user.rola != 'student':
         return redirect(url_for('index'))
-
+        
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
+    
+    #jeśli praktyka nie istnieje to tworzymy
     if not praktyka:
-        flash('Brak przypisanej praktyki w systemie.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
-    if not dokument:
-        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL9', utworzony_przez=current_user.id)
-        db.session.add(dokument)
+        praktyka = Praktyka(student_id=student.id, status='BRAK_ZGŁOSZENIA')
+        db.session.add(praktyka)
         db.session.commit()
-
-    oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument.id).first()
-
+        
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+    oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    
     if request.method == 'POST':
+        if not dokument:
+            dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL9', utworzony_przez=current_user.id)
+            db.session.add(dokument)
+            db.session.commit()
+            
         if not oswiadczenie:
             oswiadczenie = Oswiadczenie(dokument_id=dokument.id)
             db.session.add(oswiadczenie)
-
+            
         oswiadczenie.miejscowosc = request.form.get('miejscowosc')
-        
-        try:
-            if request.form.get('data_oswiadczenia'):
-                oswiadczenie.data_oswiadczenia = datetime.strptime(request.form.get('data_oswiadczenia'), '%Y-%m-%d').date()
-            if request.form.get('data_start'):
-                praktyka.data_start = datetime.strptime(request.form.get('data_start'), '%Y-%m-%d').date()
-            if request.form.get('data_end'):
-                praktyka.data_end = datetime.strptime(request.form.get('data_end'), '%Y-%m-%d').date()
-        except ValueError:
-            flash('Nieprawidłowy format daty', 'danger')
-
+        data_str = request.form.get('data_oswiadczenia')
+        if data_str:
+            try:
+                oswiadczenie.data_oswiadczenia = datetime.strptime(data_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
         oswiadczenie.nazwa_instytucji = request.form.get('nazwa_instytucji')
-        oswiadczenie.opiekun_imie_nazwisko = request.form.get('opiekun_imie_nazwisko')
+        oswiadczenie.opiekun_imie = request.form.get('opiekun_imie')
+        oswiadczenie.opiekun_nazwisko = request.form.get('opiekun_nazwisko')
         oswiadczenie.opiekun_stanowisko = request.form.get('opiekun_stanowisko')
         oswiadczenie.opiekun_telefon = request.form.get('opiekun_telefon')
         oswiadczenie.opiekun_email = request.form.get('opiekun_email')
-        oswiadczenie.osoba_upowazniona = request.form.get('osoba_upowazniona')
+        oswiadczenie.osoba_upowazniona_imie = request.form.get('osoba_upowazniona_imie')
+        oswiadczenie.osoba_upowazniona_nazwisko = request.form.get('osoba_upowazniona_nazwisko')
+        oswiadczenie.osoba_upowazniona_stanowisko = request.form.get('osoba_upowazniona_stanowisko')
         
-        if praktyka.zaklad and oswiadczenie.nazwa_instytucji:
-            praktyka.zaklad.nazwa = oswiadczenie.nazwa_instytucji
+        # Nowe pola: terminy praktyki i rok studiów
+        data_start_str = request.form.get('data_start')
+        data_end_str = request.form.get('data_end')
+        if data_start_str:
+            try:
+                praktyka.data_start = datetime.strptime(data_start_str, '%Y-%m-%d').date()
+                oswiadczenie.termin_od = praktyka.data_start
+            except ValueError:
+                pass
+        if data_end_str:
+            try:
+                praktyka.data_end = datetime.strptime(data_end_str, '%Y-%m-%d').date()
+                oswiadczenie.termin_do = praktyka.data_end
+            except ValueError:
+                pass
+        
+        rok = request.form.get('rok_studiow')
+        if rok and rok.isdigit():
+            student.rok_studiow = int(rok)
+            oswiadczenie.rok_studiow = int(rok)
+            
+        kierunek = request.form.get('kierunek')
+        if kierunek:
+            student.kierunek = kierunek
+            oswiadczenie.kierunek = kierunek
 
+        plik = request.files.get('skan_dokumentu')
+        if plik and plik.filename != '':
+            #czyszczenie nazwy pliku
+            oryginalna_nazwa = secure_filename(plik.filename)
+            #tworzenie unikalnej nazwy
+            unikalna_nazwa = f"{student.nr_albumu}_ZAL9_{oryginalna_nazwa}"
+            #zbudowanie pełnej ścieżki
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unikalna_nazwa)
+            #fizyczny zapis pliku na dysku
+            plik.save(filepath)
+            #zapisanie ścieżki w bazie danych
+            oswiadczenie.skan_path = f"uploads/{unikalna_nazwa}"
+
+        akcja = request.form.get('akcja')
+        if akcja == 'usun_plik':
+            if oswiadczenie.skan_path:
+                try:
+                    nazwa_pliku = oswiadczenie.skan_path.replace('uploads/', '')
+                    os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], nazwa_pliku))
+                except Exception:
+                    pass
+                oswiadczenie.skan_path = ""
+            flash('Zapisany plik został usunięty ze szkicu.', 'info')
+        elif akcja == 'wyslij':
+            if not (praktyka.data_start and praktyka.data_end):
+                flash('Błąd: Podaj datę rozpoczęcia i zakończenia praktyki przed wysłaniem formularza.', 'danger')
+                db.session.commit()
+                return redirect(url_for('student.zal9_oswiadczenie'))
+
+            dokument.status = 'Submitted'
+            praktyka.status = 'OCZEKUJE_NA_ZAL9' 
+            flash('Oświadczenie zostało złożone. Oczekuje na zatwierdzenie przez Dziekanat.', 'success')
+        else:
+            flash('Szkic oświadczenia został zapisany.', 'info')
+            
         db.session.commit()
-        flash('Dane z Oświadczenia zapisano pomyślnie!', 'success')
         return redirect(url_for('student.zal9_oswiadczenie'))
-
-    return render_template('dokumenty/zal9_oswiadczenie.html', student=student, praktyka=praktyka, oswiadczenie=oswiadczenie)
+        
+    dzisiaj = datetime.today().strftime('%Y-%m-%d')
+    return render_template('dokumenty/zal9_oswiadczenie.html', student=student, dokument=dokument, oswiadczenie=oswiadczenie, praktyka=praktyka, dzisiaj=dzisiaj)

@@ -5,22 +5,25 @@
 PRAGMA foreign_keys = ON;  -- wymagane w SQLite
 
 -- ------------------------------------------------------------
--- 1. UŻYTKOWNICY I ROLE
+-- 1. TABELA UŻYTKOWNIKA (Zmodyfikowana pod OAuth)
 -- ------------------------------------------------------------
 CREATE TABLE uzytkownik (
-    id          INTEGER     PRIMARY KEY AUTOINCREMENT,
-    email       TEXT        NOT NULL UNIQUE,
-    haslo_hash  TEXT        NOT NULL,
-    imie        TEXT        NOT NULL,
-    nazwisko    TEXT        NOT NULL,
-    rola        TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin')),
-    aktywny     INTEGER     NOT NULL DEFAULT 1,  -- 1 = aktywny, 0 = zablokowany
-    created_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id              INTEGER     PRIMARY KEY AUTOINCREMENT,
+    email           TEXT        NOT NULL UNIQUE,
+    haslo_hash      TEXT,                                -- Już nie jest NOT NULL
+    imie            TEXT        NOT NULL,
+    nazwisko        TEXT        NOT NULL,
+    rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik')),
+    aktywny         INTEGER     NOT NULL DEFAULT 1,      -- 1 = aktywny, 0 = zablokowany/oczekujący
+    wymaga_zmiany_hasla BOOLEAN DEFAULT 0,
+    auth_provider   TEXT        DEFAULT 'microsoft',     -- Z jakiego systemu pochodzi
+    external_id     TEXT        UNIQUE,                  -- Unikalny identyfikator z Azure/Google
+    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ------------------------------------------------------------
--- 2. PROFIL STUDENTA
+-- 2. PROFIL STUDENTA (Pozostaje bez zmian, ale tworzymy go ponownie)
 -- ------------------------------------------------------------
 CREATE TABLE student (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,
@@ -57,34 +60,17 @@ CREATE TABLE zaklad_pracy (
 -- 4. PRAKTYKA ZAWODOWA (encja główna)
 -- ------------------------------------------------------------
 CREATE TABLE praktyka (
-    id              INTEGER     PRIMARY KEY AUTOINCREMENT,
-    student_id      INTEGER     NOT NULL,
-    zaklad_id       INTEGER     NOT NULL,
-    uopz_id         INTEGER     NOT NULL,
-    status          TEXT        NOT NULL DEFAULT 'OCZEKUJE_NA_ZAL9'
-                                CHECK (status IN (
-                                    'OCZEKUJE_NA_ZAL9',
-                                    'ZAL9_PRZYJETY',
-                                    'POROZUMIENIE_PODPISANE',
-                                    'PROGRAM_UZGODNIONY',
-                                    'SKIEROWANIE_WYDANE',
-                                    'PRAKTYKA_W_TOKU',
-                                    'DOKUMENTY_ZLOZONE',
-                                    'EGZAMIN',
-                                    'PROTOKOL_SPORZADZONY',
-                                    'ZALICZONA',
-                                    'ODRZUCONA',
-                                    'PRZEDLUZONA'
-                                )),
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id      INTEGER NOT NULL,
+    zaklad_id       INTEGER,
+    uopz_id         INTEGER,
+    status          TEXT DEFAULT 'BRAK_ZGŁOSZENIA',
     data_start      DATE,
     data_end        DATE,
-    liczba_godzin   INTEGER     DEFAULT 960,
-    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (student_id)    REFERENCES student(id)      ON DELETE RESTRICT,
-    FOREIGN KEY (zaklad_id)     REFERENCES zaklad_pracy(id) ON DELETE RESTRICT,
-    FOREIGN KEY (uopz_id)       REFERENCES uzytkownik(id)   ON DELETE RESTRICT
+    liczba_godzin   INTEGER DEFAULT 960,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+    FOREIGN KEY (zaklad_id) REFERENCES zaklad_pracy(id) ON DELETE SET NULL,
+    FOREIGN KEY (uopz_id) REFERENCES uzytkownik(id) ON DELETE SET NULL
 );
 
 -- ------------------------------------------------------------
@@ -106,6 +92,7 @@ CREATE TABLE dokument (
                                 )),
     plik_path       TEXT,                   -- ścieżka do wygenerowanego PDF
     uwagi_opiekuna  TEXT,                   -- uwagi UOPZ przy odrzuceniu
+    komentarz       TEXT,                   -- komentarz (np. z Dziekanatu) przy odrzuceniu
     utworzony_przez INTEGER     NOT NULL,   -- id użytkownika
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -252,14 +239,22 @@ CREATE TABLE wniosek_zaliczenie_praktyki (
 CREATE TABLE oswiadczenie (
     id                      INTEGER PRIMARY KEY AUTOINCREMENT,
     dokument_id             INTEGER NOT NULL UNIQUE,
-    miejscowosc             TEXT,
-    data_oswiadczenia       DATE,
-    nazwa_instytucji        TEXT,
-    opiekun_imie_nazwisko   TEXT,
-    opiekun_stanowisko      TEXT,
-    opiekun_telefon         TEXT,
-    opiekun_email           TEXT,
-    osoba_upowazniona       TEXT,
+    termin_od               DATE,
+    termin_do               DATE,
+    rok_studiow             INTEGER,
+    kierunek                TEXT,
+    miejscowosc             TEXT NOT NULL,
+    data_oswiadczenia       DATE NOT NULL,
+    nazwa_instytucji        TEXT NOT NULL,
+    opiekun_imie            TEXT NOT NULL,
+    opiekun_nazwisko        TEXT NOT NULL,
+    opiekun_stanowisko      TEXT NOT NULL,
+    opiekun_telefon         TEXT NOT NULL,
+    opiekun_email           TEXT NOT NULL,
+    osoba_upowazniona_imie          TEXT NOT NULL,
+    osoba_upowazniona_nazwisko      TEXT NOT NULL,
+    osoba_upowazniona_stanowisko    TEXT NOT NULL,
+    skan_path               TEXT NOT NULL,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );
