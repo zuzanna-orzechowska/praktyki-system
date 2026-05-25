@@ -1,9 +1,20 @@
 from extensions import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 
-class Uzytkownik(db.Model, UserMixin):
+
+class DictSerializable:
+    def to_dict(self):
+        result = {}
+        for c in self.__table__.columns:
+            val = getattr(self, c.name)
+            if isinstance(val, (date, datetime)):
+                val = val.isoformat()
+            result[c.name] = val
+        return result
+
+class Uzytkownik(db.Model, UserMixin, DictSerializable):
     __tablename__ = 'uzytkownik'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -33,7 +44,7 @@ class Uzytkownik(db.Model, UserMixin):
             return False
         return check_password_hash(self.haslo_hash, password)
 
-class Student(db.Model):
+class Student(db.Model, DictSerializable):
     __tablename__ = 'student'
     id = db.Column(db.Integer, primary_key=True)
     uzytkownik_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
@@ -44,7 +55,7 @@ class Student(db.Model):
     rok_studiow = db.Column(db.Integer)
     uzytkownik = db.relationship('Uzytkownik', backref=db.backref('student_profil', uselist=False))
 
-class ZakladPracy(db.Model):
+class ZakladPracy(db.Model, DictSerializable):
     __tablename__ = 'zaklad_pracy'
     id = db.Column(db.Integer, primary_key=True)
     nazwa = db.Column(db.String(255), nullable=False)
@@ -55,7 +66,7 @@ class ZakladPracy(db.Model):
     telefon = db.Column(db.String(50))
     zopz_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'))
 
-class Praktyka(db.Model):
+class Praktyka(db.Model, DictSerializable):
     __tablename__ = 'praktyka'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
@@ -70,7 +81,7 @@ class Praktyka(db.Model):
     student = db.relationship('Student', backref='praktyki')
     zaklad = db.relationship('ZakladPracy')
 
-class Dokument(db.Model):
+class Dokument(db.Model, DictSerializable):
     __tablename__ = 'dokument'
     id = db.Column(db.Integer, primary_key=True)
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), nullable=False)
@@ -83,7 +94,7 @@ class Dokument(db.Model):
     
     praktyka = db.relationship('Praktyka', backref=db.backref('dokumenty', lazy=True))
 
-class WpisDziennika(db.Model):
+class WpisDziennika(db.Model, DictSerializable):
     __tablename__ = 'wpis_dziennika'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -95,7 +106,7 @@ class WpisDziennika(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('wpisy', cascade="all, delete-orphan"))
 
-class Porozumienie(db.Model):
+class Porozumienie(db.Model, DictSerializable):
     __tablename__ = 'porozumienie'
     id = db.Column(db.Integer, primary_key=True)
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), unique=True, nullable=False)
@@ -107,7 +118,7 @@ class Porozumienie(db.Model):
     praktyka = db.relationship('Praktyka', backref=db.backref('porozumienie', uselist=False))
     zaklad = db.relationship('ZakladPracy')
 
-class HarmonogramPraktyki(db.Model):
+class HarmonogramPraktyki(db.Model, DictSerializable):
     __tablename__ = 'harmonogram_praktyki'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -116,7 +127,7 @@ class HarmonogramPraktyki(db.Model):
     planowana_liczba_dni = db.Column(db.Integer, nullable=False)
     dokument = db.relationship('Dokument', backref=db.backref('pozycje_harmonogramu', cascade="all, delete-orphan"))
 
-class Protokol(db.Model):
+class Protokol(db.Model, DictSerializable):
     __tablename__ = 'protokol'
     id = db.Column(db.Integer, primary_key=True)
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), unique=True, nullable=False)
@@ -131,7 +142,7 @@ class Protokol(db.Model):
     
     praktyka = db.relationship('Praktyka', backref=db.backref('protokol', uselist=False))
 
-class Sprawozdanie(db.Model):
+class Sprawozdanie(db.Model, DictSerializable):
     __tablename__ = 'sprawozdanie'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
@@ -141,7 +152,7 @@ class Sprawozdanie(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
 
-class EfektUczenia(db.Model):
+class EfektUczenia(db.Model, DictSerializable):
     __tablename__ = 'efekt_uczenia'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -153,7 +164,7 @@ class EfektUczenia(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('efekty', cascade="all, delete-orphan"))
 
-class WniosekZaliczeniePraktyki(db.Model):
+class WniosekZaliczeniePraktyki(db.Model, DictSerializable):
     __tablename__ = 'wniosek_zaliczenie_praktyki'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
@@ -169,7 +180,7 @@ class WniosekZaliczeniePraktyki(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('wniosek_zaliczenie', uselist=False, cascade="all, delete-orphan"))
 
-class Oswiadczenie(db.Model):
+class Oswiadczenie(db.Model, DictSerializable):
     __tablename__ = 'oswiadczenie'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -194,7 +205,7 @@ class Oswiadczenie(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('oswiadczenie', uselist=False, cascade="all, delete-orphan"))
 
-class ProgramPraktyki(db.Model):
+class ProgramPraktyki(db.Model, DictSerializable):
     __tablename__ = 'program_praktyki'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)

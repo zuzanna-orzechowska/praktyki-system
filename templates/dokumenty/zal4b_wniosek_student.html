@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/student/zal4b.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Wniosek o zaliczenie praktyki na podst. pracy (Zał. 4b)</h2>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <p class="mb-1"><strong>Wnioskodawca:</strong> <span id="student-info">Ładowanie...</span></p>
+        <p class="mb-1"><strong>Nr albumu:</strong> <span id="student-album">...</span></p>
+    </div>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Zasady:</strong> Zaliczenie praktyki może nastąpić, jeśli wykonywana praca zawodowa lub prowadzona działalność gospodarcza jest zgodna z profilem kształcenia na wybranym kierunku i zapewnia osiągnięcie wymaganych efektów uczenia się.
+</div>
+
+<form id="zal4b-form">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">Szczegóły wniosku</div>
+        <div class="card-body">
+
+            <fieldset id="form-fieldset">
+                <div class="mb-4">
+                    <label for="specjalnosc" class="form-label">Specjalność (opcjonalnie):</label>
+                    <input type="text" class="form-control" id="specjalnosc" name="specjalnosc" placeholder="np. Inżynieria Oprogramowania">
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="data_od" class="form-label">Zatrudnienie od:</label>
+                        <input type="date" class="form-control" id="data_od" name="data_od" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="data_do" class="form-label">Zatrudnienie do (lub bieżąca data):</label>
+                        <input type="date" class="form-control" id="data_do" name="data_do" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="stanowisko" class="form-label">Zajmowane stanowisko:</label>
+                    <input type="text" class="form-control" id="stanowisko" name="stanowisko" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="zakres_obowiazkow" class="form-label">Krótki zakres obowiązków na stanowisku:</label>
+                    <textarea class="form-control" id="zakres_obowiazkow" name="zakres_obowiazkow" rows="3" required></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label for="uzasadnienie" class="form-label">Uzasadnienie zbieżności wykonywanych zadań z kierunkiem studiów:</label>
+                    <textarea class="form-control" id="uzasadnienie" name="uzasadnienie" rows="5" placeholder="Wykaż, w jaki sposób Twoja praca realizuje efekty uczenia się wymagane dla praktyki..." required></textarea>
+                </div>
+
+            </fieldset>
+
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-5" id="action-buttons">
+        <button type="button" class="btn btn-outline-primary" onclick="submitForm('zapisz')">
+            <i class="bi bi-save"></i> Zapisz szkic
+        </button>
+        <button type="button" class="btn btn-success" onclick="if(confirm('Złożenie wniosku przekazuje go do decyzji opiekuna i Dziekanatu. Czy kontynuować?')) submitForm('wyslij');">
+            <i class="bi bi-send"></i> Złóż wniosek formalnie
+        </button>
+    </div>
+</form>
+{% endblock %}

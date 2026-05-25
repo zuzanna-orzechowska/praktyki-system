@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+
+
+<script src=""></script>
+
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        
+        <a href="" class="btn btn-sm btn-outline-secondary mb-2"><i
+                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
+        
+        <h2
+            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Sprawozdanie z Pracy Zawodowej (Zał. 7a)</h2>
+    </div>
+
+    
+    <span class="badge bg-success fs-6">Zatwierdzone</span>
+    
+    <span class="badge bg-danger fs-6">Do poprawy</span>
+    
+    <span class="badge bg-primary">Dokument Edytowalny</span>
+    
+    <span class="badge bg-warning text-dark fs-6">Oczekuje na weryfikację</span>
+    
+</div>
+
+
+<div class="alert alert-dangerinfo shadow-sm border-0 mb-4">
+    <i class="bi bi-chat-left-text-fill me-2"></i> <strong>Uwagi od Opiekuna Uczelnianego:</strong> {{
+    dokument.uwagi_opiekuna }}
+</div>
+
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <p class="mb-1"><strong>Student:</strong>   (Nr
+            albumu: )</p>
+        <p class="mb-0"><strong>Miejsce pracy/działalności:</strong> </p>
+    </div>
+</div>
+
+<form method="POST"
+    action="">
+    {% set is_readonly = 'readonly disabled' if current_user.rola != 'student' or (dokument and dokument.status ==
+    'Approved') else '' %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">1. Charakterystyka miejsca pracy</div>
+        <div class="card-body">
+            <textarea class="form-control mb-2" name="charakterystyka" rows="4" required {{ is_readonly
+                }}></textarea>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">2. Opis i analiza wykonywanych prac</div>
+        <div class="card-body">
+            <textarea class="form-control mb-2" name="opis" rows="6" required {{ is_readonly
+                }}></textarea>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">3. Wiedza i umiejętności uzyskane w trakcie pracy zawodowej lub
+            działalności</div>
+        <div class="card-body">
+            <textarea class="form-control mb-2" name="wiedza" rows="6" required {{ is_readonly
+                }}></textarea>
+        </div>
+    </div>
+
+    
+    <div class="text-end mb-5">
+        <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Zapisz Sprawozdanie SN</button>
+    </div>
+    
+</form>
+
+<!-- PANEL WERYFIKACJI DLA UOPZ -->
+
+<div class="card shadow-sm border-0 border-top border-primary border-3 mb-5">
+    <div class="card-header bg-white fw-bold"><i class="bi bi-shield-check text-primary"></i> Weryfikacja Sprawozdania
+        SN (UOPZ)</div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Uwagi do sprawozdania:</label>
+                <textarea name="uwagi_opiekuna" class="form-control"
+                    rows="3"></textarea>
+            </div>
+
+            <div class="alert alert-secondary small">
+                Zgodnie z dokumentacją, w przypadku własnej działalności gospodarczej, podpis pod sprawozdaniem składa
+                UOPZ. W przypadku pracy na etacie podpisuje bezpośredni przełożony (ZOPZ).
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" name="akcja" value="odrzuc" class="btn btn-outline-danger"><i
+                        class="bi bi-x-circle"></i> Odrzuć do poprawy</button>
+                <button type="submit" name="akcja" value="zatwierdz_i_podpisz" class="btn btn-success"><i
+                        class="bi bi-check-circle"></i> Zatwierdź (i złóż podpis uczelniany)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}

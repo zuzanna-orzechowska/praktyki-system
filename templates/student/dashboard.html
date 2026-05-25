@@ -44,125 +44,27 @@
         line-height: 1.3;
     }
 </style>
+<script src="{{ url_for('static', filename='js/student/dashboard.js') }}"></script>
 {% endblock %}
 
 {% block content %}
-<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">Panel
-    Studenta</h2>
+<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">Panel Studenta</h2>
 
 <div class="alert alert-light border mb-4 d-flex justify-content-between align-items-center">
     <div>
-        <strong>Witaj, {{ current_user.imie }} {{ current_user.nazwisko }}!</strong>
-        {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki else none %}
-        {% set status_text, status_color = format_status(praktyka.status if praktyka else none) %}
-        <span class="ms-3 text-muted">Status twojej praktyki: <span class="badge bg-{{ status_color }}">{{ status_text }}</span></span>
+        <strong id="student-greeting">Ładowanie danych...</strong>
+        <span class="ms-3 text-muted">Status twojej praktyki: <span id="student-status-badge" class="badge bg-secondary">Ładowanie</span></span>
     </div>
 </div>
 
-{% set zal9 = none %}
-{% if praktyka %}
-{% set ns = namespace(zal9_doc=none) %}
-{% for doc in praktyka.dokumenty %}
-{% if doc.typ_zalacznika == 'ZAL9' %}
-{% set ns.zal9_doc = doc %}
-{% endif %}
-{% endfor %}
-{% set zal9 = ns.zal9_doc %}
-{% endif %}
+<div id="alerts-container"></div>
 
-{% if zal9 and zal9.status == 'Draft' and zal9.komentarz %}
-<div class="alert alert-danger shadow-sm mb-4">
-    <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Twoje Oświadczenie (Zał. 9) zostało
-        odrzucone</h5>
-    <p class="mb-0">Dziekanat odrzucił twoje oświadczenie do poprawy. <strong>Komentarz:</strong> {{ zal9.komentarz }}
-    </p>
-    <hr>
-    <a href="/student/zal9_oswiadczenie" class="btn btn-sm btn-danger">Popraw dokument</a>
-</div>
-{% elif praktyka and praktyka.status == 'ZAL9_ZATWIERDZONE' %}
-<div class="alert alert-success shadow-sm mb-4 alert-dismissible fade show" role="alert">
-    <h5 class="alert-heading"><i class="bi bi-check-circle-fill"></i> Oświadczenie zatwierdzone!</h5>
-    <p class="mb-0">Dziekanat zaakceptował Twoje Oświadczenie (Zał. 9). Uruchomiono standardową ścieżkę praktyki.</p>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-{% endif %}
-
-<div class="row g-4">
-
-    {% if not praktyka or praktyka.status == 'OCZEKUJE_NA_ZAL9' or praktyka.status == 'BRAK_ZGŁOSZENIA' %}
-
-    <div class="col-12 mb-2">
-        <h5 class="fw-bold text-center mt-3">Wybierz sposób realizacji praktyki:</h5>
+<div class="row g-4" id="dashboard-tiles">
+    <div class="col-12 text-center text-muted">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Ładowanie...</span>
+        </div>
+        <p class="mt-2">Wczytywanie modułów panelu...</p>
     </div>
-
-    <!-- Opcja 1: Standardowa -->
-    <div class="col-md-6 col-lg-6">
-        <a href="/student/zal9_oswiadczenie" class="usos-tile border-success border-2">
-            <div class="usos-tile-icon text-success">
-                <i class="bi bi-building"></i>
-            </div>
-            <div class="usos-tile-content">
-                <h5 class="text-success">Ścieżka Standardowa (Zał. 9)</h5>
-                <p>Znalazłem firmę, która przyjmie mnie na praktykę. Wypełnij oświadczenie od firmy, aby wygenerować
-                    porozumienie.</p>
-            </div>
-        </a>
-    </div>
-
-    <!-- Opcja 2: Praca Zawodowa -->
-    <div class="col-md-6 col-lg-6">
-        <a href="/student/zal4b_wniosek" class="usos-tile border-primary border-2">
-            <div class="usos-tile-icon text-primary">
-                <i class="bi bi-briefcase"></i>
-            </div>
-            <div class="usos-tile-content">
-                <h5 class="text-primary">Zaliczenie na podst. Pracy (Zał. 4b)</h5>
-                <p>Pracuję lub prowadzę własną działalność. Złóż wniosek, aby zaliczyć ją jako praktykę studencką.</p>
-            </div>
-        </a>
-    </div>
-
-    {% else %}
-    <!-- Profil i status -->
-    <div class="col-md-6 col-lg-6">
-        <a href="/student/dashboard" class="usos-tile">
-            <div class="usos-tile-icon">
-                <i class="bi bi-person-badge"></i>
-            </div>
-            <div class="usos-tile-content">
-                <h5>Panel praktyk</h5>
-                <p>Sprawdź swoje dane oraz szczegóły procesu zaliczania praktyk.</p>
-            </div>
-        </a>
-    </div>
-
-    <!-- Warunkowy kafelek np. dla Dziennika (tylko w standardowej) -->
-    {% if praktyka.status != 'SCIEZKA_PRACA' %}
-    <div class="col-md-6 col-lg-6">
-        <a href="/student/dziennik" class="usos-tile">
-            <div class="usos-tile-icon">
-                <i class="bi bi-journal-text"></i>
-            </div>
-            <div class="usos-tile-content">
-                <h5>Dziennik Praktyki (Zał. 6)</h5>
-                <p>Uzupełniaj wpisy w dzienniku praktyki każdego dnia pracy.</p>
-            </div>
-        </a>
-    </div>
-    {% endif %}
-
-    <div class="col-md-6 col-lg-6">
-        <a href="/dokumenty" class="usos-tile">
-            <div class="usos-tile-icon">
-                <i class="bi bi-file-earmark-text"></i>
-            </div>
-            <div class="usos-tile-content">
-                <h5>Wszystkie dokumenty</h5>
-                <p>Przeglądaj niezbędne regulaminy oraz pobieraj wzory formularzy.</p>
-            </div>
-        </a>
-    </div>
-    {% endif %}
-
 </div>
 {% endblock %}

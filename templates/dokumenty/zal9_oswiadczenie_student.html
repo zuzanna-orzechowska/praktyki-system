@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/student/zal9.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Oświadczenie Instytucji (Zał. 9)</h2>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <p class="mb-1"><strong>Student:</strong> <span id="student-info">Ładowanie...</span></p>
+        <p class="mb-1"><strong>Nr albumu:</strong> <span id="student-album">...</span></p>
+    </div>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Instrukcja:</strong>
+    <ol class="mb-0 mt-2">
+        <li>Pobierz, wydrukuj i uzyskaj podpis oraz pieczątkę firmy na papierowym oświadczeniu.</li>
+        <li>Przepisz uważnie dane z uzyskanego dokumentu do poniższego formularza.</li>
+        <li>Załącz czytelny skan lub zdjęcie podpisanego dokumentu.</li>
+    </ol>
+    <div class="mt-3">
+        <a href="{{ url_for('static', filename='wzory/Zal9_oswiadczenie.docx') }}"
+            class="btn btn-sm btn-outline-primary" target="_blank">
+            <i class="bi bi-download"></i> Pobierz pusty druk (Zał. 9)
+        </a>
+    </div>
+</div>
+
+<form id="zal9-form" enctype="multipart/form-data">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold">Dane Zakładu Pracy i Opiekuna (ZOPZ)</div>
+        <div class="card-body">
+
+            <fieldset id="form-fieldset">
+                <h6 class="fw-bold mb-3 mt-2 text-primary">Informacje ogólne z dokumentu</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="miejscowosc" class="form-label">Miejscowość:</label>
+                        <input type="text" class="form-control" id="miejscowosc" name="miejscowosc" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="data_oswiadczenia" class="form-label">Data sporządzenia widniejąca na
+                            dokumencie:</label>
+                        <input type="date" class="form-control" id="data_oswiadczenia" name="data_oswiadczenia" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="nazwa_instytucji" class="form-label">Pełna nazwa instytucji/firmy:</label>
+                    <input type="text" class="form-control" id="nazwa_instytucji" name="nazwa_instytucji" required>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3 text-primary">Informacje o praktyce i studencie</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="kierunek" class="form-label">Kierunek:</label>
+                        <input type="text" class="form-control" id="kierunek" name="kierunek" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="rok_studiow" class="form-label">Rok studiów (np. 1, 2, 3, 4):</label>
+                        <input type="number" class="form-control" id="rok_studiow" name="rok_studiow" min="1" max="5" required>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="data_start" class="form-label">Termin praktyki (od):</label>
+                        <input type="date" class="form-control" id="data_start" name="data_start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="data_end" class="form-label">Termin praktyki (do):</label>
+                        <input type="date" class="form-control" id="data_end" name="data_end" required>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3 text-primary">Wskazany Zakładowy Opiekun Praktyki (ZOPZ)</h6>
+                <div class="alert alert-secondary small py-2">
+                    Na podstawie tych danych Dziekanat utworzy konto dostępowe dla Twojego opiekuna w zakładzie pracy.
+                    Upewnij się, że adres e-mail jest poprawny.
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="opiekun_imie" class="form-label">Imię ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_imie" name="opiekun_imie" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="opiekun_nazwisko" class="form-label">Nazwisko ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_nazwisko" name="opiekun_nazwisko" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="opiekun_stanowisko" class="form-label">Stanowisko ZOPZ:</label>
+                        <input type="text" class="form-control" id="opiekun_stanowisko" name="opiekun_stanowisko" required>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="opiekun_telefon" class="form-label">Telefon kontaktowy ZOPZ:</label>
+                        <input type="tel" class="form-control" id="opiekun_telefon" name="opiekun_telefon"
+                            pattern="[\+]?[0-9\s\-]{9,15}"
+                            title="Podaj prawidłowy numer telefonu, np. 123456789, 123-456-789 lub +48 123 456 789" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="opiekun_email" class="form-label">Adres e-mail ZOPZ:</label>
+                        <input type="email" class="form-control" id="opiekun_email" name="opiekun_email" required>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3 text-primary">Reprezentacja Firmy</h6>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="osoba_upowazniona_imie" class="form-label">Imię osoby upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_imie" name="osoba_upowazniona_imie" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="osoba_upowazniona_nazwisko" class="form-label">Nazwisko osoby upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_nazwisko" name="osoba_upowazniona_nazwisko" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="osoba_upowazniona_stanowisko" class="form-label">Stanowisko osoby upoważnionej:</label>
+                        <input type="text" class="form-control" id="osoba_upowazniona_stanowisko" name="osoba_upowazniona_stanowisko" required>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-file-earmark-arrow-up"></i> Skan podpisanego
+                    dokumentu</h6>
+                <div class="mb-3">
+                    <div id="skan-container"></div>
+                    <label for="skan_dokumentu" class="form-label text-muted small">Wybierz nowy plik, jeśli chcesz
+                        nadpisać obecny (opcjonalnie):</label>
+                    <input class="form-control form-control-sm" type="file" id="skan_dokumentu" name="skan_dokumentu" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-5" id="action-buttons">
+        <button type="button" class="btn btn-outline-primary" onclick="submitForm('zapisz')">
+            <i class="bi bi-save"></i> Zapisz jako szkic
+        </button>
+        <button type="button" class="btn btn-success" onclick="if(confirmSubmit()) submitForm('wyslij');">
+            <i class="bi bi-send"></i> Wyślij do weryfikacji (Zał. 9)
+        </button>
+    </div>
+</form>
+
+<script>
+    function confirmSubmit() {
+        let dataStart = document.getElementById('data_start').value;
+        let dataEnd = document.getElementById('data_end').value;
+        let ostrzezenia = [];
+
+        if (dataStart) {
+            let dStart = new Date(dataStart);
+            if (dStart.getMonth() >= 9) {
+                ostrzezenia.push("- Praktyka powinna rozpocząć się przed 1 października (semestr 7).");
+            }
+        }
+
+        if (dataStart && dataEnd) {
+            let dStart = new Date(dataStart);
+            let dEnd = new Date(dataEnd);
+            let months = (dEnd.getFullYear() - dStart.getFullYear()) * 12 + dEnd.getMonth() - dStart.getMonth();
+            if (dEnd.getDate() < dStart.getDate()) {
+                months--;
+            }
+            if (months < 6) {
+                ostrzezenia.push("- Praktyka jest krótsza niż wymagane 6 miesięcy.");
+            }
+        }
+
+        let baseMsg = "Złożenie oświadczenia przekazuje je do weryfikacji Dziekanatu. Upewnij się, że załączyłeś skan.\n\n";
+
+        if (ostrzezenia.length > 0) {
+            let warnMsg = baseMsg + "UWAGA! Twoje dane odbiegają od regulaminu:\n" + ostrzezenia.join("\n") + "\n\nCzy na pewno chcesz wysłać wniosek mimo to? Dziekanat będzie o tym wiedział i może go odrzucić.";
+            return confirm(warnMsg);
+        } else {
+            return confirm(baseMsg + "Czy chcesz kontynuować?");
+        }
+    }
+</script>
+{% endblock %}
