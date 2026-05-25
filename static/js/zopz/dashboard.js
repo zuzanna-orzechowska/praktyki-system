@@ -101,6 +101,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 praktykanci.forEach(p => {
                     const dataStr = p.data_start && p.data_end ? `${p.data_start} - ${p.data_end}` : '<span class="text-muted">Brak danych</span>';
                     
+                    let akcjeBtn = `<button class="btn btn-sm btn-outline-primary disabled" title="Dokumenty pojawią się wkrótce"><i class="bi bi-file-earmark-text"></i> Dokumenty</button>`;
+                    
+                    if (p.porozumienie_id) {
+                        let btnClass = 'btn-outline-primary';
+                        let icon = 'bi-file-earmark-text';
+                        let text = 'Porozumienie (Zał. 1)';
+                        
+                        if (p.porozumienie_status === 'OczekujeZOPZ') {
+                            btnClass = 'btn-primary';
+                            icon = 'bi-exclamation-circle';
+                            text = 'Do zatwierdzenia (Zał. 1)';
+                        } else if (p.porozumienie_status === 'UwagiZOPZ') {
+                            btnClass = 'btn-warning';
+                            text = 'Odesłano z uwagami';
+                        } else if (p.porozumienie_status === 'ZatwierdzoneZOPZ' || p.porozumienie_status === 'Podpisane') {
+                            btnClass = 'btn-success';
+                            icon = 'bi-check-circle';
+                            text = 'Zatwierdzone';
+                        }
+                        
+                        akcjeBtn = `<a href="/zopz/porozumienie/${p.porozumienie_id}" class="btn btn-sm ${btnClass}"><i class="bi ${icon}"></i> ${text}</a>`;
+                    }
+                    
                     table.innerHTML += `
                         <tr>
                             <td class="ps-4">
@@ -111,9 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>${dataStr}</td>
                             <td><span class="badge bg-secondary">${p.status}</span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary disabled" title="Dokumenty pojawią się wkrótce">
-                                    <i class="bi bi-file-earmark-text"></i> Dokumenty i Regulamin
-                                </button>
+                                ${akcjeBtn}
                             </td>
                         </tr>
                     `;

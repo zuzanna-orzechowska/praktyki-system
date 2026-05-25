@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/porozumienia.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('dziekanat.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Wróć do Panelu Głównego
+    </a>
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        <i class="bi bi-file-earmark-text text-primary"></i> Zarządzanie Porozumieniami (Zał. 1)
+    </h2>
+</div>
+
+<!-- Tabs navs -->
+<ul class="nav nav-tabs mb-3" id="porozumieniaTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active fw-bold" id="w-toku-tab" data-bs-toggle="tab" data-bs-target="#wtoku" type="button" role="tab" aria-controls="wtoku" aria-selected="true">
+        W toku
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link text-muted" id="podpisane-tab" data-bs-toggle="tab" data-bs-target="#podpisane" type="button" role="tab" aria-controls="podpisane" aria-selected="false">
+        Podpisane (Zakończone)
+    </button>
+  </li>
+</ul>
+
+<!-- Tabs content -->
+<div class="tab-content" id="porozumieniaTabsContent">
+  <!-- Zakładka: W toku -->
+  <div class="tab-pane fade show active" id="wtoku" role="tabpanel" aria-labelledby="w-toku-tab">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Student</th>
+                            <th>Status Porozumienia</th>
+                            <th>Uwagi ZOPZ</th>
+                            <th class="text-center">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="w-toku-table">
+                        <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Zakładka: Podpisane -->
+  <div class="tab-pane fade" id="podpisane" role="tabpanel" aria-labelledby="podpisane-tab">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Student</th>
+                            <th>Status</th>
+                            <th class="text-center">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="podpisane-table">
+                        <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

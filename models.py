@@ -119,6 +119,7 @@ class Porozumienie(db.Model, DictSerializable):
     podpisal_dziekanat = db.Column(db.String(255))
     status = db.Column(db.String(50), default='Draft')
     plik_path = db.Column(db.String(255))
+    komentarz_zopz = db.Column(db.Text, nullable=True)
     praktyka = db.relationship('Praktyka', backref=db.backref('porozumienie', uselist=False))
     zaklad = db.relationship('ZakladPracy')
 

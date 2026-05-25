@@ -11,3 +11,32 @@ def dashboard():
         return redirect(url_for('index'))
 
     return render_template('zopz/dashboard.html')
+
+@zopz_bp.route('/porozumienie/<int:id>')
+@login_required
+def porozumienie(id):
+    from models import Porozumienie, Oswiadczenie, Dokument
+    if current_user.rola != 'zopz':
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+
+    porozumienie_doc = Porozumienie.query.get_or_404(id)
+    if porozumienie_doc.zaklad.zopz_id != current_user.id:
+        flash('Odmowa dostępu do tego porozumienia.', 'danger')
+        return redirect(url_for('zopz.dashboard'))
+
+    praktyka = porozumienie_doc.praktyka
+    student = praktyka.student
+    
+    oswiadczenie = None
+    dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+    if dokument_zal9:
+        oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
+
+    return render_template(
+        'zopz/weryfikuj_porozumienie.html',
+        student=student,
+        praktyka=praktyka,
+        porozumienie=porozumienie_doc,
+        oswiadczenie=oswiadczenie
+    )

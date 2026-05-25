@@ -54,6 +54,73 @@ def zal9_lista():
         'odrzucone': [format_oswiadczenie(o) for o in oswiadczenia_odrzucone]
     })
 
+@dziekanat_api_bp.route('/porozumienia', methods=['GET'])
+@login_required
+def porozumienia_lista():
+    if current_user.rola != 'dziekanat':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyki = db.session.query(Praktyka)\
+        .filter(Praktyka.status != 'OCZEKUJE_NA_ZAL9', Praktyka.status != 'BRAK_ZGŁOSZENIA').all()
+        
+    def format_praktyka_porozumienie(p):
+        student = p.student
+        por = p.porozumienie
+        return {
+            'id': por.id if por else p.id,
+            'praktyka_id': p.id,
+            'porozumienie_id': por.id if por else None,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status_porozumienia': por.status if por else 'Brak / Szkic',
+            'komentarz_zopz': por.komentarz_zopz if por else None
+        }
+
+    return jsonify({
+        'porozumienia': [format_praktyka_porozumienie(p) for p in praktyki]
+    })
+
+@dziekanat_api_bp.route('/wyslij_porozumienie/<int:praktyka_id>', methods=['POST'])
+@login_required
+def wyslij_porozumienie(praktyka_id):
+    if current_user.rola != 'dziekanat':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    if not praktyka.zaklad_id:
+        return jsonify({'error': 'Praktyka nie ma przypisanego zakładu pracy (ZAL9 nie został w pełni zatwierdzony/nie utworzono konta).'}), 400
+        
+    porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+    if not porozumienie:
+        porozumienie = Porozumienie(praktyka_id=praktyka.id, zaklad_id=praktyka.zaklad_id, status='OczekujeZOPZ')
+        db.session.add(porozumienie)
+    else:
+        porozumienie.status = 'OczekujeZOPZ'
+        porozumienie.komentarz_zopz = None # reset komentarza przy ponownym wysłaniu
+        
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Porozumienie wysłane do ZOPZ.'})
+
+@dziekanat_api_bp.route('/podpisz_porozumienie/<int:id>', methods=['POST'])
+@login_required
+def podpisz_porozumienie(id):
+    from models import Porozumienie
+    from datetime import date
+    if current_user.rola != 'dziekanat':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    porozumienie = Porozumienie.query.get_or_404(id)
+    if porozumienie.status != 'ZatwierdzoneZOPZ':
+        return jsonify({'error': 'Porozumienie nie zostało jeszcze zatwierdzone przez Zakład Pracy.'}), 400
+        
+    porozumienie.status = 'Podpisane'
+    porozumienie.data_podpisania = date.today()
+    porozumienie.podpisal_dziekanat = f"{current_user.imie} {current_user.nazwisko}"
+    
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Porozumienie zostało ostatecznie zatwierdzone i podpisane.'})
+
 @dziekanat_api_bp.route('/weryfikuj_zal9/<int:id>', methods=['GET', 'POST'])
 @login_required
 def weryfikuj_zal9(id):
@@ -90,11 +157,57 @@ def weryfikuj_zal9(id):
             dokument.status = 'AwaitingAccount'
             db.session.commit()
             return jsonify({'success': True, 'message': 'Dane przekazane do Administratora IT w celu utworzenia konta.'})
-            
+        else:
+            return jsonify({'error': 'Nieprawidłowa akcja.'}), 400
+        
+    porozumienie = praktyka.porozumienie
+    porozumienie_data = None
+    if porozumienie:
+        porozumienie_data = {
+            'id': porozumienie.id,
+            'status': porozumienie.status,
+            'komentarz_zopz': porozumienie.komentarz_zopz
+        }
+
     return jsonify({
+        'oswiadczenie': oswiadczenie.to_dict(),
+        'dokument': dokument.to_dict(),
+        'praktyka': praktyka.to_dict(),
         'student': student.to_dict(),
         'uzytkownik': student.uzytkownik.to_dict(),
-        'praktyka': praktyka.to_dict(),
-        'dokument': dokument.to_dict(),
-        'oswiadczenie': oswiadczenie.to_dict()
+        'porozumienie': porozumienie_data
     })
+
+@dziekanat_api_bp.route('/edytuj_zaklad/<int:praktyka_id>', methods=['POST'])
+@login_required
+def edytuj_zaklad(praktyka_id):
+    if current_user.rola != 'dziekanat':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    zaklad = praktyka.zaklad
+    data = request.json
+    
+    if zaklad:
+        zaklad.nazwa = data.get('nazwa', zaklad.nazwa)
+        zaklad.nip = data.get('nip', zaklad.nip)
+        zaklad.kod_pocztowy = data.get('kod_pocztowy', zaklad.kod_pocztowy)
+        zaklad.miasto = data.get('miasto', zaklad.miasto)
+        zaklad.ulica = data.get('ulica', zaklad.ulica)
+        zaklad.nr_budynku = data.get('nr_budynku', zaklad.nr_budynku)
+        zaklad.nr_lokalu = data.get('nr_lokalu', zaklad.nr_lokalu)
+    
+    dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+    if dokument_zal9:
+        oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
+        if oswiadczenie:
+            oswiadczenie.osoba_upowazniona_imie = data.get('osoba_upowazniona_imie', oswiadczenie.osoba_upowazniona_imie)
+            oswiadczenie.osoba_upowazniona_nazwisko = data.get('osoba_upowazniona_nazwisko', oswiadczenie.osoba_upowazniona_nazwisko)
+            oswiadczenie.osoba_upowazniona_stanowisko = data.get('osoba_upowazniona_stanowisko', oswiadczenie.osoba_upowazniona_stanowisko)
+            
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Zaktualizowano dane Zakładu Pracy i reprezentanta.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

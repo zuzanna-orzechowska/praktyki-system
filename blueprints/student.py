@@ -52,12 +52,19 @@ def porozumienie():
 
     #jesli nie ma porozumienia to pusty szkic z danymi z praktyki
     porozumienie_doc = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+    
+    # Pobierz oświadczenie z ZAL9, aby mieć dane reprezentanta Zakładu
+    oswiadczenie = None
+    dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+    if dokument_zal9:
+        oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
 
     return render_template(
         'dokumenty/zal1_porozumienie.html',
         student=student,
         praktyka=praktyka,
-        porozumienie=porozumienie_doc
+        porozumienie=porozumienie_doc,
+        oswiadczenie=oswiadczenie
     )
 
 @student_bp.route('/zal2_program')

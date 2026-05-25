@@ -323,7 +323,12 @@
                             Oświadczenia (Zał. 9)
                         </a>
                     </li>
-                    <li><a href="#">Porozumienia (Zał. 1)</a></li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.porozumienia') }}"
+                            class="{% if request.endpoint == 'dziekanat.porozumienia' or request.endpoint == 'dziekanat.weryfikuj_porozumienie' %}active{% endif %}">
+                            Porozumienia i Programy (Zał. 1, 2)
+                        </a>
+                    </li>
                     <li><a href="#">Protokoły (Zał. 8)</a></li>
                 </ul>
                 {% endif %}

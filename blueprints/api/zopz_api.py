@@ -18,6 +18,7 @@ def dashboard():
         
     def format_praktyka(p):
         student = p.student
+        porozumienie = p.porozumienie
         return {
             'id': p.id,
             'student_id': student.id,
@@ -27,7 +28,10 @@ def dashboard():
             'kierunek': student.kierunek,
             'data_start': str(p.data_start) if p.data_start else '',
             'data_end': str(p.data_end) if p.data_end else '',
-            'status': p.status
+            'status': p.status,
+            'porozumienie_id': porozumienie.id if porozumienie else None,
+            'porozumienie_status': porozumienie.status if porozumienie else None,
+            'porozumienie_komentarz': porozumienie.komentarz_zopz if porozumienie else None
         }
 
     return jsonify({
@@ -72,9 +76,38 @@ def update_zaklad_pracy():
     if 'telefon' in data: zaklad.telefon = data['telefon']
     
     db.session.commit()
+    return jsonify({'success': True, 'message': 'Dane zakładu zostały zaktualizowane.'})
+
+@zopz_api_bp.route('/weryfikuj_porozumienie/<int:porozumienie_id>', methods=['POST'])
+@login_required
+def weryfikuj_porozumienie(porozumienie_id):
+    from models import Porozumienie
+    from extensions import db
+    from flask import request
     
-    return jsonify({
-        'success': True,
-        'message': 'Dane zakładu pracy zostały zaktualizowane.',
-        'zaklad': zaklad.to_dict()
-    })
+    if current_user.rola != 'zopz':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    porozumienie = Porozumienie.query.get_or_404(porozumienie_id)
+    if porozumienie.zaklad.zopz_id != current_user.id:
+        return jsonify({'error': 'Odmowa dostępu do tego porozumienia'}), 403
+        
+    data = request.json
+    akcja = data.get('akcja')
+    
+    if akcja == 'zatwierdz':
+        porozumienie.status = 'ZatwierdzoneZOPZ'
+        porozumienie.komentarz_zopz = None
+        message = 'Porozumienie zostało zatwierdzone.'
+    elif akcja == 'uwagi':
+        komentarz = data.get('komentarz_zopz')
+        if not komentarz:
+            return jsonify({'error': 'Komentarz jest wymagany przy zgłaszaniu uwag.'}), 400
+        porozumienie.status = 'UwagiZOPZ'
+        porozumienie.komentarz_zopz = komentarz
+        message = 'Uwagi zostały przesłane do Dziekanatu.'
+    else:
+        return jsonify({'error': 'Nieznana akcja.'}), 400
+        
+    db.session.commit()
+    return jsonify({'success': True, 'message': message})

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script>
+function submitDecision(akcja) {
+    const komentarz = document.getElementById('komentarz_zopz') ? document.getElementById('komentarz_zopz').value : '';
+    if (akcja === 'uwagi' && !komentarz) {
+        alert('Komentarz jest wymagany przy zgłaszaniu uwag.');
+        return;
+    }
+    if (akcja === 'zatwierdz' && !confirm('Czy na pewno chcesz zatwierdzić to Porozumienie?')) return;
+    
+    fetch(`/api/zopz/weryfikuj_porozumienie/{{ porozumienie.id }}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ akcja: akcja, komentarz_zopz: komentarz })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Wystąpił błąd komunikacji.');
+    });
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Porozumienie o organizację praktyki (Zał. 1)
+    </h2>
+    {% if porozumienie and porozumienie.status == 'Podpisane' %}
+    <span class="badge bg-success">Status: Podpisane</span>
+    {% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' %}
+    <span class="badge bg-info">Status: Zatwierdzone przez ZOPZ</span>
+    {% elif porozumienie and porozumienie.status == 'UwagiZOPZ' %}
+    <span class="badge bg-warning text-dark">Status: Do poprawy przez Dziekanat</span>
+    {% elif porozumienie and porozumienie.status == 'OczekujeZOPZ' %}
+    <span class="badge bg-primary">Status: Oczekuje na ZOPZ</span>
+    {% else %}
+    <span class="badge bg-secondary">Status: Szkic</span>
+    {% endif %}
+</div>
+
+{% if porozumienie and porozumienie.status == 'OczekujeZOPZ' %}
+<div class="card shadow-sm border-primary mb-4 bg-light">
+    <div class="card-body">
+        <h5 class="text-primary"><i class="bi bi-info-circle-fill"></i> Oczekuje na Twoją weryfikację</h5>
+        <p>Sprawdź poniższe Porozumienie (Zał. 1). Jeśli wszystkie dane się zgadzają, możesz je zatwierdzić. W przypadku błędów, zgłoś uwagi, a zostaną one przekazane do Dziekanatu.</p>
+        
+        <div class="mb-3">
+            <label for="komentarz_zopz" class="form-label fw-bold text-danger"><i class="bi bi-chat-left-text"></i> Uwagi (wymagane przy odrzuceniu):</label>
+            <textarea class="form-control" id="komentarz_zopz" rows="2" placeholder="Wpisz, co należy poprawić..."></textarea>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-danger" onclick="submitDecision('uwagi')">
+                <i class="bi bi-x-circle"></i> Zgłoś uwagi do Dziekanatu
+            </button>
+            <button type="button" class="btn btn-success flex-grow-1" onclick="submitDecision('zatwierdz')">
+                <i class="bi bi-check-circle"></i> Zatwierdź Porozumienie
+            </button>
+        </div>
+    </div>
+</div>
+{% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' %}
+<div class="alert alert-success shadow-sm mb-4">
+    <i class="bi bi-check-circle-fill"></i> Zatwierdziłeś to porozumienie. Oczekuje ono na ostateczne podpisanie przez Dziekanat.
+</div>
+{% elif porozumienie and porozumienie.status == 'UwagiZOPZ' %}
+<div class="alert alert-warning shadow-sm mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i> Porozumienie cofnięte do Dziekanatu z uwagami.
+    <hr>
+    <strong>Twoje uwagi:</strong> {{ porozumienie.komentarz_zopz }}
+</div>
+{% endif %}
+
+<h4 class="mt-5 mb-3 text-secondary">Podgląd Dokumentów</h4>
+<ul class="nav nav-tabs" id="docTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="zal1-tab" data-bs-toggle="tab" data-bs-target="#zal1" type="button" role="tab">Załącznik nr 1 (Porozumienie)</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="zal2-tab" data-bs-toggle="tab" data-bs-target="#zal2" type="button" role="tab">Załącznik nr 2 (Program)</button>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 p-3 bg-white mb-5" id="docTabsContent">
+  <!-- ZAL 1 -->
+  <div class="tab-pane fade show active" id="zal1" role="tabpanel">
+      {% include 'dokumenty/_zal1_content.html' %}
+  </div>
+  
+  <!-- ZAL 2 -->
+  <div class="tab-pane fade" id="zal2" role="tabpanel">
+      {% include 'dokumenty/_zal2_content.html' %}
+  </div>
+</div>
+{% endblock %}

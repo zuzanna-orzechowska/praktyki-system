@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script>
+function wyslijPorozumienie(praktykaId) {
+    if(!confirm('Czy na pewno chcesz wygenerować i przesłać Porozumienie do ZOPZ?')) return;
+    fetch(`/api/dziekanat/wyslij_porozumienie/${praktykaId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(err => console.error(err));
+}
+
+function podpiszPorozumienie(porozumienieId) {
+    if(!confirm('Czy na pewno chcesz ostatecznie zatwierdzić i podpisać Porozumienie? Operacja jest nieodwracalna.')) return;
+    
+    if (!porozumienieId) return;
+
+    fetch(`/api/dziekanat/podpisz_porozumienie/${porozumienieId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(err => console.error(err));
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <a href="{{ url_for('dziekanat.porozumienia') }}" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Wróć do listy
+        </a>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Zarządzanie Porozumieniem (Zał. 1)
+        </h2>
+        <div class="text-muted mt-1">
+            Student: <strong>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}</strong> ({{ student.nr_albumu }})
+        </div>
+    </div>
+    
+    <div>
+        {% if not porozumienie %}
+        <span class="badge bg-secondary fs-6">Status: Brak (Szkic)</span>
+        {% elif porozumienie.status == 'OczekujeZOPZ' %}
+        <span class="badge bg-primary fs-6">Status: Wysłane do ZOPZ</span>
+        {% elif porozumienie.status == 'UwagiZOPZ' %}
+        <span class="badge bg-warning text-dark fs-6">Status: Odesłane z uwagami ZOPZ</span>
+        {% elif porozumienie.status == 'ZatwierdzoneZOPZ' %}
+        <span class="badge bg-info fs-6">Status: Zatwierdzone przez ZOPZ</span>
+        {% elif porozumienie.status == 'Podpisane' %}
+        <span class="badge bg-success fs-6">Status: Podpisane (Zakończone)</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Panel akcji Dziekanatu -->
+<div class="card shadow-sm mb-4 border-0 bg-light border-start border-primary border-4">
+    <div class="card-body">
+        <h5 class="text-primary"><i class="bi bi-gear-fill"></i> Panel Akcji</h5>
+        
+        {% if not porozumienie %}
+        <p>Porozumienie nie zostało jeszcze wygenerowane i wysłane do Zakładu Pracy (ZOPZ). Poniżej możesz zobaczyć podgląd dokumentów. Jeśli wszystko się zgadza, wyślij je do akceptacji ZOPZ.</p>
+        <button class="btn btn-primary" onclick="wyslijPorozumienie('{{ praktyka.id }}')">
+            <i class="bi bi-send"></i> Wyślij Porozumienie do ZOPZ
+        </button>
+        
+        {% elif porozumienie.status == 'OczekujeZOPZ' %}
+        <p>Porozumienie zostało wysłane. Oczekujemy na weryfikację i akceptację ze strony Opiekuna Zakładowego (ZOPZ).</p>
+        
+        {% elif porozumienie.status == 'UwagiZOPZ' %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong>ZOPZ zgłosił uwagi do porozumienia:</strong>
+            <p class="mb-0 mt-2">{{ porozumienie.komentarz_zopz }}</p>
+        </div>
+        <p>Popraw dane lub skontaktuj się ze studentem/firmą, a następnie prześlij dokument ponownie.</p>
+        <button class="btn btn-warning" onclick="wyslijPorozumienie('{{ praktyka.id }}')">
+            <i class="bi bi-send"></i> Wyślij Poprawione Porozumienie
+        </button>
+        
+        {% elif porozumienie.status == 'ZatwierdzoneZOPZ' %}
+        <p>Opiekun Zakładowy zatwierdził Porozumienie. Możesz je teraz ostatecznie podpisać.</p>
+        <button class="btn btn-success" onclick="podpiszPorozumienie('{{ porozumienie.id }}')">
+            <i class="bi bi-pen"></i> Podpisz i Zakończ Porozumienie
+        </button>
+        
+        {% elif porozumienie.status == 'Podpisane' %}
+        <p>Porozumienie jest ostatecznie podpisane przez obie strony. Proces zakończony.</p>
+        {% endif %}
+    </div>
+</div>
+
+<h4 class="mt-5 mb-3 text-secondary">Podgląd Dokumentów</h4>
+<ul class="nav nav-tabs" id="docTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="zal1-tab" data-bs-toggle="tab" data-bs-target="#zal1" type="button" role="tab">Załącznik nr 1 (Porozumienie)</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="zal2-tab" data-bs-toggle="tab" data-bs-target="#zal2" type="button" role="tab">Załącznik nr 2 (Program)</button>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 p-3 bg-white mb-5" id="docTabsContent">
+  <!-- ZAL 1 -->
+  <div class="tab-pane fade show active" id="zal1" role="tabpanel">
+      {% include 'dokumenty/_zal1_content.html' %}
+  </div>
+  
+  <!-- ZAL 2 -->
+  <div class="tab-pane fade" id="zal2" role="tabpanel">
+      {% include 'dokumenty/_zal2_content.html' %}
+  </div>
+</div>
+</div>
+
+<!-- Modal Edycji Danych Zakładu Pracy -->
+<div class="modal fade" id="editZakladModal" tabindex="-1" aria-labelledby="editZakladModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="editZakladModalLabel"><i class="bi bi-building"></i> Edytuj dane Zakładu Pracy</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editZakladForm">
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">Dane firmy</h6>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nazwa Zakładu Pracy</label>
+                <input type="text" class="form-control" name="nazwa" value="{{ praktyka.zaklad.nazwa }}" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">NIP</label>
+                    <input type="text" class="form-control" name="nip" value="{{ praktyka.zaklad.nip or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Kod Pocztowy</label>
+                    <input type="text" class="form-control" name="kod_pocztowy" value="{{ praktyka.zaklad.kod_pocztowy or '' }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Miasto</label>
+                    <input type="text" class="form-control" name="miasto" value="{{ praktyka.zaklad.miasto or '' }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Ulica</label>
+                    <input type="text" class="form-control" name="ulica" value="{{ praktyka.zaklad.ulica or '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Nr budynku</label>
+                    <input type="text" class="form-control" name="nr_budynku" value="{{ praktyka.zaklad.nr_budynku or '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Nr lokalu</label>
+                    <input type="text" class="form-control" name="nr_lokalu" value="{{ praktyka.zaklad.nr_lokalu or '' }}">
+                </div>
+            </div>
+            
+            {% if oswiadczenie %}
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">Osoba reprezentująca firmę na porozumieniu</h6>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Imię</label>
+                    <input type="text" class="form-control" name="osoba_upowazniona_imie" value="{{ oswiadczenie.osoba_upowazniona_imie or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Nazwisko</label>
+                    <input type="text" class="form-control" name="osoba_upowazniona_nazwisko" value="{{ oswiadczenie.osoba_upowazniona_nazwisko or '' }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Stanowisko</label>
+                <input type="text" class="form-control" name="osoba_upowazniona_stanowisko" value="{{ oswiadczenie.osoba_upowazniona_stanowisko or '' }}">
+            </div>
+            {% endif %}
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+        <button type="button" class="btn btn-primary" onclick="zapiszDaneZakladu()">Zapisz zmiany</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function zapiszDaneZakladu() {
+    const form = document.getElementById('editZakladForm');
+    if(!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch(`/api/dziekanat/edytuj_zaklad/{{ praktyka.id }}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if(resData.success) {
+            alert(resData.message);
+            window.location.reload();
+        } else {
+            alert(resData.error);
+        }
+    })
+    .catch(err => console.error(err));
+}
+</script>
+
+{% endblock %}

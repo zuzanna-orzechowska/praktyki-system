@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('action-panel').style.display = 'block';
             } else if (dokument && ['Approved', 'AwaitingAccount', 'AccountCreated'].includes(dokument.status)) {
                 document.getElementById('approved-panel').style.display = 'block';
+                
             }
             
         })
@@ -108,3 +109,5 @@ function submitDecision(action) {
     })
     .catch(err => console.error(err));
 }
+
+

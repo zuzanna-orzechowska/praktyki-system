@@ -1,0 +1,127 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Porozumienie o organizację praktyki (Zał. 1)
+    </h2>
+    {% if porozumienie and porozumienie.status == 'Podpisane' %}
+    <span class="badge bg-success">Status: Podpisane</span>
+    {% else %}
+    <span class="badge bg-secondary">Status: Szkic / Oczekujące</span>
+    {% endif %}
+</div>
+
+{% if current_user.rola == 'student' %}
+<div class="alert alert-secondary border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Ten dokument jest generowany automatycznie i zawierany między Instytutem a Zakładem
+    Pracy.
+    Jako student posiadasz do niego wyłącznie wgląd.
+</div>
+{% elif current_user.rola == 'dziekanat' %}
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editZakladModal">
+        <i class="bi bi-pencil-square"></i> Edytuj dane firmy (ZOPZ)
+    </button>
+</div>
+{% endif %}
+
+<div class="card shadow-sm mb-5 border-0">
+    <div class="card-body p-5"
+        style="border: 1px solid #dee2e6; max-width: 800px; margin: 0 auto; background-color: #fff;">
+        <div class="text-end mb-4">
+            <span style="font-size: 1.1rem;">Załącznik nr 1</span>
+        </div>
+        <h4 class="text-center mb-1" style="font-weight: bold; letter-spacing: 1px;">Porozumienie Nr {% if porozumienie and porozumienie.id %}{{ porozumienie.id }}/2026{% else %}PR-{{ praktyka.id }}/{{ current_year|default('2026') }}{% endif %}</h4>
+        <h4 class="text-center mb-5" style="font-weight: bold; font-style: italic;">w sprawie praktyk studenckich</h4>
+
+        <p style="text-align: justify; line-height: 1.8;">
+            zawarte w dniu 
+            <strong>
+                {% if porozumienie and porozumienie.data_podpisania %}
+                {{ porozumienie.data_podpisania }}
+                {% elif current_date %}
+                {{ current_date }}
+                {% else %}
+                ...........................
+                {% endif %}
+            </strong>
+            pomiędzy <strong>Akademią Nauk Stosowanych w Elblągu</strong>, ul. Wojska Polskiego 1, 82-300 Elbląg zwaną dalej „Uczelnią” reprezentowaną przez <strong>Dyrektora Instytutu Informatyki Stosowanej</strong> z jednej strony, a 
+            <strong>{{ praktyka.zaklad.nazwa }}{% if praktyka.zaklad.ulica %}, {{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.kod_pocztowy }} {{ praktyka.zaklad.miasto }}{% else %}, {{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}{% endif %}</strong>, 
+            zwanym dalej „Zakładem pracy”, reprezentowanym przez 
+            <strong>{% if oswiadczenie %}{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }} - {{ oswiadczenie.osoba_upowazniona_stanowisko }}{% else %}........................................................{% endif %}</strong> 
+            — z drugiej strony.
+        </p>
+
+        <p class="mt-4">1. Uczelnia kieruje studentów Uczelni na praktyki zawodowe na wskazany okres:</p>
+        <table class="table table-bordered align-middle text-center mb-4">
+            <thead>
+                <tr>
+                    <th>Lp.</th>
+                    <th>Imię i nazwisko</th>
+                    <th>Termin odbywania<br>praktyki zawodowej</th>
+                    <th>Wymiar<br>praktyki zawodowej</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1.</td>
+                    <td>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0].strip() }}</td>
+                    <td>{{ praktyka.data_start }} – {{ praktyka.data_end }}</td>
+                    <td>{{ praktyka.liczba_godzin }} godz.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="text-align: justify; line-height: 1.6;">
+            <p>2. Obowiązki Zakładu pracy:<br>
+            Zakład pracy zobowiązuje się do sprawowania nadzoru nad studentami odbywającymi praktykę oraz zapewnienia warunków niezbędnych do jej przeprowadzenia zgodnie z porozumieniem zawartym z Uczelnią, a w szczególności do:
+            <ol style="list-style-type: none; padding-left: 20px;">
+                <li>1) zapewnienia odpowiednich stanowisk pracy, urządzeń, pomieszczeń, zgodnie z programem praktyki,</li>
+                <li>2) zapoznania studentów z zakładowym regulaminem pracy, z przepisami o bezpieczeństwie i higienie pracy oraz o ochronie tajemnicy państwowej i służbowej,</li>
+                <li>3) sprawowania nadzoru nad właściwym wykonaniem przez studentów programu praktyki,</li>
+                <li>4) umożliwienia studentom korzystania z zaplecza socjalnego jakie posiada zakład pracy.</li>
+            </ol>
+            </p>
+
+            <p>3. Obowiązki Uczelni:<br>
+            Uczelnia zobowiązana jest do:
+            <ol style="list-style-type: none; padding-left: 20px;">
+                <li>1) opracowania w porozumieniu z Zakładem pracy i ze studentami szczegółowych programów praktyk,</li>
+                <li>2) sprawowania nadzoru dydaktyczno – wychowawczego oraz organizacyjnego nad przebiegiem praktyk.</li>
+            </ol>
+            </p>
+
+            <p>4. Obowiązki studenta:
+            <ol style="list-style-type: none; padding-left: 20px;">
+                <li>1) stosowanie się do ustaleń Zakładu pracy w zakresie porządku i dyscypliny pracy,</li>
+                <li>2) przestrzeganie zasad BHP i ochrony przeciwpożarowej,</li>
+                <li>3) przestrzeganie zasad odbywania praktyk określonych przez Uczelnię,</li>
+                <li>4) student odbywający praktykę zawodową jest zobowiązany ubezpieczyć się indywidualnie od następstw nieszczęśliwych wypadków na czas trwania praktyki.</li>
+            </ol>
+            </p>
+
+            <p>5. Upoważnionym do rozstrzygania, wspólnie z kierownikiem Zakładu pracy, spraw związanych z przebiegiem praktyki jest opiekun ds. praktyk powołany przez Rektora Akademii Nauk Stosowanych w Elblągu.</p>
+
+            <p>6. Porozumienie zostaje zawarte na czas trwania praktyki.</p>
+
+            <p>7. Wszelkie zmiany porozumienia wymagają formy pisemnej pod rygorem nieważności.</p>
+
+            <p>8. Porozumienie niniejsze sporządzone zostało w dwóch jednobrzmiących egzemplarzach po jednym dla każdej ze stron.</p>
+        </div>
+
+        <div class="row mt-5 pt-5 text-center">
+            <div class="col-6">
+                <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
+                    <small>(podpis Dyrektora Instytutu)</small>
+                </div>
+                {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ porozumienie.podpisal_dziekanat }}</div>
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
+                    <small>(podpis osoby uprawnionej do reprezentacji<br>w imieniu Zakładu pracy)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
