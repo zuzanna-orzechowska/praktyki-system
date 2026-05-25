@@ -75,6 +75,7 @@ def akceptuj_pracownika(id):
 @admin_api_bp.route('/stworz_zopz_z_zal9/<int:oswiadczenie_id>', methods=['POST'])
 @login_required
 def stworz_zopz_z_zal9(oswiadczenie_id):
+    from models import ZakladPracy
     if current_user.rola != 'admin':
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
@@ -82,10 +83,24 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
     email_zopz = oswiadczenie.opiekun_email.lower()
     domain = email_zopz.split('@')[1] if '@' in email_zopz else ''
 
-    if Uzytkownik.query.filter_by(email=email_zopz).first():
+    istniejacy_zopz = Uzytkownik.query.filter_by(email=email_zopz).first()
+    
+    def przypisz_zaklad_do_praktyki(zopz_id):
+        # Sprawdz czy zakład już istnieje dla tego ZOPZ
+        zaklad = ZakladPracy.query.filter_by(zopz_id=zopz_id).first()
+        if not zaklad:
+            zaklad = ZakladPracy(nazwa=oswiadczenie.nazwa_instytucji, zopz_id=zopz_id, miasto=oswiadczenie.miejscowosc, email=email_zopz, telefon=oswiadczenie.opiekun_telefon)
+            db.session.add(zaklad)
+            db.session.flush() # Wymusza nadanie ID bez commitu
+            
+        oswiadczenie.dokument.praktyka.zaklad_id = zaklad.id
+        oswiadczenie.dokument.praktyka.uopz_id = None # Opcjonalnie
+
+    if istniejacy_zopz:
+        przypisz_zaklad_do_praktyki(istniejacy_zopz.id)
         oswiadczenie.dokument.status = 'AccountCreated'
         db.session.commit()
-        return jsonify({'success': False, 'message': f'Konto dla {email_zopz} już istnieje w systemie. Zmieniono status dokumentu.'})
+        return jsonify({'success': False, 'message': f'Konto dla {email_zopz} już istnieje w systemie. Zmieniono status dokumentu i automatycznie przypisano studenta do tego ZOPZ.'})
 
     temp_password = None
     if 'gmail.com' in domain:
@@ -110,6 +125,10 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
         nowy_zopz.set_password(temp_password)
 
     db.session.add(nowy_zopz)
+    db.session.flush()
+    
+    przypisz_zaklad_do_praktyki(nowy_zopz.id)
+    
     oswiadczenie.dokument.status = 'AccountCreated'
     db.session.commit()
 
@@ -118,13 +137,13 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
         msg.body = f"Witaj {oswiadczenie.opiekun_imie} {oswiadczenie.opiekun_nazwisko},\n\nTwoje konto Opiekuna Zakładowego (ZOPZ) zostało utworzone.\n\nE-mail: {email_zopz}\nTymczasowe hasło: {temp_password}\n\nPrzy pierwszym logowaniu zostaniesz poproszony o zmianę hasła na własne."
         try:
             mail.send(msg)
-            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem lokalnym. Wysłano e-mail z hasłem do {email_zopz}.'})
+            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem lokalnym. Wysłano e-mail z hasłem do {email_zopz} i przypisano studenta do tego ZOPZ.'})
         except Exception as e:
-            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem lokalnym, ale wystąpił błąd przy wysyłaniu e-maila: {e}'})
+            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ, przypisano do studenta, ale wystąpił błąd przy wysyłaniu e-maila: {e}'})
     elif provider == 'google':
-        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem GOOGLE. Opiekun ({email_zopz}) może zalogować się jednym kliknięciem bez hasła.'})
+        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ (GOOGLE). Opiekun ({email_zopz}) może zalogować się jednym kliknięciem bez hasła. Student przypisany.'})
     else:
-        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem Microsoft ({email_zopz}).'})
+        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem Microsoft ({email_zopz}). Student przypisany.'})
 
 
 @admin_api_bp.route('/stworz_zopz', methods=['POST'])

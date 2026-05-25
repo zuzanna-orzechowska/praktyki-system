@@ -57,7 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const histTable = document.getElementById('zatwierdzone-table');
             histTable.innerHTML = '';
             if (zatwierdzone.length > 0) {
+                const statusMap = {
+                    'Approved': { text: 'Zatwierdzone', color: 'success' },
+                    'AwaitingAccount': { text: 'Oczekuje na konto IT', color: 'warning text-dark' },
+                    'AccountCreated': { text: 'Konto ZOPZ utworzone', color: 'primary' }
+                };
+                
                 zatwierdzone.forEach(o => {
+                    const mappedStatus = statusMap[o.status] || { text: o.status, color: 'secondary' };
+                    
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="ps-4">
@@ -66,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </td>
                         <td>${o.data_zlozenia || 'Brak danych'}</td>
                         <td class="text-center">
-                            <span class="badge bg-secondary">${o.status}</span>
+                            <span class="badge bg-${mappedStatus.color}">${mappedStatus.text}</span>
                         </td>
                         <td class="text-center">
                             <a href="/dziekanat/weryfikuj_zal9/${o.id}" class="btn btn-sm btn-outline-secondary">
@@ -82,6 +90,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td colspan="4" class="text-center py-5 text-muted">
                             <i class="bi bi-archive fs-1 d-block mb-2"></i>
                             Brak zatwierdzonych oświadczeń w historii.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            const odrzTable = document.getElementById('odrzucone-table');
+            const odrzucone = data.odrzucone || [];
+            odrzTable.innerHTML = '';
+            if (odrzucone.length > 0) {
+                odrzucone.forEach(o => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="ps-4">
+                            <strong>${o.student_imie} ${o.student_nazwisko}</strong><br>
+                            <small class="text-muted">Album: ${o.nr_albumu}</small>
+                        </td>
+                        <td>${o.data_zlozenia || 'Brak danych'}</td>
+                        <td><small class="text-danger">${o.komentarz || 'Brak komentarza'}</small></td>
+                        <td class="text-center">
+                            <a href="/dziekanat/weryfikuj_zal9/${o.id}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i> Podgląd
+                            </a>
+                        </td>
+                    `;
+                    odrzTable.appendChild(tr);
+                });
+            } else {
+                odrzTable.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-circle fs-1 d-block mb-2"></i>
+                            Brak odrzuconych oświadczeń oczekujących na poprawę studenta.
                         </td>
                     </tr>
                 `;

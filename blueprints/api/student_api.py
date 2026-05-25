@@ -18,10 +18,28 @@ def dashboard():
 
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
+    powiadomienia = []
+    if praktyka:
+        dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+        if dokument_zal9:
+            if dokument_zal9.status == 'Draft' and dokument_zal9.komentarz:
+                powiadomienia.append({
+                    'typ': 'danger',
+                    'tytul': 'Oświadczenie (Zał. 9) zostało odrzucone',
+                    'tresc': f"Dziekanat odrzucił Twoje oświadczenie z komentarzem: <strong>{dokument_zal9.komentarz}</strong>. Proszę wejść w oświadczenie i poprawić błędy."
+                })
+            elif dokument_zal9.status in ['AwaitingAccount', 'AccountCreated', 'Approved']:
+                powiadomienia.append({
+                    'typ': 'success',
+                    'tytul': 'Oświadczenie (Zał. 9) zaakceptowane',
+                    'tresc': 'Twoje oświadczenie zostało zaakceptowane. Jeśli wymagało utworzenia konta dla opiekuna z zakładu pracy, zostanie to wkrótce zrealizowane.'
+                })
+    
     return jsonify({
         'student': student.to_dict(),
         'praktyka': praktyka.to_dict() if praktyka else None,
-        'uzytkownik': current_user.to_dict()
+        'uzytkownik': current_user.to_dict(),
+        'powiadomienia': powiadomienia
     })
 
 @student_api_bp.route('/dziennik', methods=['GET', 'POST'])
@@ -255,8 +273,12 @@ def zal9_oswiadczenie():
             
     # GET
     dzisiaj = datetime.today().strftime('%Y-%m-%d')
+    student_dict = student.to_dict()
+    student_dict['imie'] = student.uzytkownik.imie
+    student_dict['nazwisko'] = student.uzytkownik.nazwisko
+
     return jsonify({
-        'student': student.to_dict(),
+        'student': student_dict,
         'dokument': dokument.to_dict() if dokument else None,
         'oswiadczenie': oswiadczenie.to_dict() if oswiadczenie else None,
         'praktyka': praktyka.to_dict(),

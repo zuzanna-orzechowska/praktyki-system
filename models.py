@@ -60,7 +60,11 @@ class ZakladPracy(db.Model, DictSerializable):
     id = db.Column(db.Integer, primary_key=True)
     nazwa = db.Column(db.String(255), nullable=False)
     nip = db.Column(db.String(20), unique=True)
-    adres = db.Column(db.String(255))
+    # adres = db.Column(db.String(255)) # Deprecated
+    ulica = db.Column(db.String(150))
+    nr_budynku = db.Column(db.String(20))
+    nr_lokalu = db.Column(db.String(20))
+    kod_pocztowy = db.Column(db.String(20))
     miasto = db.Column(db.String(100))
     email = db.Column(db.String(120))
     telefon = db.Column(db.String(50))

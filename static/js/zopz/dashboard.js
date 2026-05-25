@@ -17,9 +17,80 @@ document.addEventListener('DOMContentLoaded', function() {
             if (zaklad) {
                 document.getElementById('zaklad-container').style.display = 'block';
                 document.getElementById('zaklad-nazwa').textContent = zaklad.nazwa;
-                document.getElementById('zaklad-adres').textContent = zaklad.adres;
+                
+                const adresStr = `${zaklad.ulica || ''} ${zaklad.nr_budynku || ''}${zaklad.nr_lokalu ? '/' + zaklad.nr_lokalu : ''}, ${zaklad.kod_pocztowy || ''} ${zaklad.miasto || ''}`.trim();
+                document.getElementById('zaklad-adres-pola').textContent = adresStr !== ',' ? adresStr : 'Brak danych adresowych';
+                
+                const nipSpan = document.getElementById('zaklad-nip-pole');
+                if (zaklad.nip) {
+                    nipSpan.textContent = zaklad.nip;
+                    nipSpan.className = 'fw-bold text-success';
+                } else {
+                    nipSpan.textContent = 'Brak (Wymagane uzupełnienie)';
+                    nipSpan.className = 'fw-bold text-danger';
+                }
+                
+                // Pre-fill modal
+                document.getElementById('form-nip').value = zaklad.nip || '';
+                document.getElementById('form-telefon').value = zaklad.telefon || '';
+                document.getElementById('form-ulica').value = zaklad.ulica || '';
+                document.getElementById('form-nr_budynku').value = zaklad.nr_budynku || '';
+                document.getElementById('form-nr_lokalu').value = zaklad.nr_lokalu || '';
+                document.getElementById('form-kod_pocztowy').value = zaklad.kod_pocztowy || '';
+                document.getElementById('form-miasto').value = zaklad.miasto || '';
+                
             } else {
                 document.getElementById('zaklad-warning').style.display = 'block';
+            }
+            
+            const saveBtn = document.getElementById('saveZakladBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    const nipValue = document.getElementById('form-nip').value.replace(/[\s-]/g, '');
+                    
+                    // NIP validation function
+                    function isValidNip(nip) {
+                        if (typeof nip !== 'string') return false;
+                        if (nip.length !== 10) return false;
+                        const weights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
+                        let sum = 0;
+                        for (let i = 0; i < 9; i++) {
+                            sum += parseInt(nip[i], 10) * weights[i];
+                        }
+                        return (sum % 11) === parseInt(nip[9], 10);
+                    }
+
+                    if (!isValidNip(nipValue)) {
+                        alert('Wprowadzony NIP jest niepoprawny. Sprawdź, czy zawiera 10 cyfr i jest wpisany poprawnie.');
+                        return;
+                    }
+
+                    const payload = {
+                        nip: nipValue,
+                        telefon: document.getElementById('form-telefon').value,
+                        ulica: document.getElementById('form-ulica').value,
+                        nr_budynku: document.getElementById('form-nr_budynku').value,
+                        nr_lokalu: document.getElementById('form-nr_lokalu').value,
+                        kod_pocztowy: document.getElementById('form-kod_pocztowy').value,
+                        miasto: document.getElementById('form-miasto').value
+                    };
+                    
+                    fetch('/api/zopz/zaklad_pracy', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(res => res.json())
+                    .then(resData => {
+                        if(resData.success) {
+                            alert(resData.message);
+                            window.location.reload();
+                        } else {
+                            alert(resData.error || 'Wystąpił błąd');
+                        }
+                    })
+                    .catch(e => console.error(e));
+                });
             }
             
             const praktykanci = data.praktyki || [];

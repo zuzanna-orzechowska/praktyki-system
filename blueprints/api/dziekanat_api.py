@@ -30,6 +30,10 @@ def zal9_lista():
         .join(Dokument)\
         .filter(Dokument.status.in_(['Approved', 'AwaitingAccount', 'AccountCreated']), Dokument.typ_zalacznika == 'ZAL9').order_by(Dokument.updated_at.desc()).all()
 
+    oswiadczenia_odrzucone = db.session.query(Oswiadczenie)\
+        .join(Dokument)\
+        .filter(Dokument.status == 'Draft', Dokument.komentarz != None, Dokument.typ_zalacznika == 'ZAL9').order_by(Dokument.updated_at.desc()).all()
+
     # Zwracamy listę słowników. Musimy ręcznie dodać dane studenta z relacji.
     def format_oswiadczenie(osw):
         doc = osw.dokument
@@ -40,12 +44,14 @@ def zal9_lista():
             'student_nazwisko': student.uzytkownik.nazwisko,
             'nr_albumu': student.nr_albumu,
             'status': doc.status,
-            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else '',
+            'komentarz': doc.komentarz
         }
 
     return jsonify({
         'do_weryfikacji': [format_oswiadczenie(o) for o in oswiadczenia_do_weryfikacji],
-        'zatwierdzone': [format_oswiadczenie(o) for o in oswiadczenia_zatwierdzone]
+        'zatwierdzone': [format_oswiadczenie(o) for o in oswiadczenia_zatwierdzone],
+        'odrzucone': [format_oswiadczenie(o) for o in oswiadczenia_odrzucone]
     })
 
 @dziekanat_api_bp.route('/weryfikuj_zal9/<int:id>', methods=['GET', 'POST'])

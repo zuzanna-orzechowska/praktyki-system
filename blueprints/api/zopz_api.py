@@ -34,3 +34,47 @@ def dashboard():
         'zaklad': zaklad.to_dict() if zaklad else None,
         'praktyki': [format_praktyka(p) for p in praktyki]
     })
+
+@zopz_api_bp.route('/zaklad_pracy', methods=['PUT'])
+@login_required
+def update_zaklad_pracy():
+    from flask import request
+    from extensions import db
+    
+    if current_user.rola != 'zopz':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    if not zaklad:
+        return jsonify({'error': 'Nie znaleziono zakładu pracy przypisanego do Twojego konta.'}), 404
+        
+    data = request.json
+    
+    def is_valid_nip(nip_str):
+        nip_str = nip_str.replace('-', '').replace(' ', '')
+        if len(nip_str) != 10 or not nip_str.isdigit():
+            return False
+        weights = [6, 5, 7, 2, 3, 4, 5, 6, 7]
+        checksum = sum(int(nip_str[i]) * weights[i] for i in range(9))
+        return (checksum % 11) == int(nip_str[9])
+
+    if 'nip' in data:
+        nip_val = data['nip'].replace('-', '').replace(' ', '')
+        if not is_valid_nip(nip_val):
+            return jsonify({'error': 'Podany NIP jest nieprawidłowy.'}), 400
+        zaklad.nip = nip_val
+
+    if 'ulica' in data: zaklad.ulica = data['ulica']
+    if 'nr_budynku' in data: zaklad.nr_budynku = data['nr_budynku']
+    if 'nr_lokalu' in data: zaklad.nr_lokalu = data['nr_lokalu']
+    if 'kod_pocztowy' in data: zaklad.kod_pocztowy = data['kod_pocztowy']
+    if 'miasto' in data: zaklad.miasto = data['miasto']
+    if 'telefon' in data: zaklad.telefon = data['telefon']
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Dane zakładu pracy zostały zaktualizowane.',
+        'zaklad': zaklad.to_dict()
+    })

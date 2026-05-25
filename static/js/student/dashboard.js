@@ -39,6 +39,22 @@ document.addEventListener('DOMContentLoaded', function() {
             statusBadge.textContent = statusText;
             statusBadge.className = `badge bg-${statusColor}`;
             
+            // Render notifications
+            const alertsContainer = document.getElementById('alerts-container');
+            alertsContainer.innerHTML = '';
+            if (data.powiadomienia && data.powiadomienia.length > 0) {
+                data.powiadomienia.forEach(notif => {
+                    const alertHtml = `
+                        <div class="alert alert-${notif.typ} alert-dismissible fade show shadow-sm" role="alert">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>${notif.tytul}</h5>
+                            <p class="mb-0">${notif.tresc}</p>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    alertsContainer.insertAdjacentHTML('beforeend', alertHtml);
+                });
+            }
+            
             // Render tiles based on status
             const tilesContainer = document.getElementById('dashboard-tiles');
             tilesContainer.innerHTML = ''; // clear loading
