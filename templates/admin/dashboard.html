@@ -1,19 +1,36 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/admin/dashboard.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <h2 class="mb-4">Panel Administratora</h2>
 
+<div id="alerts-container"></div>
+
 <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#oczekujacy">Oczekujący
-            <span class="badge bg-danger">{{ oczekujacy|length + zgloszenia_zopz|length }}</span></button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pracownicy">Pracownicy
-            Uczelni</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#zopz">Opiekunowie ZOPZ</button>
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#oczekujacy" type="button" role="tab">
+            Oczekujący
+            <span class="badge bg-danger" id="oczekujacy-badge" style="display: none;">0</span>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pracownicy" type="button" role="tab">
+            Pracownicy Uczelni
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#zopz" type="button" role="tab">
+            Opiekunowie ZOPZ
+        </button>
     </li>
 </ul>
 
 <div class="tab-content">
-    <div class="tab-pane fade show active" id="oczekujacy">
+    <!-- Zakładka: Oczekujący -->
+    <div class="tab-pane fade show active" id="oczekujacy" role="tabpanel">
         <table class="table align-middle">
             <thead>
                 <tr>
@@ -22,28 +39,13 @@
                     <th>Akcja</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for u in oczekujacy %}
-                <tr>
-                    <td>{{ u.imie }} {{ u.nazwisko }}</td>
-                    <td>{{ u.email }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('admin.akceptuj_pracownika', id=u.id) }}"
-                            class="d-inline">
-                            <select name="rola" class="form-select form-select-sm d-inline-block w-auto me-2">
-                                <option value="dziekanat">Dziekanat</option>
-                                <option value="uopz">UOPZ</option>
-                            </select>
-                            <button type="submit" class="btn btn-sm btn-success">Akceptuj</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
+            <tbody id="oczekujacy-table">
+                <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
             </tbody>
         </table>
 
-        {% if zgloszenia_zopz %}
-        <div class="card mt-4 border-warning">
+        <!-- Zgłoszenia z Dziekanatu na założenie konta -->
+        <div class="card mt-4 border-warning" id="zgloszenia-zopz-container" style="display: none;">
             <div class="card-header bg-warning text-dark">
                 Zgłoszenia z Dziekanatu (Oczekujące na założenie konta ZOPZ)
             </div>
@@ -57,58 +59,62 @@
                             <th>Akcja</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for zgl in zgloszenia_zopz %}
-                        <tr>
-                            <td>{{ zgl.opiekun_imie }} {{ zgl.opiekun_nazwisko }}</td>
-                            <td>{{ zgl.nazwa_instytucji }}</td>
-                            <td>{{ zgl.opiekun_email }}</td>
-                            <td>
-                                <form method="POST" action="{{ url_for('admin.stworz_zopz_z_zal9', oswiadczenie_id=zgl.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-success">Generuj konto i wyślij e-mail</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id="zgloszenia-zopz-table">
                     </tbody>
                 </table>
             </div>
         </div>
-        {% endif %}
     </div>
 
-    <div class="tab-pane fade" id="zopz">
+    <!-- Zakładka: Pracownicy -->
+    <div class="tab-pane fade" id="pracownicy" role="tabpanel">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Imię i Nazwisko</th>
+                    <th>E-mail</th>
+                    <th>Rola</th>
+                    <th>Konto utworzono</th>
+                </tr>
+            </thead>
+            <tbody id="pracownicy-table">
+                <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
+    <!-- Zakładka: ZOPZ -->
+    <div class="tab-pane fade" id="zopz" role="tabpanel">
         <div class="card mb-4 border-primary">
             <div class="card-header bg-primary text-white">Dodaj nowego Opiekuna Zakładowego (Lokalnie)</div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('admin.stworz_zopz') }}" class="row g-3">
-                    <div class="col-md-3"><input type="text" name="imie" class="form-control" placeholder="Imię"
-                            required></div>
-                    <div class="col-md-3"><input type="text" name="nazwisko" class="form-control" placeholder="Nazwisko"
-                            required></div>
-                    <div class="col-md-4"><input type="email" name="email" class="form-control"
-                            placeholder="Adres e-mail" required></div>
-                    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Utwórz</button></div>
+                <form id="stworz-zopz-form" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" id="zopz-imie" name="imie" class="form-control" placeholder="Imię" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" id="zopz-nazwisko" name="nazwisko" class="form-control" placeholder="Nazwisko" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="email" id="zopz-email" name="email" class="form-control" placeholder="Adres e-mail" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Utwórz</button>
+                    </div>
                 </form>
             </div>
         </div>
+        
         <table class="table">
             <thead>
                 <tr>
                     <th>Opiekun</th>
-                    <th>Firma / E-mail</th>
-                    <th>Status</th>
+                    <th>E-mail</th>
+                    <th>Dostawca logowania</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for z in opiekunowie %}
-                <tr>
-                    <td>{{ z.imie }} {{ z.nazwisko }}</td>
-                    <td>{{ z.email }}</td>
-                    <td><span class="badge bg-info text-dark">Lokalny</span></td>
-                </tr>
-                {% endfor %}
+            <tbody id="zopz-table">
+                <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
             </tbody>
         </table>
     </div>
