@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/weryfikuj_zal9.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Weryfikacja Oświadczenia Instytucji (Zał. 9)</h2>
+    <div>
+        <a href="{{ url_for('dziekanat.zal9_lista') }}" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-arrow-left"></i> Powrót do listy
+        </a>
+        <span class="badge bg-secondary" id="status-badge">Ładowanie...</span>
+    </div>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <p class="mb-1"><strong>Student:</strong> <span id="student-info">Ładowanie...</span></p>
+        <p class="mb-1"><strong>Nr albumu:</strong> <span id="student-album">...</span></p>
+        <p class="mb-0"><strong>Kierunek:</strong> <span id="student-kierunek">...</span></p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">Dane Zakładu Pracy i Opiekuna (ZOPZ)</div>
+    <div class="card-body">
+        <h6 class="fw-bold mb-3 mt-2 text-primary">Informacje ogólne z dokumentu</h6>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Miejscowość:</strong> <span id="val-miejscowosc"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Data sporządzenia widniejąca na dokumencie:</strong> <span id="val-data_oswiadczenia"></span></p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <p><strong>Pełna nazwa instytucji/firmy:</strong> <span id="val-nazwa_instytucji"></span></p>
+        </div>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold mb-3 text-primary">Informacje o praktyce i studencie</h6>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p><strong>Termin praktyki (od):</strong> <span id="val-data_start"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Termin praktyki (do):</strong> <span id="val-data_end"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Rok studiów:</strong> <span id="val-rok_studiow"></span></p>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold mb-3 text-primary">Wskazany Zakładowy Opiekun Praktyki (ZOPZ)</h6>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Imię i nazwisko ZOPZ:</strong> <span id="val-opiekun_imie"></span> <span id="val-opiekun_nazwisko"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Stanowisko ZOPZ:</strong> <span id="val-opiekun_stanowisko"></span></p>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p><strong>Telefon kontaktowy ZOPZ:</strong> <span id="val-opiekun_telefon"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Adres e-mail ZOPZ:</strong> <span id="val-opiekun_email"></span></p>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold mb-3 text-primary">Reprezentacja Firmy</h6>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Imię i nazwisko osoby upoważnionej:</strong> <span id="val-osoba_upowazniona_imie"></span> <span id="val-osoba_upowazniona_nazwisko"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Stanowisko osoby upoważnionej:</strong> <span id="val-osoba_upowazniona_stanowisko"></span></p>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-file-earmark-arrow-up"></i> Skan podpisanego dokumentu</h6>
+        <div class="mb-3" id="skan-container">
+            Brak pliku
+        </div>
+    </div>
+</div>
+
+<div id="action-panel" style="display: none;">
+    <div class="mb-4">
+        <label for="komentarz_dziekanatu" class="form-label fw-bold text-danger"><i class="bi bi-chat-left-text"></i>
+            Komentarz przy odrzuceniu (opcjonalny):</label>
+        <textarea class="form-control" id="komentarz_dziekanatu" name="komentarz_dziekanatu" rows="2"
+            placeholder="Wpisz, co student musi poprawić przed ponownym przesłaniem..."></textarea>
+    </div>
+    <div class="d-flex gap-2 mb-5">
+        <button type="button" class="btn btn-outline-danger" onclick="submitDecision('odrzuc')">
+            <i class="bi bi-x-circle"></i> Odrzuć i odeślij do studenta
+        </button>
+        <button type="button" class="btn btn-success flex-grow-1" onclick="submitDecision('zatwierdz')">
+            <i class="bi bi-check-circle"></i> Zatwierdź Oświadczenie i Przekaż do IT
+        </button>
+    </div>
+</div>
+
+<div id="approved-panel" class="alert alert-success mt-3 mb-5 border-0 shadow-sm" style="display: none;">
+    <h5 class="alert-heading fw-bold"><i class="bi bi-check-circle-fill"></i> Oświadczenie zatwierdzone</h5>
+    <p>Dokument został pomyślnie zweryfikowany. Dane wyznaczonego opiekuna (ZOPZ) zostały automatycznie przekazane do Administratora, aby wygenerował mu konto dostępowe w systemie.</p>
+</div>
+{% endblock %}

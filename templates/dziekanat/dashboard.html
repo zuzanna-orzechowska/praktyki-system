@@ -53,6 +53,7 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 </style>
+<script src="{{ url_for('static', filename='js/dziekanat/dashboard.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -76,9 +77,7 @@
                 <h5 class="text-primary">Oświadczenia (Zał. 9)</h5>
                 <p>Weryfikacja danych wprowadzonych przez studentów dot. wyboru miejsca praktyki.</p>
             </div>
-            {% if zal9_count and zal9_count > 0 %}
-            <span class="badge bg-danger tile-badge">{{ zal9_count }}</span>
-            {% endif %}
+            <span id="zal9-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
         </a>
     </div>
 

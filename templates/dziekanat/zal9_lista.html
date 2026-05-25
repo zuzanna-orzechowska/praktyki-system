@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/zal9_lista.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="mb-4">
     <a href="{{ url_for('dziekanat.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
@@ -15,9 +19,7 @@
   <li class="nav-item" role="presentation">
     <button class="nav-link active fw-bold" id="weryfikacja-tab" data-bs-toggle="tab" data-bs-target="#weryfikacja" type="button" role="tab" aria-controls="weryfikacja" aria-selected="true">
         Do weryfikacji 
-        {% if oswiadczenia|length > 0 %}
-        <span class="badge bg-danger ms-1">{{ oswiadczenia|length }}</span>
-        {% endif %}
+        <span class="badge bg-danger ms-1" id="do-weryfikacji-badge" style="display: none;">0</span>
     </button>
   </li>
   <li class="nav-item" role="presentation">
@@ -38,37 +40,12 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">Student</th>
-                            <th>Instytucja / Firma</th>
-                            <th>Opiekun (ZOPZ)</th>
                             <th>Data złożenia</th>
                             <th class="text-center">Akcje</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for o in oswiadczenia %}
-                        <tr>
-                            <td class="ps-4">
-                                <strong>{{ o.dokument.praktyka.student.uzytkownik.imie }} {{
-                                    o.dokument.praktyka.student.uzytkownik.nazwisko }}</strong><br>
-                                <small class="text-muted">Album: {{ o.dokument.praktyka.student.nr_albumu }}</small>
-                            </td>
-                            <td>{{ o.nazwa_instytucji }}</td>
-                            <td>{{ o.opiekun_imie }} {{ o.opiekun_nazwisko }}</td>
-                            <td>{{ o.dokument.updated_at.strftime('%Y-%m-%d %H:%M') if o.dokument.updated_at else 'Brak danych' }}</td>
-                            <td class="text-center">
-                                <a href="{{ url_for('dziekanat.weryfikuj_zal9', id=o.id) }}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-search"></i> Sprawdź
-                                </a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Brak nowych oświadczeń do weryfikacji.
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id="do-weryfikacji-table">
+                        <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -85,37 +62,13 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">Student</th>
-                            <th>Instytucja / Firma</th>
-                            <th>Opiekun (ZOPZ)</th>
                             <th>Data zatwierdzenia</th>
+                            <th class="text-center">Status</th>
                             <th class="text-center">Akcje</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for o in oswiadczenia_zatwierdzone %}
-                        <tr>
-                            <td class="ps-4">
-                                <strong>{{ o.dokument.praktyka.student.uzytkownik.imie }} {{
-                                    o.dokument.praktyka.student.uzytkownik.nazwisko }}</strong><br>
-                                <small class="text-muted">Album: {{ o.dokument.praktyka.student.nr_albumu }}</small>
-                            </td>
-                            <td>{{ o.nazwa_instytucji }}</td>
-                            <td>{{ o.opiekun_imie }} {{ o.opiekun_nazwisko }}</td>
-                            <td>{{ o.dokument.updated_at.strftime('%Y-%m-%d %H:%M') if o.dokument.updated_at else 'Brak danych' }}</td>
-                            <td class="text-center">
-                                <a href="{{ url_for('dziekanat.weryfikuj_zal9', id=o.id) }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-eye"></i> Podgląd
-                                </a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="bi bi-archive fs-1 d-block mb-2"></i>
-                                Brak zatwierdzonych oświadczeń w historii.
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    <tbody id="zatwierdzone-table">
+                        <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
                     </tbody>
                 </table>
             </div>
