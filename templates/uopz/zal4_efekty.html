@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/uopz/zal4_efekty.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a id="back-link" href="#" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Wróć do teczki
+    </a>
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Weryfikacja Efektów Uczenia Się (Zał. 4) - UOPZ
+    </h2>
+    <p class="text-muted" id="student-name">Ładowanie...</p>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <h5 class="fw-bold mb-3">Zestawienie efektów wprowadzonych przez ZOPZ</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered bg-white" id="tabela-efekty">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 60%">Opis efektu zdefiniowany dla kierunku</th>
+                        <th style="width: 40%">Ocena/Potwierdzenie przez ZOPZ (wiedza, umiej., komp. społ.)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="2" class="text-center py-4">Ładowanie...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="fw-bold mb-3">Opinia Uczelnianego Opiekuna Praktyk</h5>
+        <form id="form-opinia">
+            <div class="mb-3">
+                <label for="opinia-uopz" class="form-label text-muted">Na podstawie zweryfikowanych wpisów oraz Dziennika Praktyk, opiekun uczelniany wpisuje opinię końcową:</label>
+                <textarea class="form-control" id="opinia-uopz" rows="4" placeholder="Wprowadź swoją opinię na temat zrealizowanych efektów..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Zapisz Opinię UOPZ</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
