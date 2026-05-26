@@ -96,6 +96,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const praktykanci = data.praktyki || [];
             const table = document.getElementById('praktykanci-table');
             table.innerHTML = '';
+            const alertsContainer = document.getElementById('alerts-container');
+            if (alertsContainer) alertsContainer.innerHTML = '';
+            
+            let doZatwierdzenia = 0;
             
             if (praktykanci.length > 0) {
                 praktykanci.forEach(p => {
@@ -138,7 +142,20 @@ document.addEventListener('DOMContentLoaded', function() {
                             </td>
                         </tr>
                     `;
+                    
+                    if (p.porozumienie_status === 'OczekujeZOPZ') {
+                        doZatwierdzenia++;
+                    }
                 });
+                
+                if (doZatwierdzenia > 0 && alertsContainer) {
+                    alertsContainer.innerHTML = `
+                        <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Masz <strong>${doZatwierdzenia}</strong> porozumienie/a oczekujące na zatwierdzenie. Sprawdź tabelę poniżej.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                }
             } else {
                 table.innerHTML = `
                     <tr>

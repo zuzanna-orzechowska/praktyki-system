@@ -53,7 +53,7 @@ function podpiszPorozumienie(porozumienieId) {
             Zarządzanie Porozumieniem (Zał. 1)
         </h2>
         <div class="text-muted mt-1">
-            Student: <strong>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}</strong> ({{ student.nr_albumu }})
+            Student: <strong>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0].strip() }}</strong> ({{ student.nr_albumu }})
         </div>
     </div>
     
@@ -67,12 +67,13 @@ function podpiszPorozumienie(porozumienieId) {
         {% elif porozumienie.status == 'ZatwierdzoneZOPZ' %}
         <span class="badge bg-info fs-6">Status: Zatwierdzone przez ZOPZ</span>
         {% elif porozumienie.status == 'Podpisane' %}
-        <span class="badge bg-success fs-6">Status: Podpisane (Zakończone)</span>
+        <span class="badge bg-success fs-6">Status: Porozumienie zawarte</span>
         {% endif %}
     </div>
 </div>
 
 <!-- Panel akcji Dziekanatu -->
+{% if not porozumienie or porozumienie.status != 'Podpisane' %}
 <div class="card shadow-sm mb-4 border-0 bg-light border-start border-primary border-4">
     <div class="card-body">
         <h5 class="text-primary"><i class="bi bi-gear-fill"></i> Panel Akcji</h5>
@@ -102,11 +103,10 @@ function podpiszPorozumienie(porozumienieId) {
             <i class="bi bi-pen"></i> Podpisz i Zakończ Porozumienie
         </button>
         
-        {% elif porozumienie.status == 'Podpisane' %}
-        <p>Porozumienie jest ostatecznie podpisane przez obie strony. Proces zakończony.</p>
         {% endif %}
     </div>
 </div>
+{% endif %}
 
 <h4 class="mt-5 mb-3 text-secondary">Podgląd Dokumentów</h4>
 <ul class="nav nav-tabs" id="docTabs" role="tablist">
@@ -136,12 +136,38 @@ function podpiszPorozumienie(porozumienieId) {
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="editZakladModalLabel"><i class="bi bi-building"></i> Edytuj dane Zakładu Pracy</h5>
+        <h5 class="modal-title" id="editZakladModalLabel"><i class="bi bi-pencil-square"></i> Edytuj dane na porozumieniu</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form id="editZakladForm">
-            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">Dane firmy</h6>
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-2">Dane studenta i praktyki</h6>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Imię studenta</label>
+                    <input type="text" class="form-control" name="student_imie" value="{{ student.uzytkownik.imie }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Nazwisko studenta</label>
+                    <input type="text" class="form-control" name="student_nazwisko" value="{{ student.uzytkownik.nazwisko.split('(')[0].strip() }}" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Data rozpoczęcia</label>
+                    <input type="date" class="form-control" name="praktyka_data_start" value="{{ praktyka.data_start if praktyka.data_start else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Data zakończenia</label>
+                    <input type="date" class="form-control" name="praktyka_data_end" value="{{ praktyka.data_end if praktyka.data_end else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Wymiar godzin</label>
+                    <input type="number" class="form-control" name="praktyka_liczba_godzin" value="{{ praktyka.liczba_godzin if praktyka.liczba_godzin else '960' }}">
+                </div>
+            </div>
+
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">Dane firmy</h6>
             <div class="mb-3">
                 <label class="form-label fw-bold">Nazwa Zakładu Pracy</label>
                 <input type="text" class="form-control" name="nazwa" value="{{ praktyka.zaklad.nazwa }}" required>

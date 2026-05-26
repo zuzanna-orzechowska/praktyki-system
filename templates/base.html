@@ -349,7 +349,7 @@
                 <ul class="sidebar-menu">
                     <li><a href="{{ url_for('zopz.dashboard') }}"
                             class="{% if 'zopz/dashboard' in request.path %}active{% endif %}">Moi Praktykanci</a></li>
-                    <li><a href="#" class="text-muted">Porozumienia (Zał. 1)</a></li>
+                    <li><a href="{{ url_for('zopz.dashboard') }}">Porozumienia i Programy (Zał. 1, 2)</a></li>
                     <li><a href="#" class="text-muted">Dzienniki praktyk</a></li>
                 </ul>
                 {% endif %}

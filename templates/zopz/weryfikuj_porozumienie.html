@@ -38,7 +38,7 @@ function submitDecision(akcja) {
         Porozumienie o organizację praktyki (Zał. 1)
     </h2>
     {% if porozumienie and porozumienie.status == 'Podpisane' %}
-    <span class="badge bg-success">Status: Podpisane</span>
+    <span class="badge bg-success">Status: Porozumienie zawarte</span>
     {% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' %}
     <span class="badge bg-info">Status: Zatwierdzone przez ZOPZ</span>
     {% elif porozumienie and porozumienie.status == 'UwagiZOPZ' %}
@@ -73,7 +73,7 @@ function submitDecision(akcja) {
 </div>
 {% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' %}
 <div class="alert alert-success shadow-sm mb-4">
-    <i class="bi bi-check-circle-fill"></i> Zatwierdziłeś to porozumienie. Oczekuje ono na ostateczne podpisanie przez Dziekanat.
+    <i class="bi bi-check-circle-fill"></i> Zatwierdzono
 </div>
 {% elif porozumienie and porozumienie.status == 'UwagiZOPZ' %}
 <div class="alert alert-warning shadow-sm mb-4">

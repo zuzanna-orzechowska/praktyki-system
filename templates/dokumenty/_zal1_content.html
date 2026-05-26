@@ -3,23 +3,14 @@
         Porozumienie o organizację praktyki (Zał. 1)
     </h2>
     {% if porozumienie and porozumienie.status == 'Podpisane' %}
-    <span class="badge bg-success">Status: Podpisane</span>
-    {% else %}
-    <span class="badge bg-secondary">Status: Szkic / Oczekujące</span>
+    <span class="badge bg-success">Status: Porozumienie zawarte</span>
     {% endif %}
 </div>
 
-{% if current_user.rola == 'student' %}
-<div class="alert alert-secondary border-0 shadow-sm mb-4">
-    <i class="bi bi-info-circle-fill me-2"></i>
-    <strong>Informacja:</strong> Ten dokument jest generowany automatycznie i zawierany między Instytutem a Zakładem
-    Pracy.
-    Jako student posiadasz do niego wyłącznie wgląd.
-</div>
-{% elif current_user.rola == 'dziekanat' %}
+{% if current_user.rola == 'dziekanat' %}
 <div class="d-flex justify-content-end mb-3">
     <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editZakladModal">
-        <i class="bi bi-pencil-square"></i> Edytuj dane firmy (ZOPZ)
+        <i class="bi bi-pencil-square"></i> Edytuj dane
     </button>
 </div>
 {% endif %}
@@ -113,14 +104,15 @@
                 <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
                     <small>(podpis Dyrektora Instytutu)</small>
                 </div>
-                {% if porozumienie and porozumienie.podpisal_dziekanat %}
-                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ porozumienie.podpisal_dziekanat }}</div>
-                {% endif %}
+                <div class="mt-2" style="font-family: cursive; color: #004a99;">dr inż. Jan Kowalski</div>
             </div>
             <div class="col-6">
                 <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
                     <small>(podpis osoby uprawnionej do reprezentacji<br>w imieniu Zakładu pracy)</small>
                 </div>
+                {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
+                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -64,7 +64,8 @@ def porozumienie():
         student=student,
         praktyka=praktyka,
         porozumienie=porozumienie_doc,
-        oswiadczenie=oswiadczenie
+        oswiadczenie=oswiadczenie,
+        current_date=datetime.today().date()
     )
 
 @student_bp.route('/zal2_program')

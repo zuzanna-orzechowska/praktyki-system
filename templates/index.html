@@ -48,7 +48,12 @@
 </div>
 {% else %}
 
-
+{% if current_user.is_authenticated and current_user.rola == 'zopz' and zopz_pending_porozumienia and zopz_pending_porozumienia > 0 %}
+<div class="alert alert-warning shadow-sm mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i> Masz <strong>{{ zopz_pending_porozumienia }}</strong> porozumienie/a oczekujące na zatwierdzenie. 
+    <a href="{{ url_for('zopz.dashboard') }}" class="alert-link">Przejdź do panelu, aby je sprawdzić.</a>
+</div>
+{% endif %}
 
 <div class="info-panel">
     <h2>Witamy w Systemie Obsługi Praktyk</h2>

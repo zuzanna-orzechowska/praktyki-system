@@ -20,6 +20,16 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 badge.style.display = 'none';
             }
+            
+            const porBadge = document.getElementById('porozumienia-badge');
+            if (porBadge) {
+                if (data.porozumienia_count > 0) {
+                    porBadge.textContent = data.porozumienia_count;
+                    porBadge.style.display = 'inline-block';
+                } else {
+                    porBadge.style.display = 'none';
+                }
+            }
         })
         .catch(err => console.error(err));
 });

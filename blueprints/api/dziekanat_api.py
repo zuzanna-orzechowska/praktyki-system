@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from extensions import db
-from models import Dokument, Oswiadczenie, Praktyka
+from models import Dokument, Oswiadczenie, Praktyka, Porozumienie
 
 dziekanat_api_bp = Blueprint('dziekanat_api', __name__, url_prefix='/dziekanat')
 
@@ -12,8 +12,19 @@ def dashboard():
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     zal9_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL9').count()
+    
+    porozumienia_count = 0
+    praktyki = db.session.query(Praktyka).filter(Praktyka.status != 'OCZEKUJE_NA_ZAL9', Praktyka.status != 'BRAK_ZGŁOSZENIA').all()
+    for p in praktyki:
+        por = p.porozumienie
+        if not por:
+            porozumienia_count += 1
+        elif por.status in ['Draft', 'UwagiZOPZ', 'ZatwierdzoneZOPZ']:
+            porozumienia_count += 1
+            
     return jsonify({
-        'zal9_count': zal9_count
+        'zal9_count': zal9_count,
+        'porozumienia_count': porozumienia_count
     })
 
 @dziekanat_api_bp.route('/zal9', methods=['GET'])
@@ -181,6 +192,7 @@ def weryfikuj_zal9(id):
 @dziekanat_api_bp.route('/edytuj_zaklad/<int:praktyka_id>', methods=['POST'])
 @login_required
 def edytuj_zaklad(praktyka_id):
+    from datetime import datetime
     if current_user.rola != 'dziekanat':
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
@@ -205,9 +217,41 @@ def edytuj_zaklad(praktyka_id):
             oswiadczenie.osoba_upowazniona_nazwisko = data.get('osoba_upowazniona_nazwisko', oswiadczenie.osoba_upowazniona_nazwisko)
             oswiadczenie.osoba_upowazniona_stanowisko = data.get('osoba_upowazniona_stanowisko', oswiadczenie.osoba_upowazniona_stanowisko)
             
+    # Aktualizacja danych studenta
+    student = praktyka.student
+    if student and student.uzytkownik:
+        student.uzytkownik.imie = data.get('student_imie', student.uzytkownik.imie)
+        # Przy zapisie nazwiska warto zachować ewentualne informacje w nawiasie jeśli były
+        nowe_nazwisko_base = data.get('student_nazwisko')
+        if nowe_nazwisko_base:
+            if '(' in student.uzytkownik.nazwisko:
+                dodatek = student.uzytkownik.nazwisko[student.uzytkownik.nazwisko.find('('):]
+                student.uzytkownik.nazwisko = f"{nowe_nazwisko_base} {dodatek}"
+            else:
+                student.uzytkownik.nazwisko = nowe_nazwisko_base
+
+    # Aktualizacja danych praktyki
+    if data.get('praktyka_data_start'):
+        try:
+            praktyka.data_start = datetime.strptime(data.get('praktyka_data_start'), '%Y-%m-%d').date()
+        except ValueError:
+            pass
+            
+    if data.get('praktyka_data_end'):
+        try:
+            praktyka.data_end = datetime.strptime(data.get('praktyka_data_end'), '%Y-%m-%d').date()
+        except ValueError:
+            pass
+            
+    if data.get('praktyka_liczba_godzin'):
+        try:
+            praktyka.liczba_godzin = int(data.get('praktyka_liczba_godzin'))
+        except ValueError:
+            pass
+            
     try:
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Zaktualizowano dane Zakładu Pracy i reprezentanta.'})
+        return jsonify({'success': True, 'message': 'Zaktualizowano dane porozumienia.'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

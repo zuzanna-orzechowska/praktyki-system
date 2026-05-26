@@ -111,8 +111,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     ${dziennikTile}
                     <div class="col-md-6 col-lg-6">
-                        <a href="/dokumenty" class="usos-tile">
+                        <a href="/student/porozumienie" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-file-earmark-text"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Porozumienie (Zał. 1)</h5>
+                                <p>Podgląd Twojego porozumienia o organizację praktyki.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal2_program" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-card-list"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Program praktyki (Zał. 2)</h5>
+                                <p>Podgląd programu Twojej praktyki zawodowej.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+                        <a href="/dokumenty" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-folder2-open"></i></div>
                             <div class="usos-tile-content">
                                 <h5>Wszystkie dokumenty</h5>
                                 <p>Przeglądaj niezbędne regulaminy oraz pobieraj wzory formularzy.</p>

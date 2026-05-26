@@ -33,10 +33,12 @@ def porozumienie(id):
     if dokument_zal9:
         oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
 
+    from datetime import datetime
     return render_template(
         'zopz/weryfikuj_porozumienie.html',
         student=student,
         praktyka=praktyka,
         porozumienie=porozumienie_doc,
-        oswiadczenie=oswiadczenie
+        oswiadczenie=oswiadczenie,
+        current_date=datetime.today().date()
     )

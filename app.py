@@ -82,7 +82,15 @@ def create_app():
     
     @app.route('/')
     def index():
-        return render_template('index.html')
+        zopz_pending_porozumienia = 0
+        from flask_login import current_user
+        if current_user.is_authenticated and current_user.rola == 'zopz':
+            from models import ZakladPracy, Porozumienie
+            zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+            if zaklad:
+                zopz_pending_porozumienia = Porozumienie.query.filter_by(zaklad_id=zaklad.id, status='OczekujeZOPZ').count()
+                
+        return render_template('index.html', zopz_pending_porozumienia=zopz_pending_porozumienia)
 
     return app
 
