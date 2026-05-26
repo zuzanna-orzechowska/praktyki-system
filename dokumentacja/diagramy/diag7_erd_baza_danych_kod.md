@@ -7,6 +7,9 @@ erDiagram
         string nazwisko
         string rola
         int aktywny
+        boolean wymaga_zmiany_hasla
+        string auth_provider
+        string external_id UK
         datetime created_at
         datetime updated_at
     }
@@ -44,8 +47,6 @@ erDiagram
         date data_start
         date data_end
         int liczba_godzin
-        datetime created_at
-        datetime updated_at
     }
 
     DOKUMENT {
@@ -55,17 +56,10 @@ erDiagram
         string status
         string plik_path
         text uwagi_opiekuna
+        text komentarz
         int utworzony_przez FK
         datetime created_at
         datetime updated_at
-    }
-
-    HARMONOGRAM_PRAKTYKI {
-        int id PK
-        int dokument_id FK
-        int lp
-        string dzial_komorka
-        int planowana_liczba_dni
     }
 
     WPIS_DZIENNIKA {
@@ -123,17 +117,79 @@ erDiagram
         text komentarz
     }
 
+    HARMONOGRAM_PRAKTYKI {
+        int id PK
+        int dokument_id FK
+        int lp
+        string dzial_komorka
+        int planowana_liczba_dni
+    }
+
+    SPRAWOZDANIE {
+        int id PK
+        int dokument_id FK
+        text charakterystyka
+        text opis_prac
+        text wiedza_umiejetnosci
+    }
+
+    WNIOSEK_ZALICZENIE_PRAKTYKI {
+        int id PK
+        int dokument_id FK
+        text uzasadnienie
+        date okres_zatrudnienia_od
+        date okres_zatrudnienia_do
+        string stanowisko
+        text zalaczniki_paths
+    }
+
+    OSWIADCZENIE {
+        int id PK
+        int dokument_id FK
+        date termin_od
+        date termin_do
+        int rok_studiow
+        string kierunek
+        string miejscowosc
+        date data_oswiadczenia
+        string nazwa_instytucji
+        string opiekun_imie
+        string opiekun_nazwisko
+        string opiekun_stanowisko
+        string opiekun_telefon
+        string opiekun_email
+        string osoba_upowazniona_imie
+        string osoba_upowazniona_nazwisko
+        string osoba_upowazniona_stanowisko
+        string skan_path
+    }
+
+    PROGRAM_PRAKTYKI {
+        int id PK
+        int dokument_id FK
+        string kod_efektu
+        text dzial_prace
+    }
+
     UZYTKOWNIK ||--o| STUDENT : "ma profil"
     UZYTKOWNIK ||--o{ ZAKLAD_PRACY : "zarządza jako ZOPZ"
     UZYTKOWNIK ||--o{ PRAKTYKA : "nadzoruje jako UOPZ"
     UZYTKOWNIK ||--o{ DOKUMENT : "tworzy"
     UZYTKOWNIK ||--o{ HISTORIA_STATUSU : "zmienia status"
+    
     STUDENT ||--o{ PRAKTYKA : "odbywa"
     ZAKLAD_PRACY ||--o{ PRAKTYKA : "przyjmuje"
+    
     PRAKTYKA ||--|{ DOKUMENT : "posiada załączniki"
     PRAKTYKA ||--o| PROTOKOL : "kończy się"
     PRAKTYKA ||--o| POROZUMIENIE : "wymaga"
     PRAKTYKA ||--o{ HISTORIA_STATUSU : "rejestruje zmiany"
-    DOKUMENT ||--o{ WPIS_DZIENNIKA : "ma wpisy (Zal 6)"
-    DOKUMENT ||--o{ EFEKT_UCZENIA : "ma efekty (Zal 4)"
-    DOKUMENT ||--o{ HARMONOGRAM_PRAKTYKI : "ma plan (Zal 2a)"
+    
+    DOKUMENT ||--o{ WPIS_DZIENNIKA : "ma wpisy (Zał. 6)"
+    DOKUMENT ||--o{ EFEKT_UCZENIA : "ma efekty (Zał. 4)"
+    DOKUMENT ||--o{ HARMONOGRAM_PRAKTYKI : "ma plan (Zał. 2a)"
+    DOKUMENT ||--o{ PROGRAM_PRAKTYKI : "ma program (Zał. 2a)"
+    
+    DOKUMENT ||--o| SPRAWOZDANIE : "zawiera (Zał. 7)"
+    DOKUMENT ||--o| WNIOSEK_ZALICZENIE_PRAKTYKI : "zawiera (Zał. 4b)"
+    DOKUMENT ||--o| OSWIADCZENIE : "zawiera (Zał. 9)"
