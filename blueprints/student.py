@@ -72,7 +72,18 @@ def porozumienie():
 @login_required
 def zal2_program():
     if current_user.rola != 'student': return redirect(url_for('index'))
-    return render_template('dokumenty/zal2_program_student.html')
+    
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first() if student else None
+    porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first() if praktyka else None
+    
+    oswiadczenie = None
+    if praktyka:
+        dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+        if dokument_zal9:
+            oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
+
+    return render_template('dokumenty/zal2_program_student.html', porozumienie=porozumienie, oswiadczenie=oswiadczenie)
 
 @student_bp.route('/zal2a_harmonogram', methods=['GET'])
 @login_required

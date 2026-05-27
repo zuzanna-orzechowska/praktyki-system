@@ -20,6 +20,7 @@ class Uzytkownik(db.Model, UserMixin, DictSerializable):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     haslo_hash = db.Column(db.String(255), nullable=True) 
+    tytul_naukowy = db.Column(db.String(50), nullable=True)
     imie = db.Column(db.String(50), nullable=False)
     nazwisko = db.Column(db.String(50), nullable=False)
     rola = db.Column(db.String(50), nullable=False)

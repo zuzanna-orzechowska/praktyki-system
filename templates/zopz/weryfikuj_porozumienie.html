@@ -39,8 +39,6 @@ function submitDecision(akcja) {
     </h2>
     {% if porozumienie and porozumienie.status == 'Podpisane' %}
     <span class="badge bg-success">Status: Porozumienie zawarte</span>
-    {% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' %}
-    <span class="badge bg-info">Status: Zatwierdzone przez ZOPZ</span>
     {% elif porozumienie and porozumienie.status == 'UwagiZOPZ' %}
     <span class="badge bg-warning text-dark">Status: Do poprawy przez Dziekanat</span>
     {% elif porozumienie and porozumienie.status == 'OczekujeZOPZ' %}
@@ -66,14 +64,14 @@ function submitDecision(akcja) {
                 <i class="bi bi-x-circle"></i> Zgłoś uwagi do Dziekanatu
             </button>
             <button type="button" class="btn btn-success flex-grow-1" onclick="submitDecision('zatwierdz')">
-                <i class="bi bi-check-circle"></i> Zatwierdź Porozumienie
+                <i class="bi bi-pen"></i> Zatwierdź i Podpisz Porozumienie
             </button>
         </div>
     </div>
 </div>
-{% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' %}
+{% elif porozumienie and porozumienie.status == 'Podpisane' %}
 <div class="alert alert-success shadow-sm mb-4">
-    <i class="bi bi-check-circle-fill"></i> Zatwierdzono
+    <i class="bi bi-check-circle-fill"></i> Porozumienie zostało przez Ciebie zatwierdzone i podpisane.
 </div>
 {% elif porozumienie and porozumienie.status == 'UwagiZOPZ' %}
 <div class="alert alert-warning shadow-sm mb-4">

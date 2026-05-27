@@ -6,7 +6,7 @@ dziekanat_bp = Blueprint('dziekanat', __name__, url_prefix='/dziekanat')
 @dziekanat_bp.route('/dashboard')
 @login_required
 def dashboard():
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         flash('Brak uprawnień do panelu dziekanatu.', 'danger')
         return redirect(url_for('index'))
     return render_template('dziekanat/dashboard.html')
@@ -14,7 +14,7 @@ def dashboard():
 @dziekanat_bp.route('/zal9')
 @login_required
 def zal9_lista():
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/zal9_lista.html')
 
@@ -22,14 +22,14 @@ def zal9_lista():
 @dziekanat_bp.route('/weryfikuj_zal9/<int:id>', methods=['GET'])
 @login_required
 def weryfikuj_zal9(id):
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/weryfikuj_zal9.html')
 
 @dziekanat_bp.route('/porozumienia')
 @login_required
 def porozumienia():
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/porozumienia_lista.html')
 
@@ -38,7 +38,7 @@ def porozumienia():
 def weryfikuj_porozumienie(praktyka_id):
     from models import Praktyka, Oswiadczenie, Dokument
     from datetime import datetime
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
         
     praktyka = Praktyka.query.get_or_404(praktyka_id)

@@ -11,9 +11,10 @@ CREATE TABLE uzytkownik (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,
     email           TEXT        NOT NULL UNIQUE,
     haslo_hash      TEXT,
+    tytul_naukowy   TEXT,
     imie            TEXT        NOT NULL,
     nazwisko        TEXT        NOT NULL,
-    rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik')),
+    rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik','dyrektor')),
     aktywny         INTEGER     NOT NULL DEFAULT 1,      -- 1 = aktywny, 0 = zablokowany/oczekujący
     wymaga_zmiany_hasla BOOLEAN DEFAULT 0,
     auth_provider   TEXT        DEFAULT 'microsoft',     -- Z jakiego systemu pochodzi

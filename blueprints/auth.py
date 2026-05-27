@@ -222,7 +222,7 @@ def zmien_haslo():
             return redirect(url_for('admin.dashboard'))
         elif current_user.rola == 'zopz':
             return redirect(url_for('zopz.dashboard'))
-        elif current_user.rola == 'dziekanat':
+        elif current_user.rola in ['dziekanat', 'dyrektor']:
             return redirect(url_for('dziekanat.dashboard'))
         elif current_user.rola == 'student':
             return redirect(url_for('student.dashboard'))

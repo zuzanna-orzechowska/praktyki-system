@@ -8,7 +8,7 @@ dziekanat_api_bp = Blueprint('dziekanat_api', __name__, url_prefix='/dziekanat')
 @dziekanat_api_bp.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     zal9_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL9').count()
@@ -19,7 +19,7 @@ def dashboard():
         por = p.porozumienie
         if not por:
             porozumienia_count += 1
-        elif por.status in ['Draft', 'UwagiZOPZ', 'ZatwierdzoneZOPZ']:
+        elif por.status in ['Draft', 'ZaakceptowaneDyrektor', 'UwagiZOPZ', 'ZatwierdzoneZOPZ', 'OczekujeZOPZ']:
             porozumienia_count += 1
             
     return jsonify({
@@ -30,7 +30,7 @@ def dashboard():
 @dziekanat_api_bp.route('/zal9', methods=['GET'])
 @login_required
 def zal9_lista():
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     oswiadczenia_do_weryfikacji = db.session.query(Oswiadczenie)\
@@ -68,7 +68,7 @@ def zal9_lista():
 @dziekanat_api_bp.route('/porozumienia', methods=['GET'])
 @login_required
 def porozumienia_lista():
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     praktyki = db.session.query(Praktyka)\
@@ -92,11 +92,12 @@ def porozumienia_lista():
         'porozumienia': [format_praktyka_porozumienie(p) for p in praktyki]
     })
 
-@dziekanat_api_bp.route('/wyslij_porozumienie/<int:praktyka_id>', methods=['POST'])
+@dziekanat_api_bp.route('/akceptuj_dyrektor/<int:praktyka_id>', methods=['POST'])
 @login_required
-def wyslij_porozumienie(praktyka_id):
-    if current_user.rola != 'dziekanat':
-        return jsonify({'error': 'Odmowa dostępu'}), 403
+def akceptuj_dyrektor(praktyka_id):
+    from datetime import date
+    if current_user.rola != 'dyrektor':
+        return jsonify({'error': 'Odmowa dostępu. Tylko Dyrektor może zaakceptować porozumienie.'}), 403
         
     praktyka = Praktyka.query.get_or_404(praktyka_id)
     if not praktyka.zaklad_id:
@@ -104,11 +105,49 @@ def wyslij_porozumienie(praktyka_id):
         
     porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
     if not porozumienie:
-        porozumienie = Porozumienie(praktyka_id=praktyka.id, zaklad_id=praktyka.zaklad_id, status='OczekujeZOPZ')
+        porozumienie = Porozumienie(praktyka_id=praktyka.id, zaklad_id=praktyka.zaklad_id, status='ZaakceptowaneDyrektor')
         db.session.add(porozumienie)
     else:
-        porozumienie.status = 'OczekujeZOPZ'
-        porozumienie.komentarz_zopz = None # reset komentarza przy ponownym wysłaniu
+        porozumienie.status = 'ZaakceptowaneDyrektor'
+        
+    # Zapisanie podpisu Dyrektora
+    tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+    porozumienie.podpisal_dziekanat = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+    porozumienie.data_podpisania = date.today()
+    
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Porozumienie zaakceptowane i podpisane przez Dyrektora.'})
+
+@dziekanat_api_bp.route('/przekaz_dyrektorowi/<int:praktyka_id>', methods=['POST'])
+@login_required
+def przekaz_dyrektorowi(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+    
+    if not porozumienie or porozumienie.status != 'UwagiZOPZ':
+        return jsonify({'error': 'Nie można przekazać do Dyrektora w obecnym statusie.'}), 400
+        
+    porozumienie.status = 'Draft'
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Dokument przekazany do ponownej akceptacji Dyrektora.'})
+
+@dziekanat_api_bp.route('/wyslij_porozumienie/<int:praktyka_id>', methods=['POST'])
+@login_required
+def wyslij_porozumienie(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+    
+    if not porozumienie or porozumienie.status != 'ZaakceptowaneDyrektor':
+        return jsonify({'error': 'Porozumienie musi zostać najpierw zaakceptowane przez Dyrektora.'}), 400
+        
+    porozumienie.status = 'OczekujeZOPZ'
+    porozumienie.komentarz_zopz = None # reset komentarza przy ponownym wysłaniu
         
     db.session.commit()
     return jsonify({'success': True, 'message': 'Porozumienie wysłane do ZOPZ.'})
@@ -118,7 +157,7 @@ def wyslij_porozumienie(praktyka_id):
 def podpisz_porozumienie(id):
     from models import Porozumienie
     from datetime import date
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     porozumienie = Porozumienie.query.get_or_404(id)
@@ -135,7 +174,7 @@ def podpisz_porozumienie(id):
 @dziekanat_api_bp.route('/weryfikuj_zal9/<int:id>', methods=['GET', 'POST'])
 @login_required
 def weryfikuj_zal9(id):
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     oswiadczenie = Oswiadczenie.query.get_or_404(id)
@@ -193,7 +232,7 @@ def weryfikuj_zal9(id):
 @login_required
 def edytuj_zaklad(praktyka_id):
     from datetime import datetime
-    if current_user.rola != 'dziekanat':
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     praktyka = Praktyka.query.get_or_404(praktyka_id)

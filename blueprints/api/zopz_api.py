@@ -96,9 +96,10 @@ def weryfikuj_porozumienie(porozumienie_id):
     akcja = data.get('akcja')
     
     if akcja == 'zatwierdz':
-        porozumienie.status = 'ZatwierdzoneZOPZ'
+        porozumienie.status = 'Podpisane'
         porozumienie.komentarz_zopz = None
-        message = 'Porozumienie zostało zatwierdzone.'
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Porozumienie zostało podpisane i zawarte.'})
     elif akcja == 'uwagi':
         komentarz = data.get('komentarz_zopz')
         if not komentarz:
@@ -106,6 +107,8 @@ def weryfikuj_porozumienie(porozumienie_id):
         porozumienie.status = 'UwagiZOPZ'
         porozumienie.komentarz_zopz = komentarz
         message = 'Uwagi zostały przesłane do Dziekanatu.'
+        db.session.commit()
+        return jsonify({'success': True, 'message': message})
     else:
         return jsonify({'error': 'Nieznana akcja.'}), 400
         

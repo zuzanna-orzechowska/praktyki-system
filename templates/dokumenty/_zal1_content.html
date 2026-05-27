@@ -7,7 +7,7 @@
     {% endif %}
 </div>
 
-{% if current_user.rola == 'dziekanat' %}
+{% if current_user.rola in ['dziekanat', 'dyrektor'] %}
 <div class="d-flex justify-content-end mb-3">
     <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editZakladModal">
         <i class="bi bi-pencil-square"></i> Edytuj dane
@@ -104,7 +104,9 @@
                 <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
                     <small>(podpis Dyrektora Instytutu)</small>
                 </div>
-                <div class="mt-2" style="font-family: cursive; color: #004a99;">dr inż. Jan Kowalski</div>
+                {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ porozumienie.podpisal_dziekanat }}</div>
+                {% endif %}
             </div>
             <div class="col-6">
                 <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">

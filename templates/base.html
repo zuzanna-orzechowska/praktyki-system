@@ -205,7 +205,7 @@
             {% elif current_user.rola == 'uopz' %}
             <a class="nav-link {% if 'uopz' in request.path %}active{% endif %}"
                 href="{{ url_for('uopz.dashboard') }}">PANEL STUDENTÓW</a>
-            {% elif current_user.rola == 'dziekanat' %}
+            {% elif current_user.rola in ['dziekanat', 'dyrektor'] %}
             <a class="nav-link {% if 'dziekanat' in request.path %}active{% endif %}"
                 href="{{ url_for('dziekanat.dashboard') }}">PANEL STUDENTÓW</a>
             {% elif current_user.rola == 'zopz' %}
@@ -308,7 +308,7 @@
                 </ul>
                 {% endif %}
 
-                {% if current_user.is_authenticated and current_user.rola == 'dziekanat' %}
+                {% if current_user.is_authenticated and current_user.rola in ['dziekanat', 'dyrektor'] %}
                 <div class="sidebar-section-title mt-4">Panel Dziekanatu</div>
                 <ul class="sidebar-menu">
                     <li>
