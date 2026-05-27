@@ -5,12 +5,12 @@
 PRAGMA foreign_keys = ON;  -- wymagane w SQLite
 
 -- ------------------------------------------------------------
--- 1. TABELA UŻYTKOWNIKA (Zmodyfikowana pod OAuth)
+-- 1. TABELA UŻYTKOWNIKA
 -- ------------------------------------------------------------
 CREATE TABLE uzytkownik (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,
     email           TEXT        NOT NULL UNIQUE,
-    haslo_hash      TEXT,                                -- Już nie jest NOT NULL
+    haslo_hash      TEXT,
     imie            TEXT        NOT NULL,
     nazwisko        TEXT        NOT NULL,
     rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik')),
@@ -23,7 +23,7 @@ CREATE TABLE uzytkownik (
 );
 
 -- ------------------------------------------------------------
--- 2. PROFIL STUDENTA (Pozostaje bez zmian, ale tworzymy go ponownie)
+-- 2. PROFIL STUDENTA 
 -- ------------------------------------------------------------
 CREATE TABLE student (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,
