@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/przypisz_uopz.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Przypisz Opiekuna Uczelnianego (UOPZ)
+    </h2>
+    <p class="text-muted">Wybierz studenta i przypisz mu wybranego opiekuna uczelnianego.</p>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0">Lista studentów i przypisani opiekunowie</h5>
+            <button class="btn btn-outline-primary btn-sm" id="btn-random-assign">
+                <i class="bi bi-shuffle"></i> Przypisz losowo (dla nieprzypisanych)
+            </button>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white border">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Album</th>
+                        <th>Kierunek</th>
+                        <th>Status Praktyki</th>
+                        <th style="width: 250px;">Opiekun Uczelniany (UOPZ)</th>
+                        <th style="width: 100px;" class="text-center">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody id="students-table">
+                    <tr>
+                        <td colspan="6" class="text-center py-4">Ładowanie danych...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

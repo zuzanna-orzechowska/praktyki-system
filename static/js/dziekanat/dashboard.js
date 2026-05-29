@@ -30,6 +30,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     porBadge.style.display = 'none';
                 }
             }
+            
+            const zal2aBadge = document.getElementById('zal2a-badge');
+            if (zal2aBadge) {
+                if (data.zal2a_count > 0) {
+                    zal2aBadge.textContent = data.zal2a_count;
+                    zal2aBadge.style.display = 'inline-block';
+                } else {
+                    zal2aBadge.style.display = 'none';
+                }
+            }
         })
         .catch(err => console.error(err));
 });

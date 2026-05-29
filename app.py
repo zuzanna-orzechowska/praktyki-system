@@ -7,7 +7,9 @@ from blueprints.dziekanat import dziekanat_bp
 from blueprints.admin import admin_bp
 from blueprints.zopz import zopz_bp
 from blueprints.api import api_bp
-from flask_login import login_required
+from flask_login import login_required, current_user
+from models import Uzytkownik, Oswiadczenie, Dokument, ZakladPracy, Porozumienie
+from blueprints.api.notifications_api import notifications_api_bp
 import os
 from dotenv import load_dotenv
 
@@ -60,7 +62,6 @@ def create_app():
             return status_map.get(status, (status.replace('_', ' ').capitalize(), 'secondary'))
             
         def pending_accounts_count():
-            from models import Uzytkownik, Oswiadczenie, Dokument
             try:
                 oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').count()
                 zgloszenia_zopz = Oswiadczenie.query.join(Dokument).filter(Dokument.status == 'AwaitingAccount').count()
@@ -77,15 +78,14 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(zopz_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(notifications_api_bp)
     
     init_oauth(app)
     
     @app.route('/')
     def index():
         zopz_pending_porozumienia = 0
-        from flask_login import current_user
         if current_user.is_authenticated and current_user.rola == 'zopz':
-            from models import ZakladPracy, Porozumienie
             zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
             if zaklad:
                 zopz_pending_porozumienia = Porozumienie.query.filter_by(zaklad_id=zaklad.id, status='OczekujeZOPZ').count()

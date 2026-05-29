@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/weryfikuj_zal2a.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('dziekanat.zal2a_lista') }}" class="text-decoration-none mb-2 d-inline-block">
+        <i class="bi bi-arrow-left"></i> Wróć do listy Harmonogramów
+    </a>
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Weryfikacja Programu i Harmonogramu (Zał. 2a)
+    </h2>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light fw-bold">Dane Studenta</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Imię i nazwisko:</strong> <span id="student-name"></span></p>
+                <p class="mb-1"><strong>Nr albumu:</strong> <span id="student-album"></span></p>
+                <p class="mb-1"><strong>Kierunek:</strong> <span id="student-kierunek"></span></p>
+                <p class="mb-0"><strong>Specjalność:</strong> <span id="student-specjalnosc"></span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light fw-bold">Status Dokumentu</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Aktualny status:</strong> <span id="dokument-status" class="badge bg-secondary">Ładowanie...</span></p>
+                <p class="mb-0 text-muted small mt-2">Dziekanat może jedynie zatwierdzić lub odrzucić gotowy program przygotowany przez UOPZ, ZOPZ i zaakceptowany przez Studenta.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>Zatwierdzony Program Praktyki Zawodowej</span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-bordered mb-0" id="tabela-program">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 20%;">Efekt Uczenia Się</th>
+                    <th>Dział (komórka organizacyjna), wykaz prac</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Program rows populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>Zatwierdzony Harmonogram Praktyki</span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-bordered mb-0" id="tabela-harmonogram">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 5%;">Lp.</th>
+                    <th style="width: 60%;">Dział (komórka organizacyjna)</th>
+                    <th style="width: 35%;">Planowana liczba dni</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Harmonogram rows populated by JS -->
+            </tbody>
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td colspan="2" class="text-end">RAZEM (DNI):</td>
+                    <td id="suma-dni" class="text-center">0</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-bold">Oświadczenia i Podpisy</div>
+    <div class="card-body">
+        <div class="row text-center mb-3">
+            <div class="col-4">
+                <p class="mb-1 text-muted small">Opiekun z ramienia Uczelni (UOPZ)</p>
+                <div id="podpis-uopz" style="font-family: cursive; color: #004a99; font-size: 1.1rem; height: 25px;">Brak podpisu</div>
+                <div id="data-uopz" class="small text-muted"></div>
+            </div>
+            <div class="col-4">
+                <p class="mb-1 text-muted small">Zakładowy Opiekun (ZOPZ)</p>
+                <div id="podpis-zopz" style="font-family: cursive; color: #004a99; font-size: 1.1rem; height: 25px;">Brak podpisu</div>
+                <div id="data-zopz" class="small text-muted"></div>
+            </div>
+            <div class="col-4">
+                <p class="mb-1 text-muted small">Student</p>
+                <div id="podpis-student" style="font-family: cursive; color: #004a99; font-size: 1.1rem; height: 25px;">Brak podpisu</div>
+                <div id="data-student" class="small text-muted"></div>
+            </div>
+        </div>
+        
+        <div class="mb-3" id="komentarz-container" style="display: none;">
+            <label class="form-label text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Komentarz do odrzucenia (wymagany jeśli odrzucasz):</label>
+            <textarea class="form-control" id="komentarz-dziekanatu" rows="3" placeholder="Wpisz powód odrzucenia harmonogramu..."></textarea>
+        </div>
+
+        <div id="dziekanat-actions" class="mt-4 d-none">
+            <button type="button" class="btn btn-outline-danger" onclick="toggleOdrzuc()">
+                <i class="bi bi-x-circle"></i> Odrzuć (zwrot do UOPZ)
+            </button>
+            <button type="button" class="btn btn-success ms-2" id="btn-zatwierdz" onclick="zapiszDecyzje('zatwierdz')">
+                <i class="bi bi-check-circle"></i> Zatwierdź Ostatecznie Harmonogram
+            </button>
+        </div>
+        
+        <div id="potwierdz-odrzuc-actions" class="mt-4 d-none">
+            <button type="button" class="btn btn-secondary" onclick="toggleOdrzuc()">Anuluj</button>
+            <button type="button" class="btn btn-danger ms-2" onclick="zapiszDecyzje('odrzuc')">
+                <i class="bi bi-send-x"></i> Potwierdź Odrzucenie
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -29,8 +29,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>${dataStr}</td>
                             <td><span class="badge bg-secondary">${p.status}</span></td>
                             <td class="text-end pe-4">
-                                <a href="/uopz/teczka/${p.student_id}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-folder2-open"></i> Otwórz teczkę
+                                <a href="/uopz/zal2a_harmonogram/${p.student_id}" class="btn btn-sm btn-outline-primary mb-1">
+                                    <i class="bi bi-calendar-check"></i> Zał. 2a
+                                </a>
+                                <a href="/uopz/teczka/${p.student_id}" class="btn btn-sm btn-outline-secondary mb-1">
+                                    <i class="bi bi-folder2-open"></i> Teczka
                                 </a>
                             </td>
                         </tr>

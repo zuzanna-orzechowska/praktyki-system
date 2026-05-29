@@ -92,6 +92,8 @@ class Dokument(db.Model, DictSerializable):
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), nullable=False)
     typ_zalacznika = db.Column(db.String(20), nullable=False) # np. 'ZAL6'
     status = db.Column(db.String(50), default='Draft')
+    plik_path = db.Column(db.String(255), nullable=True)
+    uwagi_opiekuna = db.Column(db.Text, nullable=True)
     utworzony_przez = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
     komentarz = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -219,3 +221,27 @@ class ProgramPraktyki(db.Model, DictSerializable):
     dzial_prace = db.Column(db.Text)
     
     dokument = db.relationship('Dokument', backref=db.backref('programy', cascade="all, delete-orphan"))
+
+class Zal2aPodpisy(db.Model, DictSerializable):
+    __tablename__ = 'zal2a_podpisy'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    podpis_uopz = db.Column(db.String(255))
+    data_uopz = db.Column(db.Date)
+    podpis_zopz = db.Column(db.String(255))
+    data_zopz = db.Column(db.Date)
+    podpis_student = db.Column(db.String(255))
+    data_student = db.Column(db.Date)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('zal2a_podpisy', uselist=False, cascade="all, delete-orphan"))
+
+class Powiadomienie(db.Model, DictSerializable):
+    __tablename__ = 'powiadomienie'
+    id = db.Column(db.Integer, primary_key=True)
+    uzytkownik_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
+    tresc = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(255), nullable=True)
+    przeczytane = db.Column(db.Boolean, default=False)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    uzytkownik = db.relationship('Uzytkownik', backref=db.backref('powiadomienia', cascade="all, delete-orphan"))

@@ -42,3 +42,11 @@ def porozumienie(id):
         oswiadczenie=oswiadczenie,
         current_date=datetime.today().date()
     )
+
+@zopz_bp.route('/zal2a_harmonogram/<int:student_id>')
+@login_required
+def zal2a_harmonogram(student_id):
+    if current_user.rola != 'zopz':
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('zopz/zal2a_harmonogram.html')

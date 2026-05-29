@@ -1,7 +1,11 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
-from models import Praktyka, ZakladPracy
-
+from extensions import db
+from models import (
+    Praktyka, ZakladPracy, Porozumienie, Student, Dokument, 
+    ProgramPraktyki, HarmonogramPraktyki, Zal2aPodpisy, Powiadomienie
+)
+from datetime import date
 zopz_api_bp = Blueprint('zopz_api', __name__, url_prefix='/zopz')
 
 @zopz_api_bp.route('/dashboard', methods=['GET'])
@@ -41,12 +45,8 @@ def dashboard():
 
 @zopz_api_bp.route('/zaklad_pracy', methods=['PUT'])
 @login_required
-def update_zaklad_pracy():
-    from flask import request
-    from extensions import db
-    
-    if current_user.rola != 'zopz':
-        return jsonify({'error': 'Odmowa dostępu'}), 403
+def update_zaklad_pracy():    
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
         
     zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
     if not zaklad:
@@ -80,13 +80,8 @@ def update_zaklad_pracy():
 
 @zopz_api_bp.route('/weryfikuj_porozumienie/<int:porozumienie_id>', methods=['POST'])
 @login_required
-def weryfikuj_porozumienie(porozumienie_id):
-    from models import Porozumienie
-    from extensions import db
-    from flask import request
-    
-    if current_user.rola != 'zopz':
-        return jsonify({'error': 'Odmowa dostępu'}), 403
+def weryfikuj_porozumienie(porozumienie_id):    
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
         
     porozumienie = Porozumienie.query.get_or_404(porozumienie_id)
     if porozumienie.zaklad.zopz_id != current_user.id:
@@ -114,3 +109,83 @@ def weryfikuj_porozumienie(porozumienie_id):
         
     db.session.commit()
     return jsonify({'success': True, 'message': message})
+
+@zopz_api_bp.route('/zal2a_harmonogram/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal2a_harmonogram(student_id):    
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka or not zaklad or praktyka.zaklad_id != zaklad.id:
+        return jsonify({'error': 'Brak dostępu do praktyki tego studenta'}), 404
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A').first()
+    if not dokument:
+        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A', utworzony_przez=current_user.id)
+        db.session.add(dokument)
+        db.session.commit()
+
+    podpisy = Zal2aPodpisy.query.filter_by(dokument_id=dokument.id).first()
+    if not podpisy:
+        podpisy = Zal2aPodpisy(dokument_id=dokument.id)
+        db.session.add(podpisy)
+        db.session.commit()
+
+    if request.method == 'POST':
+        data = request.json
+        akcja = data.get('akcja')
+        if akcja in ['zapisz', 'wyslij_do_uopz']:
+            ProgramPraktyki.query.filter_by(dokument_id=dokument.id).delete()
+            programy_data = data.get('programy', {})
+            for kod, prace in programy_data.items():
+                if prace:
+                    nowy_program = ProgramPraktyki(dokument_id=dokument.id, kod_efektu=kod, dzial_prace=prace)
+                    db.session.add(nowy_program)
+
+            HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).delete()
+            harmonogram_data = data.get('harmonogram', [])
+            for i, p in enumerate(harmonogram_data):
+                if p['dzial'] and p['dni']:
+                    nowa_pozycja = HarmonogramPraktyki(
+                        dokument_id=dokument.id, lp=i + 1,
+                        dzial_komorka=p['dzial'], planowana_liczba_dni=int(p['dni'])
+                    )
+                    db.session.add(nowa_pozycja)
+            
+            dokument.uwagi_opiekuna = ""
+            
+            if akcja == 'wyslij_do_uopz':
+                dokument.status = 'Sent_back_to_UOPZ'
+                if data.get('zloz_podpis'):
+                    tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                    podpisy.podpis_zopz = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                    podpisy.data_zopz = date.today()
+                message = 'Harmonogram zatwierdzono, podpisano i odesłano do Opiekuna Uczelnianego!'
+                notif = Powiadomienie(
+                    uzytkownik_id=praktyka.uopz_id,
+                    tresc=f"Zakład odesłał uzupełniony Załącznik 2a dla {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                    link=f"/uopz/zal2a_harmonogram/{student.id}"
+                )
+                db.session.add(notif)
+            else:
+                message = 'Harmonogram został zapisany jako szkic.'
+                
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': message})
+
+    pozycje_harmonogramu = HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).order_by(HarmonogramPraktyki.lp).all()
+    zapisane_programy = {p.kod_efektu: p.dzial_prace for p in ProgramPraktyki.query.filter_by(dokument_id=dokument.id).all()}
+
+    return jsonify({
+        'student': student.to_dict(),
+        'uzytkownik': student.uzytkownik.to_dict(),
+        'praktyka': praktyka.to_dict(),
+        'dokument': dokument.to_dict(),
+        'podpisy': podpisy.to_dict() if podpisy else None,
+        'pozycje': [p.to_dict() for p in pozycje_harmonogramu],
+        'zapisane_programy': zapisane_programy
+    })

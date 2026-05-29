@@ -132,6 +132,9 @@ def auth_callback(provider):
         elif email == 'orzechosiaa.searchw@gmail.com': #EMAIL DO WYKASOWANIA W PRZYSZLOSCI TYLK ODO CELOW TESTOWYCH
             rola = 'dziekanat'
             aktywny = 1
+        elif email == 'zuzannaorzechowska4@gmail.com':
+            rola = 'uopz'
+            aktywny = 1
         elif domain == 'student.ans-elblag.pl': #TUTAJ MA BYĆ IF
             rola = 'student'
             aktywny = 1

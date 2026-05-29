@@ -46,3 +46,9 @@ def zal7_sprawozdanie(student_id):
 def zal7a_sprawozdanie(student_id):
     if current_user.rola != 'uopz': return redirect(url_for('index'))
     return render_template('uopz/zal7a_sprawozdanie.html')
+
+@uopz_bp.route('/zal2a_lista')
+@login_required
+def zal2a_lista():
+    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    return render_template('uopz/zal2a_lista.html')

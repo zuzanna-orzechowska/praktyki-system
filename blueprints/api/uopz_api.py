@@ -1,7 +1,12 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from extensions import db
-from models import Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, ProgramPraktyki, Porozumienie, EfektUczenia, Sprawozdanie
+from models import (
+    Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, 
+    ProgramPraktyki, Porozumienie, EfektUczenia, Sprawozdanie, Powiadomienie,
+    Zal2aPodpisy
+)
+from datetime import date
 
 uopz_api_bp = Blueprint('uopz_api', __name__, url_prefix='/uopz')
 
@@ -50,6 +55,7 @@ def teczka(student_id):
         'student': student.to_dict(),
         'uzytkownik': student.uzytkownik.to_dict(),
         'praktyka': praktyka.to_dict(),
+        'zaklad_nazwa': praktyka.zaklad.nazwa if praktyka.zaklad else 'Oczekuje na przypisanie zakładu (Zał. 9)',
         'dokumenty': dok_dict
     })
 
@@ -107,15 +113,24 @@ def zal2a_harmonogram(student_id):
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     if not praktyka: return jsonify({'error': 'Brak praktyki'}), 404
 
+    from models import Zal2aPodpisy
+    from datetime import date
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A').first()
     if not dokument:
-        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A', utworzony_przez=current_user.id)
+        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A', utworzony_przez=current_user.id, status='Draft_UOPZ')
         db.session.add(dokument)
+        db.session.commit()
+        
+    podpisy = Zal2aPodpisy.query.filter_by(dokument_id=dokument.id).first()
+    if not podpisy:
+        podpisy = Zal2aPodpisy(dokument_id=dokument.id)
+        db.session.add(podpisy)
         db.session.commit()
 
     if request.method == 'POST':
         data = request.json
-        if data.get('akcja') == 'zapisz':
+        akcja = data.get('akcja')
+        if akcja in ['zapisz', 'wyslij_do_zopz', 'wyslij_do_studenta']:
             ProgramPraktyki.query.filter_by(dokument_id=dokument.id).delete()
             programy_data = data.get('programy', {})
             for kod, prace in programy_data.items():
@@ -133,11 +148,40 @@ def zal2a_harmonogram(student_id):
                     )
                     db.session.add(nowa_pozycja)
             
-            dokument.status = 'Under_Review'
-            dokument.uwagi_opiekuna = "" 
+            dokument.uwagi_opiekuna = ""
+            
+            if akcja == 'wyslij_do_zopz':
+                dokument.status = 'Sent_to_ZOPZ'
+                message = 'Harmonogram zapisano i przesłano do weryfikacji ZOPZ!'
+                if praktyka.zaklad and praktyka.zaklad.zopz_id:
+                    notif = Powiadomienie(
+                        uzytkownik_id=praktyka.zaklad.zopz_id,
+                        tresc=f"Nowy Załącznik 2a do weryfikacji od {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                        link=f"/zopz/zal2a_harmonogram/{student.id}"
+                    )
+                    db.session.add(notif)
+                    
+            elif akcja == 'wyslij_do_studenta':
+                dokument.status = 'Student_Review'
+                if data.get('zloz_podpis'):
+                    tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                    podpisy.podpis_uopz = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                    podpisy.data_uopz = date.today()
+                message = 'Harmonogram zapisano, podpisano i przesłano do akceptacji Studenta!'
+                
+                notif = Powiadomienie(
+                    uzytkownik_id=student.uzytkownik.id,
+                    tresc="Otrzymano Załącznik 2a do akceptacji.",
+                    link=f"/student/zal2a_harmonogram"
+                )
+                db.session.add(notif)
+                
+            else:
+                message = 'Program i Harmonogram został zapisany jako szkic.'
+                
             db.session.commit()
             
-            return jsonify({'success': True, 'message': 'Program i Harmonogram został zapisany i wysłany do studenta!'})
+            return jsonify({'success': True, 'message': message})
 
     pozycje_harmonogramu = HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).order_by(HarmonogramPraktyki.lp).all()
     zapisane_programy = {p.kod_efektu: p.dzial_prace for p in ProgramPraktyki.query.filter_by(dokument_id=dokument.id).all()}
@@ -147,6 +191,7 @@ def zal2a_harmonogram(student_id):
         'uzytkownik': student.uzytkownik.to_dict(),
         'praktyka': praktyka.to_dict(),
         'dokument': dokument.to_dict(),
+        'podpisy': podpisy.to_dict() if podpisy else None,
         'pozycje': [p.to_dict() for p in pozycje_harmonogramu],
         'zapisane_programy': zapisane_programy
     })
@@ -224,4 +269,46 @@ def handle_sprawozdanie(student_id, typ):
         'praktyka': praktyka.to_dict(),
         'dokument': dokument.to_dict() if dokument else None,
         'sprawozdanie': sprawozdanie_doc.to_dict() if sprawozdanie_doc else None
+    })
+@uopz_api_bp.route('/zal2a_lista', methods=['GET'])
+@login_required
+def zal2a_lista():
+    if current_user.rola != 'uopz':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyki = Praktyka.query.filter_by(uopz_id=current_user.id).all()
+    praktyka_ids = [p.id for p in praktyki]
+    
+    dokumenty = Dokument.query.filter(Dokument.praktyka_id.in_(praktyka_ids), Dokument.typ_zalacznika == 'ZAL2A').all()
+    
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_id': student.id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    do_akcji = []
+    w_toku = []
+    zatwierdzone = []
+
+    for d in dokumenty:
+        fd = format_dokument(d)
+        if d.status in ['Draft_UOPZ', 'Sent_back_to_UOPZ', 'Draft', 'Rejected']:
+            do_akcji.append(fd)
+        elif d.status in ['Sent_to_ZOPZ', 'Student_Review', 'Submitted']:
+            w_toku.append(fd)
+        elif d.status == 'Approved':
+            zatwierdzone.append(fd)
+
+    return jsonify({
+        'do_akcji': do_akcji,
+        'w_toku': w_toku,
+        'zatwierdzone': zatwierdzone
     })

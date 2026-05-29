@@ -1,9 +1,15 @@
-from flask import Blueprint, jsonify, request
+import os
+from flask import Blueprint, jsonify, request, current_app
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika
-from datetime import datetime
-
+from models import (
+    Student, Praktyka, Dokument, WpisDziennika, Porozumienie, Oswiadczenie,
+    WniosekZaliczeniePraktyki, KartaPraktyk, DecyzjaDziekana, ProtokolZaliczenia,
+    HarmonogramPraktyki, ProgramPraktyki, Zal2aPodpisy, Powiadomienie, Uzytkownik,
+    Sprawozdanie
+)
+from datetime import datetime, date
+from werkzeug.utils import secure_filename
 student_api_bp = Blueprint('student_api', __name__, url_prefix='/student')
 
 @student_api_bp.route('/dashboard', methods=['GET'])
@@ -21,7 +27,6 @@ def dashboard():
     powiadomienia = []
     if praktyka:
         dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
-        from models import Porozumienie
         porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
         
         show_zal9_accepted = True
@@ -89,7 +94,6 @@ def dziennik():
         db.session.commit()
 
     if request.method == 'POST':
-        # Accept JSON payload instead of form data
         data = request.json
         if not data or 'wpisy' not in data:
             return jsonify({'error': 'Nieprawidłowe dane'}), 400
@@ -160,7 +164,6 @@ def dziennik():
             
         return jsonify({'success': True, 'message': 'Dziennik praktyk został zapisany pomyślnie!'})
 
-    # GET Request
     wpisy = WpisDziennika.query.filter_by(dokument_id=dokument.id).order_by(WpisDziennika.numer_dnia).all()
 
     praktyka_info = {
@@ -194,10 +197,6 @@ def dziennik():
 @student_api_bp.route('/zal9_oswiadczenie', methods=['GET', 'POST'])
 @login_required
 def zal9_oswiadczenie():
-    from flask import current_app
-    from models import Oswiadczenie
-    import os
-    from werkzeug.utils import secure_filename
     
     if current_user.rola != 'student':
         return jsonify({'error': 'Odmowa dostępu'}), 403
@@ -210,8 +209,8 @@ def zal9_oswiadczenie():
         db.session.add(praktyka)
         db.session.commit()
         
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
-    oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6_SPRAWOZDANIE').first()
+    sprawozdanie_obj = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
     
     if request.method == 'POST':
         if not dokument:
@@ -297,7 +296,6 @@ def zal9_oswiadczenie():
             db.session.commit()
             return jsonify({'success': True, 'message': 'Szkic oświadczenia został zapisany.'})
             
-    # GET
     dzisiaj = datetime.today().strftime('%Y-%m-%d')
     student_dict = student.to_dict()
     student_dict['imie'] = student.uzytkownik.imie
@@ -315,7 +313,6 @@ def zal9_oswiadczenie():
 @student_api_bp.route('/zal4b_wniosek', methods=['GET', 'POST'])
 @login_required
 def zal4b_wniosek():
-    from models import WniosekZaliczeniePraktyki
     
     if current_user.rola != 'student':
         return jsonify({'error': 'Odmowa dostępu'}), 403
@@ -380,10 +377,18 @@ def zal4b_wniosek():
 @student_api_bp.route('/zal3_karta', methods=['GET'])
 @student_api_bp.route('/zal4_efekty', methods=['GET'])
 @student_api_bp.route('/zal4a_decyzja', methods=['GET'])
+@student_api_bp.route('/edytuj_dane', methods=['POST'])
+@login_required
+def edytuj_dane():
+    if current_user.rola != 'student':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+    
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
 @student_api_bp.route('/zal8_protokol', methods=['GET'])
 @login_required
 def get_dokumenty_readonly():
-    from flask import request
     if current_user.rola != 'student':
         return jsonify({'error': 'Odmowa dostępu'}), 403
     
@@ -403,8 +408,6 @@ def get_dokumenty_readonly():
     
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika=typ_zal).first() if typ_zal else None
     
-    # We might need specific models for specific documents if they have them, but mostly they just use 'dokument' and 'praktyka'
-    from models import KartaPraktyk, DecyzjaDziekana, ProtokolZaliczenia
     karta = KartaPraktyk.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL3') else None
     decyzja = DecyzjaDziekana.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL4A') else None
     protokol = ProtokolZaliczenia.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL8') else None
@@ -421,7 +424,6 @@ def get_dokumenty_readonly():
 @student_api_bp.route('/zal2a_harmonogram', methods=['GET', 'POST'])
 @login_required
 def zal2a_harmonogram_api():
-    from flask import request
     if current_user.rola != 'student':
         return jsonify({'error': 'Odmowa dostępu'}), 403
 
@@ -436,41 +438,109 @@ def zal2a_harmonogram_api():
         db.session.add(dokument)
         db.session.commit()
 
+    podpisy = Zal2aPodpisy.query.filter_by(dokument_id=dokument.id).first()
+    if not podpisy:
+        podpisy = Zal2aPodpisy(dokument_id=dokument.id)
+        db.session.add(podpisy)
+        db.session.commit()
+
     if request.method == 'POST':
         data = request.json
         akcja = data.get('akcja')
         komentarz = data.get('komentarz')
 
+        if komentarz is not None:
+            dokument.komentarz = komentarz
+            
+        specjalnosc = data.get('specjalnosc')
+        if specjalnosc is not None:
+            student.specjalnosc = specjalnosc
+
         if akcja == 'akceptuj':
-            dokument.status = 'Approved'
+            dokument.status = 'Submitted'
             dokument.uwagi_opiekuna = ""
-            if praktyka.status in ['OCZEKUJE_NA_ZAL9', 'ZAL9_PRZYJETY', 'POROZUMIENIE_PODPISANE']:
-                praktyka.status = 'PROGRAM_UZGODNIONY'
+            if data.get('zloz_podpis'):
+                clean_nazwisko = current_user.nazwisko.split('(')[0].strip()
+                podpisy.podpis_student = f"{current_user.imie} {clean_nazwisko}"
+                podpisy.data_student = date.today()
+                
+            notif = Powiadomienie(
+                uzytkownik_id=praktyka.uopz_id,
+                tresc=f"Student {current_user.imie} {current_user.nazwisko} zaakceptował Załącznik 2a (przesłano do Dziekanatu).",
+                link=f"/uopz/zal2a_harmonogram/{student.id}"
+            )
+            db.session.add(notif)
+            
+            pracownicy_dziekanatu = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'dyrektor'])).all()
+            for pd in pracownicy_dziekanatu:
+                notif_d = Powiadomienie(
+                    uzytkownik_id=pd.id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} zaakceptował Załącznik 2a do końcowej weryfikacji.",
+                    link=f"/dziekanat/weryfikuj_zal2a/{praktyka.id}"
+                )
+                db.session.add(notif_d)
+            
             db.session.commit()
-            return jsonify({'success': True, 'message': 'Zatwierdziłeś harmonogram praktyki!'})
+            return jsonify({'success': True, 'message': 'Zatwierdziłeś harmonogram praktyki i przekazałeś do Dziekanatu!'})
 
         elif akcja == 'odrzuc':
-            dokument.status = 'Rejected'
-            dokument.uwagi_opiekuna = f"UWAGA STUDENTA: {komentarz}" if komentarz else "Student odrzucił harmonogram bez komentarza."
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Odrzuciłeś harmonogram. UOPZ został o tym poinformowany.'})
+            dokument.status = 'Draft_UOPZ'
+            if komentarz:
+                dokument.uwagi_opiekuna = f"UWAGA STUDENTA: {komentarz}"
+            else:
+                dokument.uwagi_opiekuna = "Student odrzucił harmonogram bez komentarza."
+                
+            notif = Powiadomienie(
+                uzytkownik_id=praktyka.uopz_id,
+                tresc=f"Student {current_user.imie} {current_user.nazwisko} ODRZUCIŁ Załącznik 2a.",
+                link=f"/uopz/zal2a_harmonogram/{student.id}"
+            )
+            db.session.add(notif)
             
-    from models import HarmonogramPraktyki
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Odrzuciłeś harmonogram. Zwrócono do UOPZ do poprawy.'})
+            
+        elif akcja == 'zapisz_komentarz':
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Twój komentarz został zapisany.'})
+            
+        elif akcja == 'zapisz_specjalnosc':
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Specjalność została zapisana.'})
+
     pozycje = HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).order_by(HarmonogramPraktyki.lp).all()
     suma_dni = sum(p.planowana_liczba_dni for p in pozycje)
+    zapisane_programy = {p.kod_efektu: p.dzial_prace for p in ProgramPraktyki.query.filter_by(dokument_id=dokument.id).all()}
     
+    student_data = student.to_dict()
+    student_data['imie'] = current_user.imie
+    student_data['nazwisko'] = current_user.nazwisko
+    
+    praktyka_data = praktyka.to_dict()
+    praktyka_data['zaklad_nazwa'] = praktyka.zaklad.nazwa if praktyka.zaklad else ''
+
     return jsonify({
-        'student': student.to_dict(),
-        'praktyka': praktyka.to_dict(),
+        'student': student_data,
+        'praktyka': praktyka_data,
         'dokument': dokument.to_dict(),
+        'podpisy': podpisy.to_dict() if podpisy else None,
         'pozycje': [p.to_dict() for p in pozycje],
+        'zapisane_programy': zapisane_programy,
         'suma_dni': suma_dni
     })
+
+@student_api_bp.route('/sprawozdanie', methods=['GET', 'POST'])
+@login_required
+def sprawozdanie():
+    if current_user.rola != 'student':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
 
 @student_api_bp.route('/zal7a_sprawozdanie', methods=['GET', 'POST'])
 @login_required
 def zal7a_sprawozdanie_api():
-    from flask import request
     if current_user.rola != 'student':
         return jsonify({'error': 'Odmowa dostępu'}), 403
 
@@ -485,7 +555,6 @@ def zal7a_sprawozdanie_api():
         db.session.add(dokument)
         db.session.commit()
 
-    from models import Sprawozdanie
     sprawozdanie_doc = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
 
     if request.method == 'POST':

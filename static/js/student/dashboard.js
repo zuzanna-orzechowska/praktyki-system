@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     fetch('/api/student/dashboard')
         .then(response => {
             if (response.status === 401 || response.status === 403) {
@@ -12,14 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error(data.error);
                 return;
             }
-            
+
             const uzytkownik = data.uzytkownik;
             const praktyka = data.praktyka;
-            
+
             document.getElementById('student-greeting').textContent = `Witaj, ${uzytkownik.imie} ${uzytkownik.nazwisko}!`;
-            
+
             const statusBadge = document.getElementById('student-status-badge');
-            
+
             const statusMap = {
                 'BRAK_ZGŁOSZENIA': ['Brak zgłoszenia', 'secondary'],
                 'OCZEKUJE_NA_ZAL9': ['Oczekuje na załącznik 9', 'warning text-dark'],
@@ -32,13 +32,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 'EGZAMIN': ['Egzamin', 'info text-dark'],
                 'ZALICZONA': ['Praktyka zaliczona', 'success']
             };
-            
+
             const status = praktyka ? praktyka.status : null;
             const [statusText, statusColor] = status && statusMap[status] ? statusMap[status] : ['Brak zgłoszenia', 'secondary'];
-            
+
             statusBadge.textContent = statusText;
             statusBadge.className = `badge bg-${statusColor}`;
-            
+
             // Render notifications
             const alertsContainer = document.getElementById('alerts-container');
             alertsContainer.innerHTML = '';
@@ -54,11 +54,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     alertsContainer.insertAdjacentHTML('beforeend', alertHtml);
                 });
             }
-            
-            // Render tiles based on status
+
             const tilesContainer = document.getElementById('dashboard-tiles');
-            tilesContainer.innerHTML = ''; // clear loading
-            
+            tilesContainer.innerHTML = '';
+
             if (!praktyka || status === 'OCZEKUJE_NA_ZAL9' || status === 'BRAK_ZGŁOSZENIA') {
                 tilesContainer.innerHTML = `
                     <div class="col-12 mb-2">
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     `;
                 }
-                
+
                 tilesContainer.innerHTML = `
                     <div class="col-md-6 col-lg-6">
                         <a href="/student/dashboard" class="usos-tile">
@@ -125,6 +124,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="usos-tile-content">
                                 <h5>Program praktyki (Zał. 2)</h5>
                                 <p>Podgląd programu Twojej praktyki zawodowej.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal2a_harmonogram" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-calendar-check"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Harmonogram i Program (Zał. 2a)</h5>
+                                <p>Szczegółowy plan i program Twoich praktyk zawodowych.</p>
                             </div>
                         </a>
                     </div>

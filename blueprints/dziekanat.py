@@ -60,3 +60,24 @@ def weryfikuj_porozumienie(praktyka_id):
                            oswiadczenie=oswiadczenie,
                            current_date=current_date,
                            current_year=current_year)
+
+@dziekanat_bp.route('/zal2a')
+@login_required
+def zal2a_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/zal2a_lista.html')
+
+@dziekanat_bp.route('/weryfikuj_zal2a/<int:praktyka_id>')
+@login_required
+def weryfikuj_zal2a(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/weryfikuj_zal2a.html')
+
+@dziekanat_bp.route('/przypisz_uopz')
+@login_required
+def przypisz_uopz():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/przypisz_uopz.html')
