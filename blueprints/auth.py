@@ -78,6 +78,14 @@ def login():
                         return redirect(url_for('auth.zmien_haslo'))
                     if user.rola == 'admin':
                         return redirect(url_for('admin.dashboard'))
+                    elif user.rola == 'zopz':
+                        return redirect(url_for('zopz.dashboard'))
+                    elif user.rola in ['dziekanat', 'dyrektor']:
+                        return redirect(url_for('dziekanat.dashboard'))
+                    elif user.rola == 'student':
+                        return redirect(url_for('student.dashboard'))
+                    elif user.rola == 'uopz':
+                        return redirect(url_for('uopz.dashboard'))
                     return redirect(url_for('index'))
                 else:
                     flash('Twoje konto jest nieaktywne.', 'warning')
@@ -178,14 +186,15 @@ def auth_callback(provider):
         return redirect(url_for('auth.login'))
 
     login_user(user)
-    flash(f'Zalogowano pomyślnie przez {provider.capitalize()}!', 'success')
     
-    if user.rola == 'dziekanat':
+    if user.rola in ['dziekanat', 'dyrektor']:
         return redirect(url_for('dziekanat.dashboard'))
     elif user.rola == 'student':
         return redirect(url_for('student.dashboard'))
     elif user.rola == 'uopz':
         return redirect(url_for('uopz.dashboard'))
+    elif user.rola == 'zopz':
+        return redirect(url_for('zopz.dashboard'))
     elif user.rola == 'admin':
         return redirect(url_for('admin.dashboard'))
         

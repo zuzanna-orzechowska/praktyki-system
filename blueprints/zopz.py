@@ -50,3 +50,11 @@ def zal2a_harmonogram(student_id):
         flash('Brak dostępu.', 'danger')
         return redirect(url_for('index'))
     return render_template('zopz/zal2a_harmonogram.html')
+
+@zopz_bp.route('/teczka/<int:student_id>')
+@login_required
+def teczka(student_id):
+    if current_user.rola != 'zopz':
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('zopz/teczka.html')

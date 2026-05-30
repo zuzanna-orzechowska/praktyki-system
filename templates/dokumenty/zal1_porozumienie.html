@@ -1,5 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% include 'dokumenty/_zal1_content.html' %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Wróć do Panelu
+        </a>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Podgląd dokumentów
+        </h2>
+    </div>
+</div>
+
+<ul class="nav nav-tabs" id="docTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="zal1-tab" data-bs-toggle="tab" data-bs-target="#zal1" type="button" role="tab">Załącznik nr 1 (Porozumienie)</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="zal2-tab" data-bs-toggle="tab" data-bs-target="#zal2" type="button" role="tab">Załącznik nr 2 (Program)</button>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 p-3 bg-white mb-5" id="docTabsContent">
+  <!-- ZAL 1 -->
+  <div class="tab-pane fade show active" id="zal1" role="tabpanel">
+      {% include 'dokumenty/_zal1_content.html' %}
+  </div>
+  
+  <!-- ZAL 2 -->
+  <div class="tab-pane fade" id="zal2" role="tabpanel">
+      {% include 'dokumenty/_zal2_content.html' %}
+  </div>
+</div>
 {% endblock %}

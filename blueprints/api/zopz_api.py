@@ -23,6 +23,15 @@ def dashboard():
     def format_praktyka(p):
         student = p.student
         porozumienie = p.porozumienie
+        oczekujace = 0
+        if porozumienie and porozumienie.status == 'OczekujeZOPZ':
+            oczekujace += 1
+            
+        dokumenty = Dokument.query.filter_by(praktyka_id=p.id).all()
+        for doc in dokumenty:
+            if doc.typ_zalacznika == 'ZAL2A' and doc.status == 'Sent_to_ZOPZ':
+                oczekujace += 1
+                
         return {
             'id': p.id,
             'student_id': student.id,
@@ -35,12 +44,38 @@ def dashboard():
             'status': p.status,
             'porozumienie_id': porozumienie.id if porozumienie else None,
             'porozumienie_status': porozumienie.status if porozumienie else None,
-            'porozumienie_komentarz': porozumienie.komentarz_zopz if porozumienie else None
+            'porozumienie_komentarz': porozumienie.komentarz_zopz if porozumienie else None,
+            'oczekujace_akcje': oczekujace
         }
 
     return jsonify({
         'zaklad': zaklad.to_dict() if zaklad else None,
         'praktyki': [format_praktyka(p) for p in praktyki]
+    })
+
+@zopz_api_bp.route('/teczka/<int:student_id>', methods=['GET'])
+@login_required
+def teczka(student_id):
+    if current_user.rola != 'zopz':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+
+    if not praktyka or not zaklad or praktyka.zaklad_id != zaklad.id:
+        return jsonify({'error': 'Brak dostępu do praktyki tego studenta'}), 404
+
+    dokumenty = Dokument.query.filter_by(praktyka_id=praktyka.id).all()
+    dok_dict = {d.typ_zalacznika: d.to_dict() for d in dokumenty}
+
+    return jsonify({
+        'student': student.to_dict(),
+        'uzytkownik': student.uzytkownik.to_dict(),
+        'praktyka': praktyka.to_dict(),
+        'zaklad_nazwa': zaklad.nazwa,
+        'dokumenty': dok_dict,
+        'porozumienie': praktyka.porozumienie.to_dict() if praktyka.porozumienie else None
     })
 
 @zopz_api_bp.route('/zaklad_pracy', methods=['PUT'])

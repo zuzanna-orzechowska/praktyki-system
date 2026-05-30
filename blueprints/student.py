@@ -53,7 +53,6 @@ def porozumienie():
     #jesli nie ma porozumienia to pusty szkic z danymi z praktyki
     porozumienie_doc = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
     
-    # Pobierz oświadczenie z ZAL9, aby mieć dane reprezentanta Zakładu
     oswiadczenie = None
     dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
     if dokument_zal9:
@@ -68,22 +67,7 @@ def porozumienie():
         current_date=datetime.today().date()
     )
 
-@student_bp.route('/zal2_program')
-@login_required
-def zal2_program():
-    if current_user.rola != 'student': return redirect(url_for('index'))
-    
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first() if student else None
-    porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first() if praktyka else None
-    
-    oswiadczenie = None
-    if praktyka:
-        dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
-        if dokument_zal9:
-            oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
 
-    return render_template('dokumenty/zal2_program_student.html', porozumienie=porozumienie, oswiadczenie=oswiadczenie)
 
 @student_bp.route('/zal2a_harmonogram', methods=['GET'])
 @login_required

@@ -20,6 +20,17 @@ def dashboard():
     
     def format_praktyka(p):
         student = p.student
+        
+        oczekujace = 0
+        dokumenty = Dokument.query.filter_by(praktyka_id=p.id).all()
+        for doc in dokumenty:
+            if doc.typ_zalacznika == 'ZAL2A' and doc.status in ['Draft_UOPZ', 'Sent_back_to_UOPZ']:
+                oczekujace += 1
+            elif doc.typ_zalacznika in ['ZAL7', 'ZAL7A'] and doc.status == 'Submitted':
+                oczekujace += 1
+            elif doc.typ_zalacznika == 'ZAL4' and doc.status == 'Draft':
+                oczekujace += 1
+                
         return {
             'id': p.id,
             'student_id': student.id,
@@ -29,7 +40,8 @@ def dashboard():
             'kierunek': student.kierunek,
             'data_start': str(p.data_start) if p.data_start else '',
             'data_end': str(p.data_end) if p.data_end else '',
-            'status': p.status
+            'status': p.status,
+            'oczekujace_akcje': oczekujace
         }
         
     return jsonify({

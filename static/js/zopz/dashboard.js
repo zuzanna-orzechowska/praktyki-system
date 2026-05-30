@@ -93,91 +93,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const praktykanci = data.praktyki || [];
 
-            const contAction = document.getElementById('students-action-needed');
-            const contInProgress = document.getElementById('students-in-progress');
-            const contApproved = document.getElementById('students-approved');
+            const table = document.getElementById('praktyki-table');
+            if (table) table.innerHTML = '';
 
             let countAction = 0;
-            let countInProgress = 0;
-            let countApproved = 0;
-
             const alertsContainer = document.getElementById('alerts-container');
             if (alertsContainer) alertsContainer.innerHTML = '';
 
             if (praktykanci.length > 0) {
                 praktykanci.forEach(p => {
-                    let akcjeBtn = `<button class="btn btn-sm btn-outline-primary disabled w-100 text-start"><i class="bi bi-file-earmark-text"></i> Dokumenty niedostępne</button>`;
-                    let isActionNeeded = false;
-                    let isApproved = false;
-
-                    if (p.porozumienie_id) {
-                        let btnClass = 'btn-outline-primary';
-                        let icon = 'bi-file-earmark-text';
-                        let text = 'Porozumienie (Zał. 1)';
-
-                        if (p.porozumienie_status === 'OczekujeZOPZ') {
-                            btnClass = 'btn-primary';
-                            icon = 'bi-exclamation-circle';
-                            text = 'Do zatwierdzenia (Zał. 1)';
-                            isActionNeeded = true;
-                        } else if (p.porozumienie_status === 'UwagiZOPZ') {
-                            btnClass = 'btn-warning text-dark';
-                            text = 'Odesłano z uwagami (Zał. 1)';
-                        } else if (p.porozumienie_status === 'ZatwierdzoneZOPZ' || p.porozumienie_status === 'Podpisane') {
-                            btnClass = 'btn-success';
-                            icon = 'bi-check-circle';
-                            text = 'Zatwierdzone (Zał. 1)';
-                            isApproved = true;
-                        }
-
-                        akcjeBtn = `<a href="/zopz/porozumienie/${p.porozumienie_id}" class="btn btn-sm ${btnClass} w-100 text-start"><i class="bi ${icon}"></i> ${text}</a>`;
+                    if (p.porozumienie_status === 'OczekujeZOPZ') {
+                        countAction++;
                     }
 
-                    const zal2aBtn = `<a href="/zopz/zal2a_harmonogram/${p.student_id}" class="btn btn-sm btn-outline-secondary w-100 text-start"><i class="bi bi-calendar-check"></i> Harmonogram (Zał. 2a)</a>`;
+                    const dataStr = p.data_start && p.data_end ? `${p.data_start} - ${p.data_end}` : '<span class="text-muted">Brak danych</span>';
+                    
+                    const statusMap = {
+                        'BRAK_ZGŁOSZENIA': { text: 'Brak zgłoszenia', color: 'secondary' },
+                        'OCZEKUJE_NA_ZAL9': { text: 'Oczekuje na zał. 9', color: 'warning text-dark' },
+                        'ZAL9_ZATWIERDZONE': { text: 'Zał. 9 zatwierdzony', color: 'success' },
+                        'SCIEZKA_PRACA': { text: 'Zaliczenie z pracy', color: 'info text-dark' },
+                        'PROGRAM_UZGODNIONY': { text: 'Program uzgodniony', color: 'primary' },
+                        'SKIEROWANIE_WYDANE': { text: 'Skierowanie wydane', color: 'success' },
+                        'PRAKTYKA_W_TOKU': { text: 'Praktyka w toku', color: 'warning text-dark' },
+                        'DOKUMENTY_ZLOZONE': { text: 'Dokumenty złożone', color: 'info text-dark' },
+                        'EGZAMIN': { text: 'Egzamin', color: 'info text-dark' },
+                        'ZALICZONA': { text: 'Praktyka zaliczona', color: 'success' }
+                    };
+                    const mappedStatus = statusMap[p.status] || { text: p.status, color: 'secondary' };
 
-                    const cardHtml = `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card shadow-sm border-0 h-100 ${isActionNeeded ? 'border-start border-warning border-4' : (isApproved ? 'border-start border-success border-4' : '')}">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="card-title fw-bold mb-0 text-primary"><i class="bi bi-person-fill"></i> ${p.student_imie} ${p.student_nazwisko}</h6>
-                                    </div>
-                                    <p class="text-muted small mb-1">Album: ${p.nr_albumu} | ${p.kierunek}</p>
-                                    <p class="text-muted small mb-3">Status: <span class="badge bg-secondary">${p.status}</span></p>
-                                    
-                                    <div class="mt-auto d-flex flex-column gap-2">
-                                        ${akcjeBtn}
-                                        ${zal2aBtn}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    if (isActionNeeded) {
-                        contAction.insertAdjacentHTML('beforeend', cardHtml);
-                        countAction++;
-                    } else if (isApproved) {
-                        contApproved.insertAdjacentHTML('beforeend', cardHtml);
-                        countApproved++;
-                    } else {
-                        contInProgress.insertAdjacentHTML('beforeend', cardHtml);
-                        countInProgress++;
+                    let teczkaUrl = `/zopz/teczka/${p.student_id}`;
+                    
+                    if (table) {
+                        table.innerHTML += `
+                            <tr>
+                                <td class="ps-4 fw-bold">
+                                    ${p.student_imie} ${p.student_nazwisko}
+                                    ${p.oczekujace_akcje > 0 ? `<span class="badge bg-danger ms-1">${p.oczekujace_akcje}</span>` : ''}
+                                </td>
+                                <td>${p.nr_albumu}</td>
+                                <td>${p.kierunek || 'Brak danych'}</td>
+                                <td>${dataStr}</td>
+                                <td><span class="badge bg-${mappedStatus.color}">${mappedStatus.text}</span></td>
+                                <td class="text-end pe-4">
+                                    <a href="${teczkaUrl}" class="btn btn-sm btn-outline-secondary mb-1 position-relative">
+                                        <i class="bi bi-folder2-open"></i> Teczka
+                                        ${p.oczekujace_akcje > 0 ? `<span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"><span class="visually-hidden">Nowe dokumenty</span></span>` : ''}
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
                     }
                 });
-
-                if (countAction > 0) document.getElementById('empty-action-needed').style.display = 'none';
-                if (countInProgress > 0) document.getElementById('empty-in-progress').style.display = 'none';
-                if (countApproved > 0) document.getElementById('empty-approved').style.display = 'none';
 
                 if (countAction > 0 && alertsContainer) {
                     alertsContainer.innerHTML = `
                         <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Masz <strong>${countAction}</strong> studentów wymagających Twojej akcji. Sprawdź odpowiednią sekcję poniżej.
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Masz <strong>${countAction}</strong> studentów wymagających Twojej akcji.
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     `;
                 }
+            } else if (table) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Brak przypisanych praktykantów w systemie.</td>
+                    </tr>
+                `;
             }
         })
         .catch(err => console.error(err));

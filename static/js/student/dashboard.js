@@ -39,21 +39,8 @@ document.addEventListener('DOMContentLoaded', function () {
             statusBadge.textContent = statusText;
             statusBadge.className = `badge bg-${statusColor}`;
 
-            // Render notifications
             const alertsContainer = document.getElementById('alerts-container');
             alertsContainer.innerHTML = '';
-            if (data.powiadomienia && data.powiadomienia.length > 0) {
-                data.powiadomienia.forEach(notif => {
-                    const alertHtml = `
-                        <div class="alert alert-${notif.typ} alert-dismissible fade show shadow-sm" role="alert">
-                            <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>${notif.tytul}</h5>
-                            <p class="mb-0">${notif.tresc}</p>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    `;
-                    alertsContainer.insertAdjacentHTML('beforeend', alertHtml);
-                });
-            }
 
             const tilesContainer = document.getElementById('dashboard-tiles');
             tilesContainer.innerHTML = '';
@@ -109,21 +96,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     </div>
                     ${dziennikTile}
-                    <div class="col-md-6 col-lg-6">
+                    <div class="col-md-12 col-lg-12 mb-3">
                         <a href="/student/porozumienie" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-file-earmark-text"></i></div>
                             <div class="usos-tile-content">
-                                <h5>Porozumienie (Zał. 1)</h5>
-                                <p>Podgląd Twojego porozumienia o organizację praktyki.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/zal2_program" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-card-list"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Program praktyki (Zał. 2)</h5>
-                                <p>Podgląd programu Twojej praktyki zawodowej.</p>
+                                <h5>Porozumienie i Program (Zał. 1, 2)</h5>
+                                <p>Podgląd Twojego porozumienia o organizację praktyki oraz programu praktyki.</p>
                             </div>
                         </a>
                     </div>

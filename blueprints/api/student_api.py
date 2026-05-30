@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import (
     Student, Praktyka, Dokument, WpisDziennika, Porozumienie, Oswiadczenie,
-    WniosekZaliczeniePraktyki, KartaPraktyk, DecyzjaDziekana, ProtokolZaliczenia,
+    WniosekZaliczeniePraktyki, Protokol,
     HarmonogramPraktyki, ProgramPraktyki, Zal2aPodpisy, Powiadomienie, Uzytkownik,
     Sprawozdanie
 )
@@ -25,46 +25,6 @@ def dashboard():
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
     powiadomienia = []
-    if praktyka:
-        dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
-        porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
-        
-        show_zal9_accepted = True
-        
-        if porozumienie:
-            show_zal9_accepted = False
-            if porozumienie.status == 'OczekujeZOPZ':
-                powiadomienia.append({
-                    'typ': 'info',
-                    'tytul': 'Porozumienie wysłane do ZOPZ',
-                    'tresc': 'Twoje porozumienie zostało wygenerowane i oczekuje na zatwierdzenie przez Zakład Pracy.'
-                })
-            elif porozumienie.status == 'UwagiZOPZ':
-                powiadomienia.append({
-                    'typ': 'warning',
-                    'tytul': 'Porozumienie odesłane z uwagami',
-                    'tresc': 'Zakład Pracy zgłosił uwagi do porozumienia. Skontaktuj się z Dziekanatem.'
-                })
-            elif porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane']:
-                powiadomienia.append({
-                    'typ': 'success',
-                    'tytul': 'Porozumienie zaakceptowane',
-                    'tresc': 'Twoje porozumienie zostało zaakceptowane.'
-                })
-                
-        if dokument_zal9:
-            if dokument_zal9.status == 'Draft' and dokument_zal9.komentarz:
-                powiadomienia.append({
-                    'typ': 'danger',
-                    'tytul': 'Oświadczenie (Zał. 9) zostało odrzucone',
-                    'tresc': f"Dziekanat odrzucił Twoje oświadczenie z komentarzem: <strong>{dokument_zal9.komentarz}</strong>. Proszę wejść w oświadczenie i poprawić błędy."
-                })
-            elif dokument_zal9.status in ['AwaitingAccount', 'AccountCreated', 'Approved'] and show_zal9_accepted:
-                powiadomienia.append({
-                    'typ': 'success',
-                    'tytul': 'Oświadczenie (Zał. 9) zaakceptowane',
-                    'tresc': 'Twoje oświadczenie zostało zaakceptowane. Jeśli wymagało utworzenia konta dla opiekuna z zakładu pracy, zostanie to wkrótce zrealizowane.'
-                })
     
     return jsonify({
         'student': student.to_dict(),
@@ -408,9 +368,10 @@ def get_dokumenty_readonly():
     
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika=typ_zal).first() if typ_zal else None
     
-    karta = KartaPraktyk.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL3') else None
-    decyzja = DecyzjaDziekana.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL4A') else None
-    protokol = ProtokolZaliczenia.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL8') else None
+    # TODO: Update these to actual models if they are added in the future
+    karta = None
+    decyzja = None
+    protokol = Protokol.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL8') else None
 
     return jsonify({
         'student': student.to_dict(),

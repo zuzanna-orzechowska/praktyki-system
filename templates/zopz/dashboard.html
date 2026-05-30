@@ -86,24 +86,28 @@
   </div>
 </div>
 
-<div class="mb-4">
-    <h4 class="mb-3 text-muted"><i class="bi bi-exclamation-circle text-warning"></i> Wymagają Twojej akcji</h4>
-    <div class="row g-3" id="students-action-needed">
-        <div class="col-12 text-center py-3 text-muted" id="empty-action-needed">Brak studentów wymagających akcji.</div>
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white fw-bold py-3">
+        <i class="bi bi-people-fill me-2 text-primary"></i> Moi Praktykanci
     </div>
-</div>
-
-<div class="mb-4">
-    <h4 class="mb-3 text-muted"><i class="bi bi-hourglass-split text-info"></i> W trakcie / Zwrócone</h4>
-    <div class="row g-3" id="students-in-progress">
-        <div class="col-12 text-center py-3 text-muted" id="empty-in-progress">Brak studentów w tej sekcji.</div>
-    </div>
-</div>
-
-<div class="mb-4">
-    <h4 class="mb-3 text-muted"><i class="bi bi-check-circle text-success"></i> Zatwierdzone</h4>
-    <div class="row g-3" id="students-approved">
-        <div class="col-12 text-center py-3 text-muted" id="empty-approved">Brak zatwierdzonych studentów.</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Student</th>
+                        <th>Nr albumu</th>
+                        <th>Kierunek</th>
+                        <th>Termin praktyki</th>
+                        <th>Status Praktyki</th>
+                        <th class="text-end pe-4">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody id="praktyki-table">
+                    <tr><td colspan="6" class="text-center py-4">Ładowanie...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}
