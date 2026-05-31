@@ -58,3 +58,15 @@ def zal2a_lista():
 def zal3_lista():
     if current_user.rola != 'uopz': return redirect(url_for('index'))
     return render_template('uopz/zal3_lista.html')
+
+@uopz_bp.route('/zal6_lista')
+@login_required
+def zal6_lista():
+    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    return render_template('uopz/zal6_lista.html')
+
+@uopz_bp.route('/dziennik/<int:student_id>')
+@login_required
+def dziennik(student_id):
+    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    return render_template('uopz/weryfikuj_dziennik.html')

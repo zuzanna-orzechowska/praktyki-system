@@ -6,7 +6,7 @@ from models import (
     Student, Praktyka, Dokument, WpisDziennika, Porozumienie, Oswiadczenie,
     WniosekZaliczeniePraktyki, Protokol,
     HarmonogramPraktyki, ProgramPraktyki, Zal2aPodpisy, Powiadomienie, Uzytkownik,
-    Sprawozdanie, KartaPraktyki
+    Sprawozdanie, KartaPraktyki, ZalacznikDziennika
 )
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
@@ -54,9 +54,18 @@ def dziennik():
         db.session.commit()
 
     if request.method == 'POST':
-        data = request.json
+        if 'dane' in request.form:
+            import json
+            data = json.loads(request.form['dane'])
+        else:
+            data = request.json
+            
         if not data or 'wpisy' not in data:
             return jsonify({'error': 'Nieprawidłowe dane'}), 400
+
+        rok_akademicki = data.get('rok_akademicki')
+        if rok_akademicki:
+            student.rok_akademicki = rok_akademicki
 
         wpisy_data = data['wpisy']
         dzisiaj = datetime.now().date()
@@ -96,12 +105,16 @@ def dziennik():
 
             if wid and wid in wpisy_z_bazy:
                 istniejacy = wpisy_z_bazy[wid]
-                if istniejacy.potwierdzony_zopz:
+                if istniejacy.potwierdzony_zopz == 1:
                     continue # ignorowanie zmiany w zatwierdzonych
                 istniejacy.data_wpisu = data_obj
                 istniejacy.opis_prac = opis
                 istniejacy.nr_efektu = efekt
                 istniejacy.numer_dnia = i + 1
+                
+                if istniejacy.potwierdzony_zopz == -1:
+                    istniejacy.potwierdzony_zopz = 0
+                    istniejacy.komentarz_zopz = None
             else:
                 nowy_wpis = WpisDziennika(
                     dokument_id=dokument.id,
@@ -129,7 +142,8 @@ def dziennik():
     praktyka_info = {
         'zaklad_nazwa': praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak przypisanej firmy',
         'data_start': praktyka.data_start.isoformat() if praktyka.data_start else '',
-        'data_end': praktyka.data_end.isoformat() if praktyka.data_end else ''
+        'data_end': praktyka.data_end.isoformat() if praktyka.data_end else '',
+        'rok_akademicki': student.rok_akademicki if student.rok_akademicki else ''
     }
 
     today_date = datetime.now().date().isoformat()
@@ -139,20 +153,199 @@ def dziennik():
         max_date = min(today_date, praktyka_end_str)
 
     efekty_lista = [
-        {"kod": "EK_01", "opis": "Rozumienie zasad działania systemów i aplikacji"},
-        {"kod": "EK_02", "opis": "Umiejętność programowania i testowania"},
-        {"kod": "EK_03", "opis": "Znajomość relacyjnych baz danych"},
-        {"kod": "EK_04", "opis": "Praca w zespole i komunikacja"},
-        {"kod": "EK_05", "opis": "Projektowanie interfejsów użytkownika"}
+        {"kod": "01", "opis": "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych."},
+        {"kod": "02", "opis": "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce."},
+        {"kod": "03", "opis": "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy."},
+        {"kod": "04", "opis": "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka."},
+        {"kod": "05", "opis": "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami."},
+        {"kod": "06", "opis": "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje zawodowe."},
+        {"kod": "07", "opis": "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia."},
+        {"kod": "08", "opis": "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy i zaproponować jego rozwiązanie."},
+        {"kod": "09", "opis": "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności IT, stosując odpowiednie normy i standardy."},
+        {"kod": "10", "opis": "Pracuje w zespole zajmującym się zawodowo branżą IT."},
+        {"kod": "11", "opis": "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów."},
+        {"kod": "12", "opis": "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji zadania, jak i przekazać im w sposób zrozumiały opinie z zakresu informatyki."},
+        {"kod": "13", "opis": "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków, szczególnie te ekonomiczne i społeczne."}
     ]
+    
+    zalaczniki = ZalacznikDziennika.query.filter_by(dokument_id=dokument.id).all()
 
     return jsonify({
         'praktyka': praktyka_info,
         'wpisy': [w.to_dict() for w in wpisy],
         'today_date': today_date,
         'max_date': max_date,
-        'efekty_lista': efekty_lista
+        'efekty_lista': efekty_lista,
+        'zalaczniki': [z.to_dict() for z in zalaczniki],
+        'status_dokumentu': dokument.status
     })
+
+@student_api_bp.route('/dziennik/wyslij_do_zopz', methods=['POST'])
+@login_required
+def wyslij_do_zopz():
+    if current_user.rola != 'student':
+        return jsonify({'error': 'Brak dostępu'}), 403
+        
+    student = current_user.student_profil
+    if not student:
+        return jsonify({'error': 'Brak profilu studenta'}), 400
+        
+    praktyka = student.praktyki[0] if student.praktyki else None
+    if not praktyka:
+        return jsonify({'error': 'Brak przypisanej praktyki'}), 400
+        
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    if not dokument:
+        return jsonify({'error': 'Dziennik nie został jeszcze utworzony'}), 400
+        
+    if dokument.status not in ['Draft', 'Wrócono do poprawy']:
+        return jsonify({'error': f'Nie można wysłać dziennika w obecnym statusie: {dokument.status}'}), 400
+        
+    wpisy_count = WpisDziennika.query.filter_by(dokument_id=dokument.id).count()
+    if wpisy_count < 3:
+        return jsonify({'error': f'Wymagane minimum 3 wpisów. Obecnie masz {wpisy_count}.'}), 400
+        
+    dokument.status = 'Weryfikacja ZOPZ'
+    
+    # Powiadomienie dla ZOPZ
+    if praktyka.zaklad and praktyka.zaklad.zopz_id:
+        from flask import url_for
+        notif = Powiadomienie(
+            uzytkownik_id=praktyka.zaklad.zopz_id,
+            tresc=f"Student {student.uzytkownik.imie} {student.uzytkownik.nazwisko} ({student.nr_albumu}) przesłał Dziennik Praktyk do weryfikacji.",
+            link=url_for('zopz.teczka', student_id=student.id)
+        )
+        db.session.add(notif)
+        
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Dziennik został pomyślnie wysłany do weryfikacji ZOPZ!'})
+
+@student_api_bp.route('/dziennik/wyslij_do_uopz', methods=['POST'])
+@login_required
+def wyslij_do_uopz():
+    if current_user.rola != 'student':
+        return jsonify({'error': 'Brak dostępu'}), 403
+        
+    student = current_user.student_profil
+    if not student:
+        return jsonify({'error': 'Brak profilu studenta'}), 400
+        
+    praktyka = student.praktyki[0] if student.praktyki else None
+    if not praktyka:
+        return jsonify({'error': 'Brak przypisanej praktyki'}), 400
+        
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    if not dokument:
+        return jsonify({'error': 'Dziennik nie został jeszcze utworzony'}), 400
+        
+    if dokument.status != 'Zatwierdzone przez ZOPZ':
+        return jsonify({'error': f'Nie można wysłać dziennika w obecnym statusie: {dokument.status}'}), 400
+        
+    dokument.status = 'Weryfikacja UOPZ'
+    
+    # Powiadomienie dla UOPZ
+    if praktyka.uopz_id:
+        from flask import url_for
+        notif = Powiadomienie(
+            uzytkownik_id=praktyka.uopz_id,
+            tresc=f"Student {student.uzytkownik.imie} {student.uzytkownik.nazwisko} ({student.nr_albumu}) przesłał Dziennik Praktyk (zaakceptowany przez ZOPZ) do ostatecznego zatwierdzenia.",
+            link=f"/uopz/dziennik/{student.id}"
+        )
+        db.session.add(notif)
+        
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Dziennik został wysłany do ostatecznego zatwierdzenia przez Dziekanat (UOPZ)!'})
+
+@student_api_bp.route('/dziennik/zalacznik', methods=['POST'])
+@login_required
+def dodaj_zalacznik_dziennika():
+    if current_user.rola != 'student':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    
+    if not dokument:
+        return jsonify({'error': 'Nie znaleziono dokumentu'}), 404
+        
+    zal_count = int(request.form.get('zal_count', 0))
+    if zal_count == 0:
+        return jsonify({'success': False, 'message': 'Brak załączników do zapisu.'}), 400
+        
+    bledy = []
+    nowe_zalaczniki = []
+    for i in range(zal_count):
+        opis = request.form.get(f'zal_opis_{i}', '').strip()
+        plik = request.files.get(f'zal_plik_{i}')
+        
+        if not opis or not plik or not plik.filename:
+            bledy.append(f'Pominięto plik {i+1} z powodu braku opisu lub pliku.')
+            continue
+            
+        oryginalna_nazwa = secure_filename(plik.filename)
+        unikalna_nazwa = f"{student.nr_albumu}_ZAL6_zal_{datetime.now().strftime('%Y%m%d%H%M%S')}_{i}_{oryginalna_nazwa}"
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unikalna_nazwa)
+        
+        try:
+            plik.save(filepath)
+            zalacznik = ZalacznikDziennika(
+                dokument_id=dokument.id,
+                opis=opis,
+                plik_path=f"uploads/{unikalna_nazwa}"
+            )
+            db.session.add(zalacznik)
+            nowe_zalaczniki.append(zalacznik)
+        except Exception as e:
+            bledy.append(f"Błąd przy pliku {oryginalna_nazwa}: {str(e)}")
+            
+    db.session.commit()
+    
+    zalaczniki_dane = []
+    for z in nowe_zalaczniki:
+        zalaczniki_dane.append({
+            'id': z.id,
+            'opis': z.opis,
+            'plik_path': z.plik_path
+        })
+    
+    return jsonify({
+        'success': True,
+        'message': 'Załączniki zapisane pomyślnie.',
+        'errors': bledy,
+        'zalaczniki': zalaczniki_dane
+    })
+
+@student_api_bp.route('/dziennik/zalacznik/<int:zid>', methods=['DELETE'])
+@login_required
+def usun_zalacznik_dziennika(zid):
+    if current_user.rola != 'student':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    zalacznik = ZalacznikDziennika.query.get_or_404(zid)
+    
+    # Check ownership indirectly
+    dokument = Dokument.query.get(zalacznik.dokument_id)
+    praktyka = Praktyka.query.get(dokument.praktyka_id)
+    student = Student.query.get(praktyka.student_id)
+    if student.uzytkownik_id != current_user.id:
+        return jsonify({'error': 'Odmowa dostępu do pliku'}), 403
+        
+    if zalacznik.plik_path:
+        try:
+            nazwa_pliku = zalacznik.plik_path.replace('uploads/', '')
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], nazwa_pliku)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+        except Exception:
+            pass # ignore deletion errors, just remove from db
+            
+    db.session.delete(zalacznik)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Załącznik usunięty pomyślnie.'})
 
 @student_api_bp.route('/zal9_oswiadczenie', methods=['GET', 'POST'])
 @login_required

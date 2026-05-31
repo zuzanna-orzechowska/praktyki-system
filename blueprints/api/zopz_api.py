@@ -353,3 +353,133 @@ def zal3_lista():
         'zatwierdzone': zatwierdzone
     })
 
+@zopz_api_bp.route('/dziennik/<int:student_id>', methods=['GET'])
+@login_required
+def dziennik_get(student_id):
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka or not zaklad or praktyka.zaklad_id != zaklad.id:
+        return jsonify({'error': 'Brak dostępu do praktyki tego studenta'}), 404
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    if not dokument:
+        return jsonify({'error': 'Student nie utworzył jeszcze dziennika praktyk.'}), 404
+
+    from models import WpisDziennika, ZalacznikDziennika
+    wpisy = WpisDziennika.query.filter_by(dokument_id=dokument.id).order_by(WpisDziennika.numer_dnia).all()
+    zalaczniki = ZalacznikDziennika.query.filter_by(dokument_id=dokument.id).all()
+    
+    efekty_lista = [
+        {"kod": "01", "opis": "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych."},
+        {"kod": "02", "opis": "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce."},
+        {"kod": "03", "opis": "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy."},
+        {"kod": "04", "opis": "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka."},
+        {"kod": "05", "opis": "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami."},
+        {"kod": "06", "opis": "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje zawodowe."},
+        {"kod": "07", "opis": "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia."},
+        {"kod": "08", "opis": "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy i zaproponować jego rozwiązanie."},
+        {"kod": "09", "opis": "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności IT, stosując odpowiednie normy i standardy."},
+        {"kod": "10", "opis": "Pracuje w zespole zajmującym się zawodowo branżą IT."},
+        {"kod": "11", "opis": "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów."},
+        {"kod": "12", "opis": "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji zadania, jak i przekazać im w sposób zrozumiały opinie z zakresu informatyki."},
+        {"kod": "13", "opis": "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków, szczególnie te ekonomiczne i społeczne."}
+    ]
+
+    praktyka_dict = praktyka.to_dict()
+    praktyka_dict['zaklad_nazwa'] = praktyka.zaklad.nazwa if praktyka.zaklad else ''
+
+    return jsonify({
+        'student': student.uzytkownik.to_dict(),
+        'student_profil': student.to_dict(),
+        'praktyka': praktyka_dict,
+        'dokument': dokument.to_dict(),
+        'wpisy': [w.to_dict() for w in wpisy],
+        'zalaczniki': [z.to_dict() for z in zalaczniki],
+        'efekty_lista': efekty_lista
+    })
+
+@zopz_api_bp.route('/dziennik/<int:student_id>/odrzuc_wpis/<int:wpis_id>', methods=['POST'])
+@login_required
+def odrzuc_wpis(student_id, wpis_id):
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+    
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka or not zaklad or praktyka.zaklad_id != zaklad.id:
+        return jsonify({'error': 'Brak dostępu do praktyki tego studenta'}), 404
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    from models import WpisDziennika
+    wpis = WpisDziennika.query.get_or_404(wpis_id)
+    
+    if wpis.dokument_id != dokument.id:
+        return jsonify({'error': 'Wpis nie należy do tego dziennika.'}), 400
+        
+    data = request.json
+    komentarz = data.get('komentarz')
+    if not komentarz:
+        return jsonify({'error': 'Komentarz jest wymagany do odrzucenia wpisu.'}), 400
+        
+    wpis.potwierdzony_zopz = -1
+    wpis.komentarz_zopz = komentarz
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Wpis został odrzucony i oznaczony do poprawy.'})
+
+@zopz_api_bp.route('/dziennik/<int:student_id>/zatwierdz_dziennik', methods=['POST'])
+@login_required
+def zatwierdz_dziennik(student_id):
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+    
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka or not zaklad or praktyka.zaklad_id != zaklad.id:
+        return jsonify({'error': 'Brak dostępu do praktyki tego studenta'}), 404
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    from models import WpisDziennika
+    wpisy = WpisDziennika.query.filter_by(dokument_id=dokument.id).all()
+    
+    if not wpisy:
+        return jsonify({'error': 'Brak wpisów w dzienniku.'}), 400
+        
+    odrzucone_count = 0
+    from datetime import datetime
+    
+    for wpis in wpisy:
+        if wpis.potwierdzony_zopz == -1:
+            odrzucone_count += 1
+        else:
+            wpis.potwierdzony_zopz = 1
+            wpis.potwierdzono_at = datetime.utcnow()
+            
+    if odrzucone_count > 0:
+        dokument.status = 'Wrócono do poprawy'
+        message = f'Część wpisów ({odrzucone_count}) została odrzucona. Dziennik wrócił do studenta celem poprawy.'
+        notif = Powiadomienie(
+            uzytkownik_id=student.uzytkownik_id,
+            tresc="Zakładowy Opiekun Praktyk zgłosił poprawki do Twojego Dziennika Praktyk. Sprawdź uwagi i popraw odrzucone wpisy.",
+            link="/student/dziennik"
+        )
+        db.session.add(notif)
+    else:
+        dokument.status = 'Zatwierdzone przez ZOPZ'
+        message = 'Wszystkie wpisy zostały zatwierdzone. Dziennik gotowy do wysłania do Dziekanatu.'
+        notif = Powiadomienie(
+            uzytkownik_id=student.uzytkownik_id,
+            tresc="Twój Dziennik Praktyk został pomyślnie zweryfikowany przez ZOPZ. Możesz go teraz wysłać do Dziekanatu.",
+            link="/student/dziennik"
+        )
+        db.session.add(notif)
+        
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': message})

@@ -95,3 +95,17 @@ def weryfikuj_zal3(praktyka_id):
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/weryfikuj_zal3.html')
+
+@dziekanat_bp.route('/zal6_lista')
+@login_required
+def zal6_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/zal6_lista.html')
+
+@dziekanat_bp.route('/dziennik/<int:student_id>')
+@login_required
+def podglad_dziennika(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/podglad_dziennika.html')

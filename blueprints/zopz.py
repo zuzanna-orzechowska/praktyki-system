@@ -72,3 +72,11 @@ def zal3_karta(student_id):
 def zal3_lista():
     if current_user.rola != 'zopz': return redirect(url_for('index'))
     return render_template('zopz/zal3_lista.html')
+
+@zopz_bp.route('/dziennik/<int:student_id>')
+@login_required
+def weryfikuj_dziennik(student_id):
+    if current_user.rola != 'zopz':
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('zopz/weryfikuj_dziennik.html')

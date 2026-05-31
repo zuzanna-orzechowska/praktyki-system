@@ -54,6 +54,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (btnZal3) {
                 btnZal3.href = `/zopz/zal3_karta/${studentId}`;
             }
+
+            const btnZal6 = document.getElementById('btn-zal6');
+            if (btnZal6) {
+                if (data.dokumenty && data.dokumenty['ZAL6']) {
+                    btnZal6.href = `/zopz/dziennik/${studentId}`;
+                    if (data.dokumenty['ZAL6'].status === 'Weryfikacja ZOPZ') {
+                        document.getElementById('badge-zal6').style.display = 'inline-block';
+                    }
+                } else {
+                    btnZal6.classList.add('disabled');
+                    btnZal6.textContent = 'Brak Dziennika';
+                }
+            }
         })
         .catch(err => console.error(err));
 });

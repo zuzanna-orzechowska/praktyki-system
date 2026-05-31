@@ -317,6 +317,8 @@
                             class="{% if 'uopz/zal2a_lista' in request.path %}active{% endif %}">Harmonogramy (Zał. 2a)</a></li>
                     <li><a href="{{ url_for('uopz.zal3_lista') }}"
                             class="{% if 'uopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
+                    <li><a href="{{ url_for('uopz.zal6_lista') }}"
+                            class="{% if 'uopz/zal6_lista' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>
                     <li><a href="#">Wnioski do oceny (Zał. 4a)</a></li>
                     <li><a href="#">Hospitacje</a></li>
                 </ul>
@@ -361,6 +363,12 @@
                             Karty Praktyki (Zał. 3)
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.zal6_lista') }}"
+                            class="{% if 'dziekanat/zal6_lista' in request.path %}active{% endif %}">
+                            Dzienniki praktyk (Zał. 6)
+                        </a>
+                    </li>
                     <li><a href="#">Protokoły (Zał. 8)</a></li>
                 </ul>
                 {% endif %}
@@ -384,7 +392,8 @@
                     <li><a href="{{ url_for('zopz.dashboard') }}">Porozumienia i Programy (Zał. 1, 2)</a></li>
                     <li><a href="{{ url_for('zopz.zal3_lista') }}"
                             class="{% if 'zopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
-                    <li><a href="#" class="text-muted">Dzienniki praktyk</a></li>
+                    <li><a href="{{ url_for('zopz.dashboard') }}"
+                            class="{% if 'zopz/dziennik' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>
                 </ul>
                 {% endif %}
             </div>

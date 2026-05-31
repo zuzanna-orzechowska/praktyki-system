@@ -27,10 +27,21 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('btn-zal4').href = `/uopz/zal4_efekty/${studentId}`;
             document.getElementById('btn-zal7').href = `/uopz/zal7_sprawozdanie/${studentId}`;
             document.getElementById('btn-zal7a').href = `/uopz/zal7a_sprawozdanie/${studentId}`;
+            
+            const btnZal6 = document.getElementById('btn-zal6');
+            if (btnZal6) {
+                btnZal6.href = `/uopz/dziennik/${studentId}`;
+                btnZal6.classList.remove('disabled');
+                btnZal6.textContent = 'Podgląd Dziennika';
+            }
 
             const dokumenty = data.dokumenty || {};
             if (dokumenty['ZAL7'] && dokumenty['ZAL7'].status === 'Submitted') {
                 document.getElementById('badge-zal7').style.display = 'inline-block';
+            }
+            if (dokumenty['ZAL6'] && dokumenty['ZAL6'].status === 'Weryfikacja UOPZ') {
+                const badgeZal6 = document.getElementById('badge-zal6');
+                if (badgeZal6) badgeZal6.style.display = 'inline-block';
             }
         })
         .catch(err => console.error(err));

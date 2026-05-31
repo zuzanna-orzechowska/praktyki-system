@@ -54,6 +54,7 @@ class Student(db.Model, DictSerializable):
     specjalnosc = db.Column(db.String(100))
     tryb_studiow = db.Column(db.String(50))
     rok_studiow = db.Column(db.Integer)
+    rok_akademicki = db.Column(db.String(20))
     uzytkownik = db.relationship('Uzytkownik', backref=db.backref('student_profil', uselist=False))
 
 class ZakladPracy(db.Model, DictSerializable):
@@ -110,6 +111,7 @@ class WpisDziennika(db.Model, DictSerializable):
     opis_prac = db.Column(db.Text, nullable=False)
     nr_efektu = db.Column(db.String(100))
     potwierdzony_zopz = db.Column(db.Integer, default=0)
+    komentarz_zopz = db.Column(db.Text, nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('wpisy', cascade="all, delete-orphan"))
 
@@ -159,6 +161,14 @@ class Sprawozdanie(db.Model, DictSerializable):
     wiedza_umiejetnosci = db.Column(db.Text, nullable=False)
     
     dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
+
+class ZalacznikDziennika(db.Model, DictSerializable):
+    __tablename__ = 'zalacznik_dziennika'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id', ondelete='CASCADE'), nullable=False)
+    opis = db.Column(db.Text, nullable=False)
+    plik_path = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class EfektUczenia(db.Model, DictSerializable):
     __tablename__ = 'efekt_uczenia'

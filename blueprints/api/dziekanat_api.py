@@ -531,3 +531,68 @@ def weryfikuj_zal3(praktyka_id):
         'uzytkownik': student.uzytkownik.to_dict(),
         'porozumienie': porozumienie_data
     })
+
+@dziekanat_api_bp.route('/zal6_lista', methods=['GET'])
+@login_required
+def zal6_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Brak uprawnień'}), 403
+
+    dokumenty = Dokument.query.filter_by(typ_zalacznika='ZAL6').all()
+    
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_id': student.id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    do_akcji = []
+    w_toku = []
+    zatwierdzone = []
+
+    for d in dokumenty:
+        fd = format_dokument(d)
+        if d.status == 'Weryfikacja Dziekanatu':
+            do_akcji.append(fd)
+        elif d.status == 'Weryfikacja UOPZ':
+            do_akcji.append(fd)
+        elif d.status in ['Draft', 'Weryfikacja ZOPZ', 'Wrócono do poprawy', 'Zatwierdzone przez ZOPZ']:
+            w_toku.append(fd)
+        elif d.status == 'Zatwierdzone':
+            zatwierdzone.append(fd)
+        else:
+            w_toku.append(fd)
+
+    return jsonify({
+        'do_akcji': do_akcji,
+        'w_toku': w_toku,
+        'zatwierdzone': zatwierdzone
+    })
+
+@dziekanat_api_bp.route('/dziennik/<int:student_id>', methods=['GET'])
+@login_required
+def dziennik_get(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']: return jsonify({'error': 'Brak uprawnień'}), 403
+    from models import Student, Praktyka, Dokument, WpisDziennika
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    if not praktyka: return jsonify({'error': 'Brak praktyki'}), 404
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
+    if not dokument: return jsonify({'error': 'Dziennik nie został utworzony'}), 404
+    
+    wpisy = WpisDziennika.query.filter_by(dokument_id=dokument.id).order_by(WpisDziennika.data_wpisu).all()
+    
+    return jsonify({
+        'student': student.uzytkownik.to_dict(),
+        'student_profil': student.to_dict(),
+        'praktyka': praktyka.to_dict(),
+        'dokument': dokument.to_dict(),
+        'wpisy': [w.to_dict() for w in wpisy]
+    })

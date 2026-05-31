@@ -34,6 +34,7 @@ CREATE TABLE student (
     specjalnosc     TEXT,
     tryb_studiow    TEXT        NOT NULL CHECK (tryb_studiow IN ('stacjonarne', 'niestacjonarne')),
     rok_studiow     INTEGER     NOT NULL,
+    rok_akademicki  TEXT,
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownik(id) ON DELETE CASCADE
@@ -115,12 +116,26 @@ CREATE TABLE wpis_dziennika (
     data_wpisu          DATE        NOT NULL,
     opis_prac           TEXT        NOT NULL,
     nr_efektu           TEXT,                   -- np. "EK_01, EK_03"
-    potwierdzony_zopz   INTEGER     NOT NULL DEFAULT 0,  -- 0 = nie, 1 = tak
+    potwierdzony_zopz   INTEGER     NOT NULL DEFAULT 0,  -- 0 = nie, 1 = tak, -1 = odrzucony
     potwierdzono_at     DATETIME,
+    komentarz_zopz      TEXT,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE,
 
     UNIQUE (dokument_id, numer_dnia)
+);
+
+-- ------------------------------------------------------------
+-- 6a. ZAŁĄCZNIKI DOWODOWE DO DZIENNIKA PRAKTYK (Zał. 6)
+-- ------------------------------------------------------------
+CREATE TABLE zalacznik_dziennika (
+    id                  INTEGER     PRIMARY KEY AUTOINCREMENT,
+    dokument_id         INTEGER     NOT NULL,
+    opis                TEXT        NOT NULL,
+    plik_path           TEXT        NOT NULL,
+    created_at          DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );
 
 -- ------------------------------------------------------------
