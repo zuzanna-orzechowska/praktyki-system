@@ -115,6 +115,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     </div>
                     <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal3_karta" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-card-checklist"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Karta Praktyki (Zał. 3)</h5>
+                                <p>Podgląd potwierdzenia odbycia praktyki i wystawionych ocen.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
                         <a href="/dokumenty" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-folder2-open"></i></div>
                             <div class="usos-tile-content">

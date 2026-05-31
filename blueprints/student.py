@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie
+from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie, KartaPraktyki
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
@@ -90,7 +90,9 @@ def zal3_karta():
 
     uopz = Uzytkownik.query.get(praktyka.uopz_id) if praktyka.uopz_id else None
     porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
-    protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
+    
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL3').first()
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first() if dokument else None
     
     zopz = Uzytkownik.query.get(praktyka.zaklad.zopz_id) if praktyka.zaklad and praktyka.zaklad.zopz_id else None
 
@@ -101,7 +103,8 @@ def zal3_karta():
         uopz=uopz, 
         zopz=zopz,
         porozumienie=porozumienie, 
-        protokol=protokol
+        karta=karta,
+        dokument=dokument
     )
 
 @student_bp.route('/sprawozdanie', methods=['GET', 'POST'])

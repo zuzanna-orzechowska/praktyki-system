@@ -6,7 +6,7 @@ from models import (
     Student, Praktyka, Dokument, WpisDziennika, Porozumienie, Oswiadczenie,
     WniosekZaliczeniePraktyki, Protokol,
     HarmonogramPraktyki, ProgramPraktyki, Zal2aPodpisy, Powiadomienie, Uzytkownik,
-    Sprawozdanie
+    Sprawozdanie, KartaPraktyki
 )
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
@@ -368,8 +368,7 @@ def get_dokumenty_readonly():
     
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika=typ_zal).first() if typ_zal else None
     
-    # TODO: Update these to actual models if they are added in the future
-    karta = None
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL3') else None
     decyzja = None
     protokol = Protokol.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL8') else None
 

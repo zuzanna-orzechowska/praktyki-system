@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/zal3_lista.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Karty Praktyk (Załącznik nr 3)
+        </h2>
+        <p class="text-muted mb-0">Zarządzanie kartami praktyk (weryfikacja dziekanatu)</p>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="zal3Tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="do-weryfikacji-tab" data-bs-toggle="tab" data-bs-target="#do-weryfikacji" type="button" role="tab">Do Weryfikacji <span class="badge bg-danger ms-1" id="badge-do-weryfikacji">0</span></button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="zatwierdzone-tab" data-bs-toggle="tab" data-bs-target="#zatwierdzone" type="button" role="tab">Zatwierdzone</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="zal3TabsContent">
+    <div class="tab-pane fade show active" id="do-weryfikacji" role="tabpanel">
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Nr albumu</th>
+                                <th>Data przesłania</th>
+                                <th>Akcja</th>
+                            </tr>
+                        </thead>
+                        <tbody id="do-weryfikacji-tbody">
+                            <tr><td colspan="4" class="text-center text-muted">Ładowanie danych...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-pane fade" id="zatwierdzone" role="tabpanel">
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Nr albumu</th>
+                                <th>Data zatwierdzenia</th>
+                                <th>Akcja</th>
+                            </tr>
+                        </thead>
+                        <tbody id="zatwierdzone-tbody">
+                            <tr><td colspan="4" class="text-center text-muted">Ładowanie danych...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

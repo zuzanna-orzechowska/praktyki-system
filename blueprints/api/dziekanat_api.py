@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from extensions import db
-from models import Dokument, Oswiadczenie, Praktyka, Porozumienie, ProgramPraktyki, HarmonogramPraktyki, Zal2aPodpisy, Powiadomienie, Uzytkownik, Praktyka
+from models import Dokument, Oswiadczenie, Praktyka, Porozumienie, ProgramPraktyki, HarmonogramPraktyki, Zal2aPodpisy, Powiadomienie, Uzytkownik, KartaPraktyki
 from datetime import date, datetime
 
 dziekanat_api_bp = Blueprint('dziekanat_api', __name__, url_prefix='/dziekanat')
@@ -429,4 +429,105 @@ def przypisz_uopz():
     return jsonify({
         'uopz_list': [{'id': u.id, 'imie': u.imie, 'nazwisko': u.nazwisko, 'tytul': u.tytul_naukowy} for u in uopz_list],
         'praktyki': [format_praktyka(p) for p in praktyki]
+    })
+
+@dziekanat_api_bp.route('/zal3', methods=['GET'])
+@login_required
+def zal3_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    dokumenty_do_weryfikacji = db.session.query(Dokument)\
+        .filter(Dokument.status == 'Weryfikacja_Uczelni', Dokument.typ_zalacznika == 'ZAL3').all()
+        
+    dokumenty_zatwierdzone = db.session.query(Dokument)\
+        .filter(Dokument.status == 'Zatwierdzone', Dokument.typ_zalacznika == 'ZAL3').order_by(Dokument.updated_at.desc()).all()
+
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    return jsonify({
+        'do_weryfikacji': [format_dokument(d) for d in dokumenty_do_weryfikacji],
+        'zatwierdzone': [format_dokument(d) for d in dokumenty_zatwierdzone]
+    })
+
+@dziekanat_api_bp.route('/weryfikuj_zal3/<int:praktyka_id>', methods=['GET', 'POST'])
+@login_required
+def weryfikuj_zal3(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    student = praktyka.student
+    
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL3').first()
+    if not dokument:
+        return jsonify({'error': 'Brak dokumentu ZAL3'}), 404
+        
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first()
+
+    if request.method == 'POST':
+        data = request.json
+        akcja = data.get('akcja')
+        
+        if akcja == 'zatwierdz':
+            dokument.status = 'Zatwierdzone'
+            if karta:
+                karta.akceptacja_dziekanat = True
+                karta.akceptacja_dziekanat_data = date.today()
+            
+            notif_u = Powiadomienie(
+                uzytkownik_id=praktyka.uopz_id,
+                tresc=f"Dziekanat ostatecznie ZATWIERDZIŁ Kartę Praktyki (Zał. 3) dla {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                link=f"/uopz/zal3_karta/{student.id}"
+            )
+            notif_s = Powiadomienie(
+                uzytkownik_id=student.uzytkownik.id,
+                tresc="Dziekanat ostatecznie ZATWIERDZIŁ Twoją Kartę Praktyki (Zał. 3).",
+                link=f"/student/zal3_karta"
+            )
+            db.session.add_all([notif_u, notif_s])
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Karta Praktyki (ZAL3) została ostatecznie zatwierdzona!'})
+            
+        elif akcja == 'odrzuc':
+            dokument.status = 'Skierowanie_Wydane'
+            komentarz = data.get('komentarz_dziekanatu')
+            dokument.komentarz = komentarz if komentarz else "Odrzucono do poprawy."
+            
+            notif_u = Powiadomienie(
+                uzytkownik_id=praktyka.uopz_id,
+                tresc=f"Dziekanat cofnął do poprawy Kartę Praktyki (Zał. 3) dla {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                link=f"/uopz/zal3_karta/{student.id}"
+            )
+            db.session.add(notif_u)
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'ZAL3 cofnięty do poprawy.'})
+
+    porozumienie = praktyka.porozumienie
+    porozumienie_data = None
+    if porozumienie:
+        porozumienie_data = {
+            'id': porozumienie.id,
+            'data_podpisania': porozumienie.data_podpisania.strftime('%Y-%m-%d') if porozumienie.data_podpisania else None
+        }
+
+    return jsonify({
+        'dokument': dokument.to_dict(),
+        'karta': karta.to_dict() if karta else None,
+        'praktyka': praktyka.to_dict(),
+        'student': student.to_dict(),
+        'uzytkownik': student.uzytkownik.to_dict(),
+        'porozumienie': porozumienie_data
     })

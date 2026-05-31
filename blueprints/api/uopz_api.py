@@ -4,7 +4,7 @@ from extensions import db
 from models import (
     Uzytkownik, Student, Praktyka, Dokument, Protokol, HarmonogramPraktyki, 
     ProgramPraktyki, Porozumienie, EfektUczenia, Sprawozdanie, Powiadomienie,
-    Zal2aPodpisy
+    Zal2aPodpisy, KartaPraktyki
 )
 from datetime import date
 
@@ -84,23 +84,66 @@ def zal3_karta(student_id):
     porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
     zopz = Uzytkownik.query.get(praktyka.zaklad.zopz_id) if praktyka.zaklad and praktyka.zaklad.zopz_id else None
 
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL3').first()
+    if not dokument:
+        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL3', utworzony_przez=current_user.id)
+        db.session.add(dokument)
+        db.session.commit()
+        
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first()
+    if not karta:
+        karta = KartaPraktyki(dokument_id=dokument.id)
+        db.session.add(karta)
+        db.session.commit()
+
     if request.method == 'POST':
         data = request.json
         akcja = data.get('akcja')
         
         if akcja == 'wydaj_skierowanie':
             praktyka.status = 'SKIEROWANIE_WYDANE'
+            dokument.status = 'Skierowanie_Wydane'
+            tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+            karta.podpis_dyrektora = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+            karta.skierowanie_data = date.today()
             db.session.commit()
-            return jsonify({'success': True, 'message': 'Skierowanie zostało oficjalnie wydane.'})
+            
+            if praktyka.zaklad and praktyka.zaklad.zopz_id:
+                notif = Powiadomienie(
+                    uzytkownik_id=praktyka.zaklad.zopz_id,
+                    tresc=f"Wydano skierowanie na praktykę dla studenta {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                    link=f"/zopz/zal3_karta/{student.id}"
+                )
+                db.session.add(notif)
+                db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Skierowanie zostało oficjalnie wydane i podpisane.'})
+            
+        elif akcja == 'popros_dyrektora':
+            dyrektor = Uzytkownik.query.filter_by(rola='dyrektor').first()
+            if dyrektor:
+                notif = Powiadomienie(
+                    uzytkownik_id=dyrektor.id,
+                    tresc=f"UOPZ {current_user.imie} {current_user.nazwisko} prosi o zatwierdzenie Skierowania na praktykę (Zał. 3) dla studenta {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                    link=f"/dziekanat/weryfikuj_zal3/{praktyka.id}"
+                )
+                db.session.add(notif)
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Prośba o podpis Dyrektora została wysłana.'})
+            else:
+                return jsonify({'success': False, 'message': 'Brak konta Dyrektora w systemie.'})
             
         elif akcja == 'zapisz_ocene':
-            if not protokol:
-                protokol = Protokol(praktyka_id=praktyka.id)
-                db.session.add(protokol)
-            
             try:
-                if data.get('ocena_u'): protokol.ocena_u = float(data.get('ocena_u'))
-                if data.get('ocena_s'): protokol.ocena_s = float(data.get('ocena_s'))
+                if data.get('ocena_uopz_param'): karta.ocena_uopz_param = float(data.get('ocena_uopz_param'))
+                if 'ocena_uopz_opis' in data: karta.ocena_uopz_opis = data.get('ocena_uopz_opis')
+                if data.get('ocena_sprawozdania'): karta.ocena_sprawozdania = float(data.get('ocena_sprawozdania'))
+                
+                if data.get('zloz_podpis'):
+                    tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                    karta.podpis_uopz = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                    karta.ocena_uopz_data = date.today()
+                    
                 db.session.commit()
                 return jsonify({'success': True, 'message': 'Oceny UOPZ zostały zapisane w Karcie Praktyki.'})
             except ValueError:
@@ -113,6 +156,8 @@ def zal3_karta(student_id):
         'uopz': current_user.to_dict(),
         'zopz': zopz.to_dict() if zopz else None,
         'porozumienie': porozumienie.to_dict() if porozumienie else None,
+        'dokument': dokument.to_dict(),
+        'karta': karta.to_dict() if karta else None,
         'protokol': protokol.to_dict() if protokol else None
     })
 
@@ -125,8 +170,6 @@ def zal2a_harmonogram(student_id):
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     if not praktyka: return jsonify({'error': 'Brak praktyki'}), 404
 
-    from models import Zal2aPodpisy
-    from datetime import date
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A').first()
     if not dokument:
         dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A', utworzony_przez=current_user.id, status='Draft_UOPZ')
@@ -318,6 +361,51 @@ def zal2a_lista():
             w_toku.append(fd)
         elif d.status == 'Approved':
             zatwierdzone.append(fd)
+
+    return jsonify({
+        'do_akcji': do_akcji,
+        'w_toku': w_toku,
+        'zatwierdzone': zatwierdzone
+    })
+
+@uopz_api_bp.route('/zal3_lista', methods=['GET'])
+@login_required
+def zal3_lista():
+    if current_user.rola != 'uopz':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyki = Praktyka.query.filter_by(uopz_id=current_user.id).all()
+    praktyka_ids = [p.id for p in praktyki]
+    
+    dokumenty = Dokument.query.filter(Dokument.praktyka_id.in_(praktyka_ids), Dokument.typ_zalacznika == 'ZAL3').all()
+    
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_id': student.id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    do_akcji = []
+    w_toku = []
+    zatwierdzone = []
+
+    for d in dokumenty:
+        fd = format_dokument(d)
+        if d.status in ['Draft', 'Draft_UOPZ', 'Weryfikacja_Uczelni']:
+            do_akcji.append(fd)
+        elif d.status in ['Skierowanie_Wydane', 'Weryfikacja_ZOPZ']:
+            w_toku.append(fd)
+        elif d.status == 'Zatwierdzone':
+            zatwierdzone.append(fd)
+        else:
+            w_toku.append(fd)
 
     return jsonify({
         'do_akcji': do_akcji,

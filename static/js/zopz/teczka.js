@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             document.getElementById('btn-zal2a').href = `/zopz/zal2a_harmonogram/${studentId}`;
+
+            const btnZal3 = document.getElementById('btn-zal3');
+            if (btnZal3) {
+                btnZal3.href = `/zopz/zal3_karta/${studentId}`;
+            }
         })
         .catch(err => console.error(err));
 });

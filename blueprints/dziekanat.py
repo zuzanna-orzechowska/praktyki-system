@@ -81,3 +81,17 @@ def przypisz_uopz():
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/przypisz_uopz.html')
+
+@dziekanat_bp.route('/zal3')
+@login_required
+def zal3_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/zal3_lista.html')
+
+@dziekanat_bp.route('/weryfikuj_zal3/<int:praktyka_id>')
+@login_required
+def weryfikuj_zal3(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/weryfikuj_zal3.html')

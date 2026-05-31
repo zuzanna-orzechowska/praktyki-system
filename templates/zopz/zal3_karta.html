@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<script src="{{ url_for('static', filename='js/uopz/zal3_karta.js') }}"></script>
+<script src="{{ url_for('static', filename='js/zopz/zal3_karta.js') }}"></script>
 <style>
     .karta-doc {
         max-width: 900px;
@@ -60,7 +60,7 @@
             <i class="bi bi-arrow-left"></i> Wróć do teczki
         </a>
         <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-            Karta Praktyki (Zał. 3) - Edycja UOPZ
+            Karta Praktyki (Zał. 3) - Edycja ZOPZ
         </h2>
         <p class="text-muted mb-0" id="student-name-header">Ładowanie...</p>
     </div>
@@ -73,7 +73,7 @@
 
 <div class="karta-doc">
     <div class="text-center mb-4">
-        <h4 class="m-0 text-primary">KARTA PRAKTYKI ZAWODOWEJ</h4>
+        <h4 class="m-0">KARTA PRAKTYKI ZAWODOWEJ</h4>
     </div>
 
     <div class="karta-box">
@@ -125,12 +125,8 @@
         </div>
 
         <div class="d-flex karta-border-top bg-light">
-            <div class="w-50 p-4 text-center d-flex align-items-center justify-content-center text-muted flex-column">
-                <p class="mb-0">Dyrektor Instytutu<br>lub osoba upoważniona</p>
-                <div id="skierowanie-actions" style="display: none;" class="mt-3">
-                    <button id="btn-wydaj" class="btn btn-primary btn-sm mb-2"><i class="bi bi-pen"></i> Wystaw i podpisz</button><br>
-                    <button id="btn-popros" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-up"></i> Poproś Dyrektora</button>
-                </div>
+            <div class="w-50 p-4 text-center d-flex align-items-center justify-content-center text-muted">
+                Dyrektor Instytutu<br>lub osoba upoważniona
             </div>
             <div class="w-50 p-4 karta-border-left d-flex align-items-center justify-content-center flex-column">
                 <div style="height: 40px; font-family: 'Brush Script MT', cursive; font-size: 20px; color: #000;" id="val-skierowanie-podpis">
@@ -145,7 +141,7 @@
         <div class="karta-box-inner bg-light pb-2">
             <h5 class="mb-0">POTWIERDZENIA Z ZAKŁADU PRACY</h5>
         </div>
-        <div class="karta-box-inner karta-border-top opacity-75">
+        <div class="karta-box-inner karta-border-top">
             <div class="row mb-4">
                 <div class="col-md-4 text-muted">Zakładowy opiekun (ZOPZ):</div>
                 <div class="col-md-8 data-value" id="val-zopz-dane">Brak</div>
@@ -157,6 +153,7 @@
                 </div>
                 <div class="text-end">
                     <div style="font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zgloszenie-podpis">Brak podpisu</div>
+                    <button class="btn btn-sm btn-outline-success mt-1 zopz-action" id="btn-podpis-zgloszenie" style="display:none;" onclick="podpiszSekcje('zgloszenie')">Złóż podpis elektroniczny</button>
                 </div>
             </div>
             
@@ -166,113 +163,109 @@
                 </div>
                 <div class="text-end">
                     <div style="font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-bhp-podpis">Brak podpisu</div>
+                    <button class="btn btn-sm btn-outline-success mt-1 zopz-action" id="btn-podpis-bhp" style="display:none;" onclick="podpiszSekcje('bhp')">Złóż podpis elektroniczny</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Zaświadczenie -->
-    <div class="karta-box mt-4 border-success">
-        <div class="karta-box-inner text-center bg-light">
-            <h5 class="mb-0 text-success">ZAŚWIADCZENIE I OCENA (Wypełnia ZOPZ)</h5>
-        </div>
-        <div class="karta-box-inner karta-border-top opacity-75">
-            <p>Zaświadczam, że student <span class="data-value fs-5" id="val-student-imienazwisko2"></span> odbył praktykę zawodową w:</p>
-            <div class="p-3 bg-light border rounded text-center mb-3">
-                <span class="data-value" id="val-zaklad-nazwa2"></span> <span id="val-zaklad-adres2"></span>
+    <form id="form-oceny-zopz">
+        <div class="karta-box mt-4 border-dark" style="border-width: 2px;">
+            <div class="karta-box-inner text-center bg-light">
+                <h5 class="mb-0">ZAŚWIADCZENIE I OCENA (Wypełnia ZOPZ)</h5>
             </div>
-            <p>w okresie od <span class="data-value" id="val-data-start2"></span> do <span class="data-value" id="val-data-end2"></span> zgodnie z przyjętym programem.</p>
-            
-            <div class="p-3 border rounded mb-4 mt-3 bg-light">
-                <span class="text-muted fw-bold">Uwagi:</span> <span class="data-value" id="val-zaswiadczenie-uwagi">Brak uwag</span>
-            </div>
+            <div class="karta-box-inner karta-border-top">
+                <p>Zaświadczam, że student <span class="data-value fs-5" id="val-student-imienazwisko2"></span> odbył praktykę zawodową w:</p>
+                <div class="p-3 bg-light border rounded text-center mb-3">
+                    <span class="data-value" id="val-zaklad-nazwa2"></span> <span id="val-zaklad-adres2"></span>
+                </div>
+                <p>w okresie od <span class="data-value" id="val-data-start2"></span> do <span class="data-value" id="val-data-end2"></span> zgodnie z przyjętym programem.</p>
+                
+                <div class="mb-4 mt-3">
+                    <label class="form-label text-muted fw-bold">Uwagi (opcjonalne):</label>
+                    <div id="zaswiadczenie-uwagi-view" class="data-value p-3 border rounded" style="display: none;"></div>
+                    <textarea id="zaswiadczenie-uwagi-input" class="form-control" rows="2" placeholder="Uwagi na zaświadczeniu..."></textarea>
+                </div>
 
-            <div class="d-flex justify-content-end pb-2 pt-2 px-4">
-                <div class="d-flex flex-column align-items-center">
-                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zaswiadczenie-podpis">
+                <div class="d-flex justify-content-end pb-2 pt-2 px-4">
+                    <div class="d-flex flex-column align-items-center">
+                        <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zaswiadczenie-podpis">
+                        </div>
+                        <div class="karta-signature-line mt-3">(pieczęć i podpis kierownika zakładu)</div>
                     </div>
-                    <div class="karta-signature-line mt-3">(pieczęć i podpis kierownika zakładu)</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ocena ZOPZ -->
-        <div class="karta-box-inner karta-border-top bg-light">
-            <h5 class="m-0 text-success"><i class="bi bi-building"></i> Ocena z zakładu pracy</h5>
-        </div>
-        <div class="karta-box-inner karta-border-top opacity-75">
-            <div class="row mb-3 align-items-center">
-                <div class="col-md-4 fw-bold text-muted">Ocena parametryczna:</div>
-                <div class="col-md-8">
-                    <div id="val-zopz-ocena-param" class="data-value fs-5">Brak</div>
-                </div>
-            </div>
-            <div class="row mb-4">
-                <div class="col-md-4 fw-bold text-muted">Ocena opisowa:</div>
-                <div class="col-md-8">
-                    <div id="val-zopz-ocena-opis" class="fst-italic">Brak wpisu</div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end align-items-end mb-2 mt-4" id="zopz-podpis-container">
-                <div class="d-flex flex-column align-items-center">
-                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zopz-podpis">
-                    </div>
-                    <div class="karta-signature-line mt-3">(podpis zakładowego opiekuna)</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ocena UOPZ -->
-    <form id="form-oceny">
-        <div class="karta-box mt-4 border-primary" style="border-width: 2px;">
+            <!-- Ocena ZOPZ -->
             <div class="karta-box-inner karta-border-top bg-light">
-                <h5 class="m-0 text-primary"><i class="bi bi-mortarboard"></i> Ocena Uczelnianego Opiekuna (Wypełnia UOPZ)</h5>
+                <h5 class="m-0"><i class="bi bi-building"></i> Ocena z zakładu pracy</h5>
             </div>
             <div class="karta-box-inner karta-border-top">
                 <div class="row mb-3 align-items-center">
-                    <div class="col-md-4 text-muted fw-bold">Ocena z przebiegu praktyki:</div>
+                    <div class="col-md-4 fw-bold">Ocena parametryczna:</div>
                     <div class="col-md-8">
-                        <div id="uopz-ocena-param-view" class="data-value fs-5" style="display: none;"></div>
-                        <input type="number" step="0.5" id="ocena-uopz-param-input" class="form-control" style="max-width: 150px;" required min="2.0" max="5.0" placeholder="np. 4.5">
-                    </div>
-                </div>
-                <div class="row mb-3 align-items-center">
-                    <div class="col-md-4 text-muted fw-bold">Ocena ze sprawozdania:</div>
-                    <div class="col-md-8">
-                        <div id="uopz-ocena-sprawozdania-view" class="data-value fs-5" style="display: none;"></div>
-                        <input type="number" step="0.5" id="ocena-sprawozdania-input" class="form-control" style="max-width: 150px;" required min="2.0" max="5.0" placeholder="np. 4.5">
+                        <div id="ocena-zopz-param-view" class="data-value fs-5" style="display: none;"></div>
+                        <input type="number" step="0.5" id="ocena-zopz-param-input" class="form-control" style="max-width: 150px;" required min="2.0" max="5.0" placeholder="np. 4.5">
                     </div>
                 </div>
                 <div class="row mb-4">
-                    <div class="col-md-4 text-muted fw-bold">Ocena opisowa:</div>
+                    <div class="col-md-4 fw-bold">Ocena opisowa:</div>
                     <div class="col-md-8">
-                        <div id="uopz-ocena-opis-view" class="fst-italic" style="display: none;"></div>
-                        <textarea id="ocena-uopz-opis-input" class="form-control" rows="3" placeholder="Wpisz uzasadnienie oceny..."></textarea>
+                        <div id="ocena-zopz-opis-view" class="fst-italic" style="display: none;"></div>
+                        <textarea id="ocena-zopz-opis-input" class="form-control" rows="3" placeholder="Wpisz uzasadnienie oceny, opis postawy studenta..."></textarea>
                     </div>
                 </div>
                 
-                <div id="uopz-form-actions" class="p-3 border rounded bg-white mt-4 shadow-sm">
+                <div id="zopz-form-actions" class="p-3 border rounded bg-white mt-4 shadow-sm">
                     <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="zloz-podpis-uopz">
-                        <label class="form-check-label fw-bold text-primary" for="zloz-podpis-uopz">
-                            Złóż podpis elektroniczny i ostatecznie zatwierdź oceny z praktyki
+                        <input class="form-check-input" type="checkbox" id="zloz-podpis-zopz">
+                        <label class="form-check-label fw-bold" for="zloz-podpis-zopz">
+                            Złóż podpis elektroniczny i ostatecznie zatwierdź ocenę oraz zaświadczenie
                         </label>
-                        <p class="small text-muted mb-0">Zatwierdzenie spowoduje przesłanie dokumentu do Dziekanatu.</p>
+                        <p class="small text-muted mb-0">Po zaznaczeniu i zapisaniu karta zostanie odesłana na Uczelnię, bez możliwości edycji.</p>
                     </div>
                     <button type="submit" id="btn-zapisz-ocene" class="btn btn-primary"><i class="bi bi-save"></i> Zapisz Kartę</button>
                 </div>
 
-                <div class="d-flex justify-content-end align-items-end mb-2 mt-4" id="uopz-podpis-container" style="display: none !important;">
+                <div class="d-flex justify-content-end align-items-end mb-2 mt-4" id="zopz-podpis-container" style="display: none !important;">
                     <div class="d-flex flex-column align-items-center">
-                        <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-uopz-podpis">
+                        <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zopz-podpis">
                         </div>
-                        <div class="karta-signature-line mt-3">(podpis uczelnianego opiekuna)</div>
+                        <div class="karta-signature-line mt-3">(podpis zakładowego opiekuna)</div>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+
+    <!-- Ocena UOPZ -->
+    <div class="karta-box mt-4">
+        <div class="karta-box-inner karta-border-top bg-light">
+            <h5 class="m-0 text-primary"><i class="bi bi-mortarboard"></i> Ocena Uczelnianego Opiekuna (UOPZ)</h5>
+        </div>
+        <div class="karta-box-inner karta-border-top opacity-75">
+            <div class="row mb-3">
+                <div class="col-md-4 text-muted">Ocena z przebiegu praktyki:</div>
+                <div class="col-md-8 data-value fs-5" id="val-uopz-ocena-param">Brak</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4 text-muted">Ocena ze sprawozdania:</div>
+                <div class="col-md-8 data-value fs-5" id="val-ocena-sprawozdania">Brak</div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-4 text-muted">Ocena opisowa:</div>
+                <div class="col-md-8 fst-italic" id="val-uopz-ocena-opis">Brak wpisu</div>
+            </div>
+            
+            <div class="d-flex justify-content-end align-items-end mb-2 mt-4">
+                <div class="d-flex flex-column align-items-center">
+                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #004a99;" id="val-uopz-podpis">
+                    </div>
+                    <div class="karta-signature-line mt-3">(podpis uczelnianego opiekuna)</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -3,7 +3,8 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import (
     Praktyka, ZakladPracy, Porozumienie, Student, Dokument, 
-    ProgramPraktyki, HarmonogramPraktyki, Zal2aPodpisy, Powiadomienie
+    ProgramPraktyki, HarmonogramPraktyki, Zal2aPodpisy, Powiadomienie,
+    KartaPraktyki
 )
 from datetime import date
 zopz_api_bp = Blueprint('zopz_api', __name__, url_prefix='/zopz')
@@ -224,3 +225,131 @@ def zal2a_harmonogram(student_id):
         'pozycje': [p.to_dict() for p in pozycje_harmonogramu],
         'zapisane_programy': zapisane_programy
     })
+
+@zopz_api_bp.route('/zal3_karta/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal3_karta(student_id):
+    if current_user.rola != 'zopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka or not zaklad or praktyka.zaklad_id != zaklad.id:
+        return jsonify({'error': 'Brak dostępu do praktyki tego studenta'}), 404
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL3').first()
+    if not dokument:
+        return jsonify({'error': 'Uczelnia nie utworzyła jeszcze karty praktyki (Brak Zał. 3).'}), 404
+        
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first()
+    if not karta:
+        return jsonify({'error': 'Brak wpisów w karcie praktyki.'}), 404
+
+    if request.method == 'POST':
+        data = request.json
+        akcja = data.get('akcja')
+        
+        if akcja == 'potwierdz_zgloszenie':
+            if data.get('zloz_podpis'):
+                tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                karta.podpis_zgloszenie = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+            karta.data_zgloszenia = date.today()
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Potwierdzono zgłoszenie studenta.'})
+            
+        elif akcja == 'potwierdz_bhp':
+            if data.get('zloz_podpis'):
+                tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                karta.podpis_bhp = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+            karta.data_bhp = date.today()
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Potwierdzono szkolenie BHP.'})
+            
+        elif akcja in ['zapisz_ocene', 'wyslij_do_uczelni']:
+            try:
+                if 'zaswiadczenie_uwagi' in data: karta.zaswiadczenie_uwagi = data.get('zaswiadczenie_uwagi')
+                if data.get('ocena_zopz_param'): karta.ocena_zopz_param = float(data.get('ocena_zopz_param'))
+                if 'ocena_zopz_opis' in data: karta.ocena_zopz_opis = data.get('ocena_zopz_opis')
+                
+                if akcja == 'wyslij_do_uczelni':
+                    dokument.status = 'Weryfikacja_Uczelni'
+                    tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                    karta.podpis_zaswiadczenie = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                    karta.zaswiadczenie_data = date.today()
+                    karta.podpis_zopz = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                    karta.ocena_zopz_data = date.today()
+                    
+                    notif = Powiadomienie(
+                        uzytkownik_id=praktyka.uopz_id,
+                        tresc=f"Zakład pracy (ZOPZ) przesłał kartę praktyki oraz ocenił studenta {student.uzytkownik.imie} {student.uzytkownik.nazwisko}.",
+                        link=f"/uopz/zal3_karta/{student.id}"
+                    )
+                    db.session.add(notif)
+                    message = 'Karta praktyki i oceny zostały przesłane do uczelni.'
+                else:
+                    message = 'Oceny i uwagi zapisane jako szkic.'
+                    
+                db.session.commit()
+                return jsonify({'success': True, 'message': message})
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Wprowadzono niepoprawny format oceny.'})
+
+    return jsonify({
+        'student': student.to_dict(),
+        'uzytkownik': student.uzytkownik.to_dict(),
+        'praktyka': praktyka.to_dict(),
+        'dokument': dokument.to_dict(),
+        'karta': karta.to_dict(),
+        'zopz': current_user.to_dict()
+    })
+
+@zopz_api_bp.route('/zal3_lista', methods=['GET'])
+@login_required
+def zal3_lista():
+    if current_user.rola != 'zopz':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+    if not zaklad:
+        return jsonify({'do_akcji': [], 'w_toku': [], 'zatwierdzone': []})
+        
+    praktyki = Praktyka.query.filter_by(zaklad_id=zaklad.id).all()
+    praktyka_ids = [p.id for p in praktyki]
+    
+    dokumenty = Dokument.query.filter(Dokument.praktyka_id.in_(praktyka_ids), Dokument.typ_zalacznika == 'ZAL3').all()
+    
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_id': student.id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    do_akcji = []
+    w_toku = []
+    zatwierdzone = []
+
+    for d in dokumenty:
+        fd = format_dokument(d)
+        if d.status == 'Weryfikacja_ZOPZ' or d.status == 'Skierowanie_Wydane':
+            do_akcji.append(fd)
+        elif d.status in ['Draft_UOPZ', 'Weryfikacja_Uczelni']:
+            w_toku.append(fd)
+        elif d.status == 'Zatwierdzone':
+            zatwierdzone.append(fd)
+        else:
+            w_toku.append(fd)
+
+    return jsonify({
+        'do_akcji': do_akcji,
+        'w_toku': w_toku,
+        'zatwierdzone': zatwierdzone
+    })
+

@@ -245,3 +245,42 @@ class Powiadomienie(db.Model, DictSerializable):
     data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
     
     uzytkownik = db.relationship('Uzytkownik', backref=db.backref('powiadomienia', cascade="all, delete-orphan"))
+
+class KartaPraktyki(db.Model, DictSerializable):
+    __tablename__ = 'karta_praktyki'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    
+    # Skierowanie
+    podpis_dyrektora = db.Column(db.String(255))
+    skierowanie_data = db.Column(db.Date)
+    
+    # Zgłoszenie i BHP (ZOPZ)
+    data_zgloszenia = db.Column(db.Date)
+    podpis_zgloszenie = db.Column(db.String(255))
+    data_bhp = db.Column(db.Date)
+    podpis_bhp = db.Column(db.String(255))
+    
+    # Zaświadczenie (ZOPZ)
+    zaswiadczenie_uwagi = db.Column(db.Text)
+    zaswiadczenie_data = db.Column(db.Date)
+    podpis_zaswiadczenie = db.Column(db.String(255))
+    
+    # Oceny (ZOPZ)
+    ocena_zopz_param = db.Column(db.Float)
+    ocena_zopz_opis = db.Column(db.Text)
+    ocena_zopz_data = db.Column(db.Date)
+    podpis_zopz = db.Column(db.String(255))
+    
+    # Oceny (UOPZ)
+    ocena_uopz_param = db.Column(db.Float)
+    ocena_uopz_opis = db.Column(db.Text)
+    ocena_uopz_data = db.Column(db.Date)
+    podpis_uopz = db.Column(db.String(255))
+    ocena_sprawozdania = db.Column(db.Float)
+    
+    # Dziekanat
+    akceptacja_dziekanat = db.Column(db.Boolean, default=False)
+    akceptacja_dziekanat_data = db.Column(db.Date)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('karta_praktyki', uselist=False, cascade="all, delete-orphan"))

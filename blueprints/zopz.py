@@ -58,3 +58,17 @@ def teczka(student_id):
         flash('Brak dostępu.', 'danger')
         return redirect(url_for('index'))
     return render_template('zopz/teczka.html')
+
+@zopz_bp.route('/zal3_karta/<int:student_id>')
+@login_required
+def zal3_karta(student_id):
+    if current_user.rola != 'zopz':
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('zopz/zal3_karta.html')
+
+@zopz_bp.route('/zal3_lista')
+@login_required
+def zal3_lista():
+    if current_user.rola != 'zopz': return redirect(url_for('index'))
+    return render_template('zopz/zal3_lista.html')
