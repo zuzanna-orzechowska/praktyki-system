@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = {
                 charakterystyka: document.getElementById('charakterystyka').value,
                 opis: document.getElementById('opis').value,
-                wiedza: document.getElementById('wiedza').value
+                wiedza: document.getElementById('wiedza').value,
+                akcja: document.getElementById('akcja_ukryta') ? document.getElementById('akcja_ukryta').value : 'wyslij'
             };
             
             fetch('/api/student/zal7a_sprawozdanie', {

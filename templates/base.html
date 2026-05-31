@@ -369,6 +369,12 @@
                             Dzienniki praktyk (Zał. 6)
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.zal7_lista') }}"
+                            class="{% if 'dziekanat/zal7_lista' in request.path %}active{% endif %}">
+                            Sprawozdania (Zał. 7, 7a)
+                        </a>
+                    </li>
                     <li><a href="#">Protokoły (Zał. 8)</a></li>
                 </ul>
                 {% endif %}

@@ -362,8 +362,8 @@ def zal9_oswiadczenie():
         db.session.add(praktyka)
         db.session.commit()
         
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6_SPRAWOZDANIE').first()
-    sprawozdanie_obj = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+    oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
     
     if request.method == 'POST':
         if not dokument:
@@ -525,11 +525,6 @@ def zal4b_wniosek():
         'praktyka': praktyka.to_dict()
     })
 
-@student_api_bp.route('/porozumienie', methods=['GET'])
-@student_api_bp.route('/zal2_program', methods=['GET'])
-@student_api_bp.route('/zal3_karta', methods=['GET'])
-@student_api_bp.route('/zal4_efekty', methods=['GET'])
-@student_api_bp.route('/zal4a_decyzja', methods=['GET'])
 @student_api_bp.route('/edytuj_dane', methods=['POST'])
 @login_required
 def edytuj_dane():
@@ -538,7 +533,13 @@ def edytuj_dane():
     
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    return jsonify({'success': False, 'message': 'Nie zaimplementowano.'})
 
+@student_api_bp.route('/porozumienie', methods=['GET'])
+@student_api_bp.route('/zal2_program', methods=['GET'])
+@student_api_bp.route('/zal3_karta', methods=['GET'])
+@student_api_bp.route('/zal4_efekty', methods=['GET'])
+@student_api_bp.route('/zal4a_decyzja', methods=['GET'])
 @student_api_bp.route('/zal8_protokol', methods=['GET'])
 @login_required
 def get_dokumenty_readonly():
@@ -683,17 +684,9 @@ def zal2a_harmonogram_api():
     })
 
 @student_api_bp.route('/sprawozdanie', methods=['GET', 'POST'])
-@login_required
-def sprawozdanie():
-    if current_user.rola != 'student':
-        return jsonify({'error': 'Odmowa dostępu'}), 403
-
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
 @student_api_bp.route('/zal7a_sprawozdanie', methods=['GET', 'POST'])
 @login_required
-def zal7a_sprawozdanie_api():
+def handle_sprawozdanie_api():
     if current_user.rola != 'student':
         return jsonify({'error': 'Odmowa dostępu'}), 403
 
@@ -702,9 +695,11 @@ def zal7a_sprawozdanie_api():
     if not praktyka:
         return jsonify({'error': 'Brak praktyki'}), 404
 
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    typ_zal = 'ZAL7' if 'sprawozdanie' in request.path and 'zal7a' not in request.path else 'ZAL7A'
+
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika=typ_zal).first()
     if not dokument:
-        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A', utworzony_przez=current_user.id)
+        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika=typ_zal, utworzony_przez=current_user.id)
         db.session.add(dokument)
         db.session.commit()
 
@@ -712,23 +707,51 @@ def zal7a_sprawozdanie_api():
 
     if request.method == 'POST':
         data = request.json
+        akcja = data.get('akcja', 'wyslij')
         charakterystyka = data.get('charakterystyka', '').strip()
         opis = data.get('opis', '').strip()
         wiedza = data.get('wiedza', '').strip()
 
-        if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
-            return jsonify({'success': False, 'message': 'Błąd zapisu! Niektóre sekcje są zbyt krótkie.'})
-        else:
-            if not sprawozdanie_doc:
-                sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
-                db.session.add(sprawozdanie_doc)
-
-            sprawozdanie_doc.charakterystyka = charakterystyka
-            sprawozdanie_doc.opis_prac = opis
-            sprawozdanie_doc.wiedza_umiejetnosci = wiedza
+        if akcja == 'wyslij':
+            if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
+                return jsonify({'success': False, 'message': 'Błąd wysyłania! Niektóre sekcje są zbyt krótkie.'})
             
+        if not sprawozdanie_doc:
+            sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
+            db.session.add(sprawozdanie_doc)
+
+        sprawozdanie_doc.charakterystyka = charakterystyka
+        sprawozdanie_doc.opis_prac = opis
+        sprawozdanie_doc.wiedza_umiejetnosci = wiedza
+        
+        if akcja == 'wyslij':
+            dokument.status = 'Weryfikacja ZOPZ' if typ_zal == 'ZAL7' else 'Weryfikacja UOPZ'
             db.session.commit()
-            return jsonify({'success': True, 'message': 'Sprawozdanie z pracy zawodowej zapisano pomyślnie!'})
+            
+            from models import Powiadomienie
+            if typ_zal == 'ZAL7' and praktyka.zaklad and praktyka.zaklad.zopz_id:
+                from flask import url_for
+                notif = Powiadomienie(
+                    uzytkownik_id=praktyka.zaklad.zopz_id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał Sprawozdanie z praktyki (Zał. 7) do oceny.",
+                    link=url_for('zopz.teczka', student_id=student.id)
+                )
+                db.session.add(notif)
+            elif typ_zal == 'ZAL7A' and praktyka.uopz_id:
+                from flask import url_for
+                notif = Powiadomienie(
+                    uzytkownik_id=praktyka.uopz_id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał Sprawozdanie z pracy (Zał. 7a) do oceny.",
+                    link=url_for('uopz.teczka', student_id=student.id)
+                )
+                db.session.add(notif)
+            db.session.commit()
+                
+            return jsonify({'success': True, 'message': 'Sprawozdanie przesłane do weryfikacji!'})
+        else:
+            dokument.status = 'Draft'
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Szkic sprawozdania został zapisany.'})
 
     return jsonify({
         'student': student.to_dict(),

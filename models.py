@@ -159,6 +159,9 @@ class Sprawozdanie(db.Model, DictSerializable):
     charakterystyka = db.Column(db.Text, nullable=False)
     opis_prac = db.Column(db.Text, nullable=False)
     wiedza_umiejetnosci = db.Column(db.Text, nullable=False)
+    uwagi_zopz = db.Column(db.Text, nullable=True)
+    podpis_zopz = db.Column(db.String(255), nullable=True)
+    podpis_uopz = db.Column(db.String(255), nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
 

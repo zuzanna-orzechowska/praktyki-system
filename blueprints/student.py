@@ -129,30 +129,62 @@ def sprawozdanie():
     sprawozdanie_doc = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
 
     if request.method == 'POST':
+        akcja = request.form.get('akcja', 'wyslij')
         charakterystyka = request.form.get('charakterystyka', '').strip()
         opis = request.form.get('opis', '').strip()
         wiedza = request.form.get('wiedza', '').strip()
 
-        if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
-            flash('Błąd zapisu! Niektóre sekcje są zbyt krótkie. Wymagamy dłuższego, merytorycznego opisu.', 'danger')
-        else:
-            if not sprawozdanie_doc:
-                sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
-                db.session.add(sprawozdanie_doc)
+        if akcja == 'wyslij':
+            if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
+                flash('Błąd wysyłania! Niektóre sekcje są zbyt krótkie. Uzupełnij sprawozdanie przed wysłaniem.', 'danger')
+                return redirect(url_for('student.sprawozdanie'))
 
-            sprawozdanie_doc.charakterystyka = charakterystyka
-            sprawozdanie_doc.opis_prac = opis
-            sprawozdanie_doc.wiedza_umiejetnosci = wiedza
-            
+        if not sprawozdanie_doc:
+            sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
+            db.session.add(sprawozdanie_doc)
+
+        sprawozdanie_doc.charakterystyka = charakterystyka
+        sprawozdanie_doc.opis_prac = opis
+        sprawozdanie_doc.wiedza_umiejetnosci = wiedza
+        
+        if akcja == 'wyslij':
+            dokument.status = 'OczekujeZOPZ'
             db.session.commit()
-            flash('Sprawozdanie zapisano pomyślnie!', 'success')
-            return redirect(url_for('student.sprawozdanie'))
+            
+            # Wysłanie powiadomień
+            from models import Powiadomienie
+            if praktyka.zaklad and praktyka.zaklad.zopz_id:
+                powiadomienie_zopz = Powiadomienie(
+                    uzytkownik_id=praktyka.zaklad.zopz_id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał Sprawozdanie (Zał. 7) do weryfikacji.",
+                    link=url_for('zopz.teczka', student_id=student.id)
+                )
+                db.session.add(powiadomienie_zopz)
+                
+            if praktyka.uopz_id:
+                powiadomienie_uopz = Powiadomienie(
+                    uzytkownik_id=praktyka.uopz_id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał Sprawozdanie (Zał. 7) do ZOPZ.",
+                    link=url_for('uopz.teczka', student_id=student.id)
+                )
+                db.session.add(powiadomienie_uopz)
+                
+            db.session.commit()
+            
+            flash('Sprawozdanie zapisano i przesłano do weryfikacji ZOPZ!', 'success')
+        else:
+            dokument.status = 'Draft'
+            db.session.commit()
+            flash('Szkic sprawozdania został zapisany.', 'info')
+            
+        return redirect(url_for('student.sprawozdanie'))
 
     return render_template(
         'dokumenty/zal7_sprawozdanie.html', 
         student=student, 
         praktyka=praktyka, 
-        sprawozdanie=sprawozdanie_doc
+        sprawozdanie=sprawozdanie_doc,
+        dokument=dokument
     )
 
 @student_bp.route('/zal4_efekty')

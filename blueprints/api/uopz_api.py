@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, url_for
 from flask_login import login_required, current_user
 from extensions import db
 from models import (
@@ -311,11 +311,31 @@ def handle_sprawozdanie(student_id, typ):
             dokument.uwagi_opiekuna = uwagi
             if akcja in ['zatwierdz', 'zatwierdz_i_podpisz']:
                 dokument.status = 'Approved'
+                if akcja == 'zatwierdz_i_podpisz' and sprawozdanie_doc:
+                    sprawozdanie_doc.podpis_uopz = f"{current_user.imie} {current_user.nazwisko}"
                 db.session.commit()
+                
+                notif = Powiadomienie(
+                    uzytkownik_id=student.uzytkownik_id,
+                    tresc=f"UOPZ zatwierdził Twoje Sprawozdanie ({'Zał. 7a' if typ == 'ZAL7A' else 'Zał. 7'}).",
+                    link=url_for('student.sprawozdanie') if typ == 'ZAL7' else url_for('student.zal7a_sprawozdanie')
+                )
+                db.session.add(notif)
+                db.session.commit()
+                
                 return jsonify({'success': True, 'message': 'Sprawozdanie zostało zatwierdzone.'})
             elif akcja == 'odrzuc':
                 dokument.status = 'Rejected'
                 db.session.commit()
+                
+                notif = Powiadomienie(
+                    uzytkownik_id=student.uzytkownik_id,
+                    tresc=f"UOPZ odrzucił Twoje Sprawozdanie ({'Zał. 7a' if typ == 'ZAL7A' else 'Zał. 7'}). Uwagi: {uwagi}",
+                    link=url_for('student.sprawozdanie') if typ == 'ZAL7' else url_for('student.zal7a_sprawozdanie')
+                )
+                db.session.add(notif)
+                db.session.commit()
+                
                 return jsonify({'success': True, 'message': 'Sprawozdanie zostało odrzucone do poprawy.'})
                 
     return jsonify({

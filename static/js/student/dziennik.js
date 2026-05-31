@@ -152,9 +152,9 @@ function renderStatusAndActions(status, wpisyCount) {
 
         // Przycisk "Wyślij do ZOPZ" na dole
         if (btnBottomZopz) {
-            if (wpisyCount < 3) {
+            if (wpisyCount < 120) {
                 btnBottomZopz.disabled = true;
-                btnBottomZopz.title = `Wymagane minimum 3 wpisy (obecnie ${wpisyCount})`;
+                btnBottomZopz.title = `Wymagane minimum 120 wpisów (obecnie ${wpisyCount})`;
             } else {
                 btnBottomZopz.disabled = false;
                 btnBottomZopz.title = '';

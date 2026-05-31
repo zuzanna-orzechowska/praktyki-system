@@ -576,6 +576,49 @@ def zal6_lista():
         'zatwierdzone': zatwierdzone
     })
 
+@dziekanat_api_bp.route('/zal7_lista', methods=['GET'])
+@login_required
+def zal7_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Brak uprawnień'}), 403
+
+    dokumenty = Dokument.query.filter(Dokument.typ_zalacznika.in_(['ZAL7', 'ZAL7A'])).all()
+    
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_id': student.id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'typ': doc.typ_zalacznika,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    do_akcji = []
+    w_toku = []
+    zatwierdzone = []
+
+    for d in dokumenty:
+        fd = format_dokument(d)
+        if d.status == 'Weryfikacja UOPZ':
+            do_akcji.append(fd)
+        elif d.status in ['Draft', 'Weryfikacja ZOPZ', 'OczekujeZOPZ', 'Weryfikacja', 'Rejected']:
+            w_toku.append(fd)
+        elif d.status == 'Approved':
+            zatwierdzone.append(fd)
+        else:
+            w_toku.append(fd)
+
+    return jsonify({
+        'do_akcji': do_akcji,
+        'w_toku': w_toku,
+        'zatwierdzone': zatwierdzone
+    })
+
 @dziekanat_api_bp.route('/dziennik/<int:student_id>', methods=['GET'])
 @login_required
 def dziennik_get(student_id):

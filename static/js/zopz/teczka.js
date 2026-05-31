@@ -67,6 +67,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     btnZal6.textContent = 'Brak Dziennika';
                 }
             }
+
+            const btnZal7 = document.getElementById('btn-zal7');
+            if (btnZal7) {
+                if (data.dokumenty && data.dokumenty['ZAL7']) {
+                    btnZal7.href = `/zopz/zal7_sprawozdanie/${studentId}`;
+                    if (data.dokumenty['ZAL7'].status === 'OczekujeZOPZ' || data.dokumenty['ZAL7'].status === 'Weryfikacja') {
+                        document.getElementById('badge-zal7').style.display = 'inline-block';
+                    }
+                } else {
+                    btnZal7.classList.add('disabled');
+                    btnZal7.textContent = 'Brak Sprawozdania';
+                }
+            }
         })
         .catch(err => console.error(err));
 });

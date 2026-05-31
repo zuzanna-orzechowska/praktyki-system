@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
+from models import Student, Praktyka, Dokument, Sprawozdanie
 
 dziekanat_bp = Blueprint('dziekanat', __name__, url_prefix='/dziekanat')
 
@@ -102,6 +103,35 @@ def zal6_lista():
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/zal6_lista.html')
+
+@dziekanat_bp.route('/zal7_lista')
+@login_required
+def zal7_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/zal7_lista.html')
+
+@dziekanat_bp.route('/zal7_sprawozdanie/<int:student_id>')
+@login_required
+def zal7_sprawozdanie(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first() if praktyka else None
+    sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    return render_template('dokumenty/zal7_sprawozdanie.html', student=student, praktyka=praktyka, dokument=dokument, sprawozdanie=sprawozdanie)
+
+@dziekanat_bp.route('/zal7a_sprawozdanie/<int:student_id>')
+@login_required
+def zal7a_sprawozdanie(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first() if praktyka else None
+    sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    return render_template('dokumenty/zal7a_sprawozdanie.html', student=student, praktyka=praktyka, dokument=dokument, sprawozdanie=sprawozdanie)
 
 @dziekanat_bp.route('/dziennik/<int:student_id>')
 @login_required
