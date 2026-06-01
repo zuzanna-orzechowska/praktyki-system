@@ -139,3 +139,46 @@ def podglad_dziennika(student_id):
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     return render_template('dziekanat/podglad_dziennika.html')
+
+@dziekanat_bp.route('/zal4_lista')
+@login_required
+def zal4_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    return render_template('dziekanat/zal4_lista.html')
+
+@dziekanat_bp.route('/zal4_efekty/<int:student_id>')
+@login_required
+def zal4_efekty(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+        
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4').first() if praktyka else None
+    
+    import re
+    opinia_text = dokument.uwagi_opiekuna if dokument and dokument.uwagi_opiekuna else ''
+    podpis_uopz = None
+    data_podpisu_uopz = None
+    
+    if opinia_text:
+        match = re.search(r'\[Podpis elektroniczny UOPZ:\s*(.*?),\s*Data:\s*(.*?)\]', opinia_text)
+        if match:
+            podpis_uopz = match.group(1).strip()
+            data_podpisu_uopz = match.group(2).strip()
+            opinia_text = opinia_text[:match.start()].strip()
+
+    from models import EfektUczenia
+    efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all() if dokument else []
+    from blueprints.student import lista_wymaganych_efektow
+    
+    return render_template('dokumenty/zal4_efekty.html', 
+                           student=student, 
+                           praktyka=praktyka, 
+                           dokument=dokument, 
+                           efekty=efekty, 
+                           lista_statyczna=lista_wymaganych_efektow,
+                           opinia_text=opinia_text,
+                           podpis_uopz=podpis_uopz,
+                           data_podpisu_uopz=data_podpisu_uopz)

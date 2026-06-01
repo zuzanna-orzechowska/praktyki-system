@@ -153,19 +153,19 @@ def dziennik():
         max_date = min(today_date, praktyka_end_str)
 
     efekty_lista = [
-        {"kod": "01", "opis": "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych."},
-        {"kod": "02", "opis": "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce."},
-        {"kod": "03", "opis": "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy."},
-        {"kod": "04", "opis": "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka."},
-        {"kod": "05", "opis": "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami."},
-        {"kod": "06", "opis": "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje zawodowe."},
-        {"kod": "07", "opis": "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia."},
-        {"kod": "08", "opis": "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy i zaproponować jego rozwiązanie."},
-        {"kod": "09", "opis": "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności IT, stosując odpowiednie normy i standardy."},
-        {"kod": "10", "opis": "Pracuje w zespole zajmującym się zawodowo branżą IT."},
-        {"kod": "11", "opis": "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów."},
-        {"kod": "12", "opis": "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji zadania, jak i przekazać im w sposób zrozumiały opinie z zakresu informatyki."},
-        {"kod": "13", "opis": "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków, szczególnie te ekonomiczne i społeczne."}
+        {"kod": "01", "opis": "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych"},
+        {"kod": "02", "opis": "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce"},
+        {"kod": "03", "opis": "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy"},
+        {"kod": "04", "opis": "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka"},
+        {"kod": "05", "opis": "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami publikowanymi w języku polskim jak i angielskim"},
+        {"kod": "06", "opis": "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje, wiedzę i umiejętności, co najmniej z dwóch zakresów: zadania dotyczące sprzętu i oprogramowania: np.: programowania, administrowanie siecią komputerową, konserwacja sprzętu i oprogramowania, bieżące usuwanie usterek, administrowanie zasobami informatycznymi, zakładu pracy / instytucji, (e)-usługami."},
+        {"kod": "07", "opis": "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia"},
+        {"kod": "08", "opis": "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy / instytucji, opisać go, przedstawić koncepcję rozwiązania i ją zrealizować."},
+        {"kod": "09", "opis": "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności informatycznej zakładu pracy/instytucji stosując normy i standardy stosowane w informatyce oraz biorąc pod uwagę aspekty środowiskowe i etyczne."},
+        {"kod": "10", "opis": "Pracuje w zespole zajmującym się zawodowo branżą IT,"},
+        {"kod": "11", "opis": "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów"},
+        {"kod": "12", "opis": "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji planowanego zadania, jak i przekazać im w sposób zrozumiały informacje i opinie z zakresu informatyki"},
+        {"kod": "13", "opis": "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków w szczególności ekonomiczne i społeczne"}
     ]
     
     zalaczniki = ZalacznikDziennika.query.filter_by(dokument_id=dokument.id).all()

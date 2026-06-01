@@ -1,11 +1,26 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie, KartaPraktyki
+from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie, KartaPraktyki, Powiadomienie
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 
+lista_wymaganych_efektow = [
+    "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych",
+    "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce",
+    "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy",
+    "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka",
+    "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami publikowanymi w języku polskim jak i angielskim",
+    "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje, wiedzę i umiejętności, co najmniej z dwóch zakresów: zadania dotyczące sprzętu i oprogramowania: np.: programowania, administrowanie siecią komputerową, konserwacja sprzętu i oprogramowania, bieżące usuwanie usterek, administrowanie zasobami informatycznymi, zakładu pracy / instytucji, (e)-usługami.",
+    "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia",
+    "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy / instytucji, opisać go, przedstawić koncepcję rozwiązania i ją zrealizować.",
+    "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności informatycznej zakładu pracy/instytucji stosując normy i standardy stosowane w informatyce oraz biorąc pod uwagę aspekty środowiskowe i etyczne.",
+    "Pracuje w zespole zajmującym się zawodowo branżą IT,",
+    "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów",
+    "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji planowanego zadania, jak i przekazać im w sposób zrozumiały informacje i opinie z zakresu informatyki",
+    "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków w szczególności ekonomiczne i społeczne"
+]
 student_bp = Blueprint('student', __name__, url_prefix='/student')
 
 UPLOAD_FOLDER = 'static/uploads/zal4b'
@@ -200,27 +215,28 @@ def zal4_efekty():
         flash('Brak przypisanej praktyki.', 'warning')
         return redirect(url_for('student.dashboard'))
 
+    # Oznacz powiadomienia jako przeczytane
+    Powiadomienie.query.filter_by(uzytkownik_id=current_user.id, link=request.path, przeczytane=False).update({'przeczytane': True})
+    db.session.commit()
+
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4').first()
     efekty = []
     
     if dokument:
         efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all()
 
-    lista_wymaganych_efektow = [
-        "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych",
-        "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce",
-        "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy",
-        "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka",
-        "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania...",
-        "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje...",
-        "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia",
-        "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy / instytucji, opisać go, przedstawić koncepcję rozwiązania i ją zrealizować.",
-        "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności informatycznej...",
-        "Pracuje w zespole zajmującym się zawodowo branżą IT",
-        "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów",
-        "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje...",
-        "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków..."
-    ]
+
+    import re
+    opinia_text = dokument.uwagi_opiekuna if dokument and dokument.uwagi_opiekuna else ''
+    podpis_uopz = None
+    data_podpisu_uopz = None
+    
+    if opinia_text:
+        match = re.search(r'\[Podpis elektroniczny UOPZ:\s*(.*?),\s*Data:\s*(.*?)\]', opinia_text)
+        if match:
+            podpis_uopz = match.group(1).strip()
+            data_podpisu_uopz = match.group(2).strip()
+            opinia_text = opinia_text[:match.start()].strip()
 
     return render_template(
         'dokumenty/zal4_efekty.html', 
@@ -228,7 +244,10 @@ def zal4_efekty():
         praktyka=praktyka, 
         dokument=dokument,
         efekty=efekty,
-        lista_statyczna=lista_wymaganych_efektow
+        lista_statyczna=lista_wymaganych_efektow,
+        opinia_text=opinia_text,
+        podpis_uopz=podpis_uopz,
+        data_podpisu_uopz=data_podpisu_uopz
     )
 
 @student_bp.route('/zal4a_decyzja')

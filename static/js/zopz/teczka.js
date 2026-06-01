@@ -80,6 +80,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     btnZal7.textContent = 'Brak Sprawozdania';
                 }
             }
+
+            const btnZal4 = document.getElementById('btn-zal4');
+            if (btnZal4) {
+                btnZal4.href = `/zopz/zal4_efekty/${studentId}`;
+                if (data.dokumenty && data.dokumenty['ZAL4']) {
+                    if (data.dokumenty['ZAL4'].status === 'OczekujeZOPZ' || data.dokumenty['ZAL4'].status === 'Weryfikacja') {
+                        document.getElementById('badge-zal4').style.display = 'inline-block';
+                    }
+                }
+            }
         })
         .catch(err => console.error(err));
 });

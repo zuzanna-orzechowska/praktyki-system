@@ -124,6 +124,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     </div>
                     <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal4_efekty" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-list-check"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Efekty Uczenia (Zał. 4)</h5>
+                                <p>Podgląd zatwierdzonych przez zakład efektów uczenia się z Twojej praktyki.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
                         <a href="/dokumenty" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-folder2-open"></i></div>
                             <div class="usos-tile-content">

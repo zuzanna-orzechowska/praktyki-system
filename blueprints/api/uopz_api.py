@@ -28,7 +28,7 @@ def dashboard():
                 oczekujace += 1
             elif doc.typ_zalacznika in ['ZAL7', 'ZAL7A'] and doc.status == 'Submitted':
                 oczekujace += 1
-            elif doc.typ_zalacznika == 'ZAL4' and doc.status == 'Draft':
+            elif doc.typ_zalacznika == 'ZAL4' and doc.status == 'Weryfikacja UOPZ':
                 oczekujace += 1
                 
         return {
