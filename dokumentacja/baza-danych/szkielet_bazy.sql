@@ -70,6 +70,7 @@ CREATE TABLE praktyka (
     data_start      DATE,
     data_end        DATE,
     liczba_godzin   INTEGER DEFAULT 960,
+    ankieta_wypelniona BOOLEAN DEFAULT 0,
     FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
     FOREIGN KEY (zaklad_id) REFERENCES zaklad_pracy(id) ON DELETE SET NULL,
     FOREIGN KEY (uopz_id) REFERENCES uzytkownik(id) ON DELETE SET NULL
@@ -286,6 +287,21 @@ CREATE TABLE program_praktyki (
     
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE,
     UNIQUE(dokument_id, kod_efektu)
+);
+
+-- ------------------------------------------------------------
+-- 16. ANKIETA (Zał. 5)
+-- ------------------------------------------------------------
+CREATE TABLE ankieta (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    odpowiedzi          TEXT NOT NULL,
+    uwagi               TEXT,
+    rok_akademicki      TEXT NOT NULL,
+    kierunek            TEXT NOT NULL,
+    forma_studiow       TEXT NOT NULL,
+    semestr             INTEGER NOT NULL,
+    liczba_godzin       INTEGER NOT NULL,
+    data_utworzenia     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================================

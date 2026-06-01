@@ -83,6 +83,7 @@ class Praktyka(db.Model, DictSerializable):
     data_end = db.Column(db.Date)
     
     liczba_godzin = db.Column(db.Integer, default=960)
+    ankieta_wypelniona = db.Column(db.Boolean, default=False)
     
     student = db.relationship('Student', backref='praktyki')
     zaklad = db.relationship('ZakladPracy')
@@ -297,3 +298,15 @@ class KartaPraktyki(db.Model, DictSerializable):
     akceptacja_dziekanat_data = db.Column(db.Date)
     
     dokument = db.relationship('Dokument', backref=db.backref('karta_praktyki', uselist=False, cascade="all, delete-orphan"))
+
+class Ankieta(db.Model, DictSerializable):
+    __tablename__ = 'ankieta'
+    id = db.Column(db.Integer, primary_key=True)
+    odpowiedzi = db.Column(db.String(255), nullable=False) # Przechowywanie odpowiedzi JSON (lista 1-5 dla 14 pytań)
+    uwagi = db.Column(db.Text, nullable=True)
+    rok_akademicki = db.Column(db.String(20), nullable=False)
+    kierunek = db.Column(db.String(100), nullable=False)
+    forma_studiow = db.Column(db.String(50), nullable=False)
+    semestr = db.Column(db.Integer, nullable=False)
+    liczba_godzin = db.Column(db.Integer, nullable=False)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)

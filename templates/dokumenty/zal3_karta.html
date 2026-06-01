@@ -1,50 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-    .karta-doc {
-        max-width: 900px;
-        margin: 0 auto;
-        background-color: #fff;
-        padding: 40px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        font-family: Arial, sans-serif;
-        color: #000;
-        font-size: 15px;
-        line-height: 1.6;
-    }
-    .karta-doc h4, .karta-doc h5 {
-        font-family: Arial, sans-serif;
-        font-weight: bold;
-    }
-    .karta-box {
-        border: 1px solid #dee2e6;
-        margin-bottom: 20px;
-        border-radius: 4px;
-    }
-    .karta-box-inner {
-        padding: 20px 25px;
-    }
-    .karta-border-top {
-        border-top: 1px solid #dee2e6;
-    }
-    .karta-border-left {
-        border-left: 1px solid #dee2e6;
-    }
-    .karta-signature-line {
-        border-top: 1px solid #dee2e6;
-        width: 250px;
-        margin-top: 40px;
-        text-align: center;
-        font-size: 12px;
-        color: #6c757d;
-    }
-    .data-value {
-        font-weight: bold;
-        color: #000;
-    }
-</style>
-
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
@@ -70,191 +26,227 @@
     {% endif %}
 </div>
 
-<div class="karta-doc">
-    <div class="text-center mb-4">
-        <h4 class="m-0 text-primary">KARTA PRAKTYKI ZAWODOWEJ</h4>
+<!-- KARTA PRAKTYKI ZAWODOWEJ -->
+<div class="text-center mb-4 mt-3">
+    <h4 class="m-0 fw-bold">KARTA PRAKTYKI ZAWODOWEJ</h4>
+</div>
+
+<!-- SKIEROWANIE NA PRAKTYKĘ -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white fw-bold text-center text-uppercase">
+        SKIEROWANIE NA PRAKTYKĘ
     </div>
-
-    <div class="karta-box">
-        <div class="karta-box-inner text-center bg-light">
-            <h5 class="mb-0">SKIEROWANIE NA PRAKTYKĘ</h5>
-        </div>
-        <div class="karta-box-inner karta-border-top">
-            <p class="text-start mt-1 mb-3">
-                Na podstawie porozumienia nr <span class="data-value">{% if porozumienie and porozumienie.id %}Porozumienie Nr {{ porozumienie.id }}/{{ porozumienie.data_podpisania.strftime('%Y') if porozumienie.data_podpisania else '2026' }}{% else %}Brak{% endif %}</span> 
-                z dnia <span class="data-value">{% if porozumienie and porozumienie.data_podpisania %}{{ porozumienie.data_podpisania }}{% elif porozumienie and porozumienie.data_zawarcia %}{{ porozumienie.data_zawarcia }}{% else %}Brak{% endif %}</span> r., kieruję niżej wymienionego studenta na praktykę zawodową do zakładu pracy:
-            </p>
-            <div class="p-3 bg-light border rounded text-center mb-3">
-                <span class="data-value fs-5">{{ praktyka.zaklad.nazwa }}</span><br>
-                <span>{{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.miasto }}</span>
-            </div>
-
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">1. Imię i nazwisko:</div>
-                <div class="col-md-8 data-value">{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split(' (')[0] }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">2. Numer albumu:</div>
-                <div class="col-md-8 data-value">{{ student.nr_albumu }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">3. Studia:</div>
-                <div class="col-md-8 data-value">inżynierskie {% if student.tryb_studiow == 'stacjonarne' %}stacjonarne{% else %}niestacjonarne{% endif %}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">4. Kierunek:</div>
-                <div class="col-md-8 data-value">{{ student.kierunek }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">&nbsp;&nbsp;&nbsp;specjalność:</div>
-                <div class="col-md-8 data-value">{{ student.specjalnosc|default('Brak') }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">5. Czas trwania praktyki:</div>
-                <div class="col-md-8 data-value">6 miesięcy (120 dni roboczych)</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">6. Uczelniany opiekun (UOPZ):</div>
-                <div class="col-md-8 data-value">{% if uopz %}{{ uopz.imie }} {{ uopz.nazwisko }}{% else %}Brak{% endif %}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-md-4 text-muted">7. Termin praktyki:</div>
-                <div class="col-md-8">od <span class="data-value">{{ praktyka.data_start }}</span> do <span class="data-value">{{ praktyka.data_end }}</span> r.</div>
-            </div>
+    <div class="card-body bg-light">
+        <p class="text-start mt-1 mb-3">
+            Na podstawie porozumienia nr <span class="fw-bold">{% if porozumienie and porozumienie.id %}Porozumienie Nr {{ porozumienie.id }}/{{ porozumienie.data_podpisania.strftime('%Y') if porozumienie.data_podpisania else '2026' }}{% else %}Brak{% endif %}</span> 
+            z dnia <span class="fw-bold">{% if porozumienie and porozumienie.data_podpisania %}{{ porozumienie.data_podpisania }}{% elif porozumienie and porozumienie.data_zawarcia %}{{ porozumienie.data_zawarcia }}{% else %}Brak{% endif %}</span> r., kieruję niżej wymienionego studenta na praktykę zawodową do zakładu pracy:
+        </p>
+        <div class="p-3 bg-white border rounded text-center mb-4">
+            <span class="fw-bold fs-5">{{ praktyka.zaklad.nazwa }}</span><br>
+            <span>{{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.miasto }}</span>
         </div>
 
-        <div class="d-flex karta-border-top bg-light">
-            <div class="w-50 p-4 text-center d-flex align-items-center justify-content-center text-muted">
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">1. Imię i nazwisko:</div>
+            <div class="col-md-8 fw-bold">{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split(' (')[0] }}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">2. Numer albumu:</div>
+            <div class="col-md-8 fw-bold">{{ student.nr_albumu }}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">3. Studia:</div>
+            <div class="col-md-8 fw-bold">inżynierskie {% if student.tryb_studiow == 'stacjonarne' %}stacjonarne{% else %}niestacjonarne{% endif %}*</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">4. Kierunek:</div>
+            <div class="col-md-8 fw-bold">{{ student.kierunek }}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">&nbsp;&nbsp;&nbsp;specjalność:</div>
+            <div class="col-md-8 fw-bold">{{ student.specjalnosc|default('Brak') }}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">5. Czas trwania praktyki:</div>
+            <div class="col-md-8 fw-bold">6 miesięcy (120 dni roboczych)</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">6. Uczelniany opiekun praktyki zawodowej:</div>
+            <div class="col-md-8 fw-bold">{% if uopz %}{{ uopz.imie }} {{ uopz.nazwisko }}{% else %}Brak{% endif %}</div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-md-4 text-muted">7. Termin praktyki:</div>
+            <div class="col-md-8">od <span class="fw-bold">{{ praktyka.data_start }}</span> do <span class="fw-bold">{{ praktyka.data_end }}</span></div>
+        </div>
+
+        <div class="row mt-4 pt-3 border-top">
+            <div class="col-6 text-center text-muted d-flex align-items-center justify-content-center">
                 Dyrektor Instytutu<br>lub osoba upoważniona
             </div>
-            <div class="w-50 p-4 karta-border-left d-flex align-items-center justify-content-center flex-column">
-                <div style="height: 40px; font-family: 'Brush Script MT', cursive; font-size: 20px; color: #000;">
-                    {% if karta and karta.podpis_dyrektora %}{{ karta.podpis_dyrektora }}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">{{ karta.skierowanie_data }}</span>{% endif %}
+            <div class="col-6 text-center border-start">
+                <div style="height: 40px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_dyrektora %}{{ karta.podpis_dyrektora }}{% endif %}
                 </div>
-                <div class="karta-signature-line mt-2">(podpis cyfrowy)</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ZOPZ Info -->
-    <div class="karta-box">
-        <div class="karta-box-inner bg-light pb-2">
-            <h5 class="mb-0">POTWIERDZENIA Z ZAKŁADU PRACY</h5>
-        </div>
-        <div class="karta-box-inner karta-border-top">
-            <div class="row mb-4">
-                <div class="col-md-4 text-muted">Zakładowy opiekun (ZOPZ):</div>
-                <div class="col-md-8 data-value">{% if zopz %}{{ zopz.imie }} {{ zopz.nazwisko }}{% else %}Brak{% endif %}</div>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center mb-4 border p-3 rounded bg-light">
-                <div>
-                    <p class="fw-bold mb-0">Potwierdzenie zgłoszenia się studenta na praktykę:</p>
-                </div>
-                <div class="text-end">
-                    {% if karta and karta.podpis_zgloszenie %}
-                    <div style="font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;">{{ karta.podpis_zgloszenie }}</div>
-                    <div class="small text-muted">{{ karta.data_zgloszenia }}</div>
-                    {% else %}
-                    <span class="text-warning">Oczekuje na podpis</span>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center border p-3 rounded bg-light">
-                <div>
-                    <p class="fw-bold mb-0">Potwierdzenie odbycia szkolenia BHP:</p>
-                </div>
-                <div class="text-end">
-                    {% if karta and karta.podpis_bhp %}
-                    <div style="font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;">{{ karta.podpis_bhp }}</div>
-                    <div class="small text-muted">{{ karta.data_bhp }}</div>
-                    {% else %}
-                    <span class="text-warning">Oczekuje na podpis</span>
-                    {% endif %}
+                <div class="mt-1 text-muted small w-75 mx-auto pt-1" style="border-top: 1px dotted #000;">
+                    {% if karta and karta.skierowanie_data %}<div style="font-size: 11px;">{{ karta.skierowanie_data }}</div>{% endif %}
+                    (podpis cyfrowy)
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Zaświadczenie -->
-    <div class="karta-box mt-4">
-        <div class="karta-box-inner text-center bg-light">
-            <h5 class="mb-0">ZAŚWIADCZENIE ODBYCIA PRAKTYKI ZAWODOWEJ</h5>
+<!-- POTWIERDZENIA Z ZAKŁADU PRACY -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body bg-light">
+        <div class="row mb-4">
+            <div class="col-md-4 text-muted">Zakładowy opiekun praktyki zawodowej:</div>
+            <div class="col-md-8 fw-bold">{% if zopz %}{{ zopz.imie }} {{ zopz.nazwisko }}{% else %}Brak{% endif %}</div>
+            <div class="col-12 mt-2">
+                <div class="border-top mx-auto" style="width: 100%; border-style: dotted !important;"></div>
+                <div class="small text-muted text-center mt-1">(imię i nazwisko, funkcja, zajmowane stanowisko)</div>
+            </div>
         </div>
-        <div class="karta-box-inner karta-border-top">
-            <p>Zaświadczam, że student <span class="data-value fs-5">{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}</span> odbył praktykę zawodową w:</p>
-            <div class="p-3 bg-light border rounded text-center mb-3">
-                <span class="data-value">{{ praktyka.zaklad.nazwa }}</span> <span>{{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.miasto }}</span>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 border p-3 rounded bg-white">
+            <div>
+                <p class="fw-bold mb-0">Potwierdzam zgłoszenie się studenta na praktykę:</p>
             </div>
-            <p>w okresie od <span class="data-value">{{ praktyka.data_start }}</span> do <span class="data-value">{{ praktyka.data_end }}</span> zgodnie z przyjętym programem.</p>
-            
-            <div class="p-3 border rounded mb-4 mt-3">
-                <span class="text-muted">Uwagi:</span> <span class="data-value">{% if karta and karta.zaswiadczenie_uwagi %}{{ karta.zaswiadczenie_uwagi }}{% else %}Brak uwag{% endif %}</span>
-            </div>
-
-            <div class="d-flex justify-content-end pb-2 pt-2 px-4">
-                <div class="d-flex flex-column align-items-center">
-                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;">
-                        {% if karta and karta.podpis_zopz %}{{ karta.podpis_zopz }}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">{{ karta.zaswiadczenie_data }}</span>{% endif %}
-                    </div>
-                    <div class="karta-signature-line mt-3">(pieczęć i podpis kierownika zakładu)</div>
+            <div class="text-end">
+                <div style="height: 35px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_zgloszenie %}{{ karta.podpis_zgloszenie }}{% else %}<span class="text-warning fs-6" style="font-family: Arial; font-style: normal;">Oczekuje na podpis</span>{% endif %}
+                </div>
+                <div class="small text-muted mt-1 pt-1" style="width: 350px; margin-left: auto; border-top: 1px dotted #000;">
+                    {% if karta and karta.podpis_zgloszenie %}<div style="font-size: 11px; text-align: center;">{{ karta.data_zgloszenia }}</div>{% endif %}
+                    <div class="text-center">(data, pieczęć i podpis zakładowego opiekuna praktyki)</div>
                 </div>
             </div>
         </div>
-
-        <!-- Ocena ZOPZ -->
-        <div class="karta-box-inner karta-border-top bg-light">
-            <h5 class="m-0 text-success"><i class="bi bi-building"></i> Ocena z zakładu pracy (ZOPZ)</h5>
-        </div>
-        <div class="karta-box-inner karta-border-top">
-            <div class="row mb-3">
-                <div class="col-md-4 text-muted">Ocena parametryczna:</div>
-                <div class="col-md-8 data-value fs-5">{% if karta and karta.ocena_zopz_param %}{{ karta.ocena_zopz_param }}{% else %}Brak{% endif %}</div>
+        
+        <div class="d-flex justify-content-between align-items-center border p-3 rounded bg-white">
+            <div>
+                <p class="fw-bold mb-0">Potwierdzam odbycie szkolenia BHP:</p>
             </div>
-            <div class="row mb-4">
-                <div class="col-md-4 text-muted">Ocena opisowa:</div>
-                <div class="col-md-8 fst-italic">{% if karta and karta.ocena_zopz_opis %}{{ karta.ocena_zopz_opis }}{% else %}Brak wpisu{% endif %}</div>
-            </div>
-            
-            <div class="d-flex justify-content-end align-items-end mb-2">
-                <div class="d-flex flex-column align-items-center">
-                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;">
-                        {% if karta and karta.podpis_zopz %}{{ karta.podpis_zopz }}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">{{ karta.ocena_zopz_data }}</span>{% endif %}
-                    </div>
-                    <div class="karta-signature-line mt-3">(podpis zakładowego opiekuna)</div>
+            <div class="text-end">
+                <div style="height: 35px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_bhp %}{{ karta.podpis_bhp }}{% else %}<span class="text-warning fs-6" style="font-family: Arial; font-style: normal;">Oczekuje na podpis</span>{% endif %}
+                </div>
+                <div class="small text-muted mt-1 pt-1" style="width: 350px; margin-left: auto; border-top: 1px dotted #000;">
+                    {% if karta and karta.podpis_bhp %}<div style="font-size: 11px; text-align: center;">{{ karta.data_bhp }}</div>{% endif %}
+                    <div class="text-center">(data, pieczęć i podpis upoważnionego pracownika zakładu)</div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Ocena UOPZ -->
-        <div class="karta-box-inner karta-border-top bg-light">
-            <h5 class="m-0 text-primary"><i class="bi bi-mortarboard"></i> Ocena Uczelnianego Opiekuna (UOPZ)</h5>
+<!-- ZAŚWIADCZENIE ODBYCIA PRAKTYKI ZAWODOWEJ -->
+<div class="card shadow-sm border-0 mb-4 mt-5">
+    <div class="card-header bg-white fw-bold text-center text-uppercase fs-5 border-bottom border-dark">
+        Zaświadczenie odbycia praktyki zawodowej
+    </div>
+    <div class="card-body bg-light">
+        <p>Zaświadczam, że student <span class="fw-bold">{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}</span> odbył praktykę zawodową w:</p>
+        <div class="p-3 bg-white border rounded text-center mb-3">
+            <span class="fw-bold">{{ praktyka.zaklad.nazwa }}</span> <span>{{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.miasto }}</span>
         </div>
-        <div class="karta-box-inner karta-border-top">
-            <div class="row mb-3">
-                <div class="col-md-4 text-muted">Ocena z przebiegu praktyki:</div>
-                <div class="col-md-8 data-value fs-5">{% if karta and karta.ocena_uopz_param %}{{ karta.ocena_uopz_param }}{% else %}Brak{% endif %}</div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-4 text-muted">Ocena ze sprawozdania:</div>
-                <div class="col-md-8 data-value fs-5">{% if karta and karta.ocena_sprawozdania %}{{ karta.ocena_sprawozdania }}{% else %}Brak{% endif %}</div>
-            </div>
-            <div class="row mb-4">
-                <div class="col-md-4 text-muted">Ocena opisowa:</div>
-                <div class="col-md-8 fst-italic">{% if karta and karta.ocena_uopz_opis %}{{ karta.ocena_uopz_opis }}{% else %}Brak wpisu{% endif %}</div>
-            </div>
-            
-            <div class="d-flex justify-content-end align-items-end mb-2 mt-4">
-                <div class="d-flex flex-column align-items-center">
-                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;">
-                        {% if karta and karta.podpis_uopz %}{{ karta.podpis_uopz }}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">{{ karta.ocena_uopz_data }}</span>{% endif %}
-                    </div>
-                    <div class="karta-signature-line mt-3">(podpis uczelnianego opiekuna)</div>
+        <p>w okresie (okresach) od <span class="fw-bold">{{ praktyka.data_start }}</span> do <span class="fw-bold">{{ praktyka.data_end }}</span> zgodnie z przyjętym programem.</p>
+        
+        <div class="p-3 border bg-white rounded mb-4 mt-3">
+            <span class="text-muted">Uwagi:</span> <span class="fw-bold">{% if karta and karta.zaswiadczenie_uwagi %}{{ karta.zaswiadczenie_uwagi }}{% else %}Brak uwag{% endif %}</span>
+        </div>
+
+        <div class="d-flex justify-content-end pb-2 pt-2 px-4">
+            <div class="d-flex flex-column align-items-center">
+                <div style="height: 40px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_zopz %}{{ karta.podpis_zopz }}{% endif %}
+                </div>
+                <div class="mt-1 text-muted small pt-1 text-center" style="width: 350px; border-top: 1px dotted #000;">
+                    {% if karta and karta.podpis_zopz %}<div style="font-size: 11px;">Elbląg, {{ karta.zaswiadczenie_data }}</div>{% endif %}
+                    (miejscowość i data) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (pieczęć i podpis kierownika zakładu)
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- OCENA PRZEBIEGU PRAKTYKI ZAWODOWEJ -->
+<div class="card shadow-sm border-0 mb-4 border border-dark">
+    <div class="card-header bg-white fw-bold text-center text-uppercase border-bottom border-dark">
+        Ocena przebiegu praktyki zawodowej
+    </div>
+    
+    <!-- ZOPZ -->
+    <div class="card-body bg-light border-bottom border-dark">
+        <h6 class="fw-bold mb-3">Ocena z zakładu pracy (ZOPZ)</h6>
+        <div class="row mb-3">
+            <div class="col-md-4 text-muted">Ocena parametryczna (w skali 2 do 5):</div>
+            <div class="col-md-8 fw-bold fs-5">{% if karta and karta.ocena_zopz_param %}{{ karta.ocena_zopz_param }}{% else %}....................................................................{% endif %}</div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-4 text-muted">Ocena opisowa:</div>
+            <div class="col-md-8 fst-italic">{% if karta and karta.ocena_zopz_opis %}{{ karta.ocena_zopz_opis }}{% else %}<br><br><br>{% endif %}</div>
+        </div>
+        
+        <div class="d-flex justify-content-end align-items-end mb-2">
+            <div class="d-flex flex-column align-items-center">
+                <div style="height: 40px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_zopz %}{{ karta.podpis_zopz }}{% endif %}
+                </div>
+                <div class="mt-1 text-muted small pt-1 text-center" style="width: 250px; border-top: 1px dotted #000;">
+                    {% if karta and karta.podpis_zopz %}<div style="font-size: 11px;">{{ karta.ocena_zopz_data }}</div>{% endif %}
+                    (data, pieczęć i podpis)<br>
+                    Zakładowy opiekun praktyki zawodowej
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UOPZ -->
+    <div class="card-body bg-light border-bottom border-dark">
+        <h6 class="fw-bold mb-3">Ocena Uczelnianego Opiekuna Praktyki Zawodowej (UOPZ)</h6>
+        <div class="row mb-3">
+            <div class="col-md-4 text-muted">Ocena parametryczna (w skali 2 do 5):</div>
+            <div class="col-md-8 fw-bold fs-5">{% if karta and karta.ocena_uopz_param %}{{ karta.ocena_uopz_param }}{% else %}....................................................................{% endif %}</div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-4 text-muted">Ocena opisowa:</div>
+            <div class="col-md-8 fst-italic">{% if karta and karta.ocena_uopz_opis %}{{ karta.ocena_uopz_opis }}{% else %}<br><br><br>{% endif %}</div>
+        </div>
+        
+        <div class="d-flex justify-content-end align-items-end mb-2 mt-4">
+            <div class="d-flex flex-column align-items-center">
+                <div style="height: 40px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_uopz %}{{ karta.podpis_uopz }}{% endif %}
+                </div>
+                <div class="mt-1 text-muted small pt-1 text-center" style="width: 250px; border-top: 1px dotted #000;">
+                    {% if karta and karta.podpis_uopz %}<div style="font-size: 11px;">{{ karta.ocena_uopz_data }}</div>{% endif %}
+                    (data, pieczęć i podpis)<br>
+                    Uczelniany opiekun praktyki zawodowej
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ocena Sprawozdania -->
+    <div class="card-body bg-light">
+        <div class="row align-items-center mb-3">
+            <div class="col-md-6 fw-bold">Ocena sprawozdania z praktyki (w skali 2 do 5):</div>
+            <div class="col-md-6 fw-bold fs-5">{% if karta and karta.ocena_sprawozdania %}{{ karta.ocena_sprawozdania }}{% else %}........................................................{% endif %}</div>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4">
+            <div class="d-flex flex-column align-items-center">
+                <div style="height: 40px; font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 20px; color: #004b93; display: flex; align-items: end; justify-content: center;">
+                    {% if karta and karta.podpis_uopz %}{{ karta.podpis_uopz }}{% endif %}
+                </div>
+                <div class="mt-1 text-muted small pt-1 text-center" style="width: 300px; border-top: 1px dotted #000;">
+                    {% if karta and karta.podpis_uopz %}<div style="font-size: 11px;">{{ karta.ocena_sprawozdania_data | default(karta.ocena_uopz_data) }}</div>{% endif %}
+                    (data i podpis uczelnianego opiekuna praktyki)
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 small text-muted fw-bold">*) niewłaściwe skreślić</div>
     </div>
 </div>
 {% endblock %}

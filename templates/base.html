@@ -304,6 +304,7 @@
                     {% endif %}
 
                     <div class="sidebar-section-title mt-3">Ogólne</div>
+                    <li><a href="/student/zal5_ankieta" class="{% if 'zal5_ankieta' in request.path %}active{% endif %}">Ankieta (Zał. 5)</a></li>
                     <li><a href="/dokumenty">Wszystkie dokumenty</a></li>
                 </ul>
                 {% endif %}
@@ -376,6 +377,12 @@
                         </a>
                     </li>
                     <li><a href="#">Protokoły (Zał. 8)</a></li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.ankiety_lista') }}"
+                            class="{% if 'dziekanat/ankiety' in request.path %}active{% endif %}">
+                            Przegląd Ankiet (Zał. 5)
+                        </a>
+                    </li>
                 </ul>
                 {% endif %}
                 {% if current_user.rola == 'admin' %}

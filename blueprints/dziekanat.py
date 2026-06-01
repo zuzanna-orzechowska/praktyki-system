@@ -182,3 +182,84 @@ def zal4_efekty(student_id):
                            opinia_text=opinia_text,
                            podpis_uopz=podpis_uopz,
                            data_podpisu_uopz=data_podpisu_uopz)
+
+@dziekanat_bp.route('/ankiety')
+@login_required
+def ankiety_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    from models import Ankieta
+    import json
+    ankiety_z_bazy = Ankieta.query.order_by(Ankieta.data_utworzenia.desc()).all()
+    
+    ankiety_parsed = []
+    for a in ankiety_z_bazy:
+        odp = []
+        try:
+            odp = json.loads(a.odpowiedzi)
+        except:
+            pass
+            
+        suma = 0
+        ilosc = 0
+        for o in odp:
+            if o > 0:
+                suma += o
+                ilosc += 1
+        srednia = round(suma/ilosc, 2) if ilosc > 0 else 0
+        
+        ankiety_parsed.append({
+            'id': a.id,
+            'rok': a.rok_akademicki,
+            'semestr': a.semestr,
+            'forma': a.forma_studiow,
+            'srednia': srednia,
+            'uwagi': a.uwagi,
+            'data': a.data_utworzenia.strftime('%Y-%m-%d %H:%M')
+        })
+        
+    return render_template('dziekanat/ankiety_lista.html', ankiety=ankiety_parsed)
+
+@dziekanat_bp.route('/ankiety/<int:id>')
+@login_required
+def ankieta_szczegoly(id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+        
+    from models import Ankieta
+    import json
+    
+    ankieta = Ankieta.query.get_or_404(id)
+    odpowiedzi = []
+    try:
+        odpowiedzi = json.loads(ankieta.odpowiedzi)
+    except:
+        pass
+        
+    pytania = [
+        "Poznałam/poznałem zasady funkcjonowania instytucji, w której odbywałam/odbywałem praktyki zawodowe.",
+        "Poznałam/poznałem strukturę oraz regulamin organizacyjny instytucji, w której odbywałam/odbywałem praktyki zawodowe.",
+        "Praktyki zawodowe umożliwiły mi pełną realizację ramowego programu praktyk zawodowych przewidzianego w ramach mojego kierunku studiów.",
+        "Podczas praktyk zawodowych zwracano uwagę na przestrzeganie zasad etyki i tajemnicy zawodowej.",
+        "Podczas praktyk miałam/miałem możliwość praktycznego zastosowania wiedzy teoretycznej zdobytej na zajęciach.",
+        "Praktyki zawodowe przyczyniły się do pogłębienia mojej wiedzy i umiejętności zdobytych w trakcie studiów.",
+        "Mogłem liczyć na wsparcie merytoryczne Opiekuna zakładowego praktyk.",
+        "Mogłem liczyć na wsparcie merytoryczne Opiekuna uczelnianego praktyk.",
+        "Opiekun zakładowy odpowiedzialny za praktyki zawodowe w miejscu ich odbywania potrafił prawidłowo zorganizować ich przebieg.",
+        "Podczas praktyk zawodowych miałam/miałem możliwość pozyskiwania materiałów niezbędnych do przygotowania mojej pracy dyplomowej.",
+        "Praktyki zawodowe rozwinęły moje umiejętności skutecznego komunikowania się w sytuacjach zawodowych i pracy w zespole.",
+        "Praktyki zawodowe nauczyły mnie samodzielności i odpowiedzialności podczas wykonywania pracy.",
+        "Liczba godzin realizowana w ramach praktyk zawodowych jest wystarczająca.",
+        "Czy po zakończeniu praktyki zawodowej chciałaby/chciałby Pani/Pan współpracować z instytucją, w której Pani/Pan zrealizowała/zrealizował praktykę?"
+    ]
+    
+    wyniki = []
+    for idx, pyt in enumerate(pytania):
+        odp_val = odpowiedzi[idx] if idx < len(odpowiedzi) else 0
+        wyniki.append({
+            'numer': idx + 1,
+            'pytanie': pyt,
+            'ocena': odp_val
+        })
+        
+    return render_template('dziekanat/ankieta_szczegoly.html', ankieta=ankieta, wyniki=wyniki)

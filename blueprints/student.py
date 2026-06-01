@@ -282,3 +282,58 @@ def zal9_oswiadczenie():
     if current_user.rola != 'student':
         return redirect(url_for('index'))
     return render_template('dokumenty/zal9_oswiadczenie_student.html')
+
+@student_bp.route('/zal5_ankieta', methods=['GET', 'POST'])
+@login_required
+def zal5_ankieta():
+    if current_user.rola != 'student':
+        return redirect(url_for('index'))
+        
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka:
+        flash('Nie posiadasz przypisanej praktyki w systemie.', 'warning')
+        return redirect(url_for('student.dashboard'))
+        
+    if praktyka.ankieta_wypelniona:
+        flash('Wysłałeś już anonimową ankietę dla tej praktyki. Dziękujemy!', 'info')
+        return redirect(url_for('student.dashboard'))
+
+    if request.method == 'POST':
+        import json
+        from models import Ankieta, Uzytkownik, Powiadomienie
+        
+        odpowiedzi = []
+        for i in range(1, 15):
+            val = request.form.get(f'pytanie_{i}', '0')
+            odpowiedzi.append(int(val))
+            
+        nowa_ankieta = Ankieta(
+            odpowiedzi=json.dumps(odpowiedzi),
+            uwagi=request.form.get('uwagi', ''),
+            rok_akademicki=request.form.get('rok_akademicki', ''),
+            kierunek=request.form.get('kierunek', ''),
+            forma_studiow=request.form.get('forma_studiow', ''),
+            semestr=int(request.form.get('semestr', 0)),
+            liczba_godzin=int(request.form.get('liczba_godzin', 0))
+        )
+        db.session.add(nowa_ankieta)
+        
+        # Powiadomienia dla dziekanatu
+        pracownicy_dziekanatu = Uzytkownik.query.filter_by(rola='dziekanat').all()
+        for pracownik in pracownicy_dziekanatu:
+            powiadomienie = Powiadomienie(
+                uzytkownik_id=pracownik.id,
+                tresc="Wpłynęła nowa, anonimowa ankieta od studenta (Zał. 5).",
+                link=url_for('dziekanat.ankiety_lista')
+            )
+            db.session.add(powiadomienie)
+            
+        # Oznacz ankietę jako wypełnioną dla praktyki studenta (zachowując anonimowość wpisu Ankiety)
+        praktyka.ankieta_wypelniona = True
+        db.session.commit()
+        
+        flash('Ankieta została wysłana anonimowo do Dziekanatu. Dziękujemy!', 'success')
+        return redirect(url_for('student.dashboard'))
+    return render_template('dokumenty/zal5_ankieta.html')

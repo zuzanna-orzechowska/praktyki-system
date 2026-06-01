@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Szczegóły Ankiety #{{ ankieta.id }}
+        </h2>
+        <p class="text-muted mb-0">Złożona: {{ ankieta.data_utworzenia.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+    <a href="{{ url_for('dziekanat.ankiety_lista') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Powrót do listy
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold">
+                Metryczka
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0"><strong>Rok akademicki:</strong> {{ ankieta.rok_akademicki }}</li>
+                    <li class="list-group-item px-0"><strong>Kierunek:</strong> {{ ankieta.kierunek }}</li>
+                    <li class="list-group-item px-0"><strong>Forma:</strong> {{ ankieta.forma_studiow }}</li>
+                    <li class="list-group-item px-0"><strong>Semestr:</strong> {{ ankieta.semestr }}</li>
+                    <li class="list-group-item px-0"><strong>Liczba godzin:</strong> {{ ankieta.liczba_godzin }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold">
+                Uwagi dodatkowe od Studenta
+            </div>
+            <div class="card-body text-muted fst-italic">
+                {% if ankieta.uwagi %}
+                    "{{ ankieta.uwagi }}"
+                {% else %}
+                    Brak uwag.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="card-title fw-bold mb-4">Odpowiedzi na pytania</h5>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%;" class="text-center">Lp.</th>
+                        <th style="width: 75%;">Pytanie</th>
+                        <th style="width: 20%;" class="text-center">Ocena (1-5)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in wyniki %}
+                    <tr>
+                        <td class="text-center fw-bold">{{ w.numer }}.</td>
+                        <td>{{ w.pytanie }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if w.ocena >= 4 %}bg-success{% elif w.ocena == 3 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                {% if w.ocena > 0 %}{{ w.ocena }}{% else %}Brak{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
