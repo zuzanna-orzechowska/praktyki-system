@@ -141,6 +141,22 @@ def podglad_dziennika(student_id):
         return redirect(url_for('index'))
     return render_template('dziekanat/podglad_dziennika.html')
 
+@dziekanat_bp.route('/zal4b_lista')
+@login_required
+def zal4b_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('dziekanat/zal4b_lista.html')
+
+@dziekanat_bp.route('/weryfikuj_zal4b/<int:praktyka_id>')
+@login_required
+def weryfikuj_zal4b(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        flash('Brak dostępu.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('dziekanat/weryfikuj_zal4b.html', praktyka_id=praktyka_id)
+
 @dziekanat_bp.route('/zal4_lista')
 @login_required
 def zal4_lista():

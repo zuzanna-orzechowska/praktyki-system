@@ -565,10 +565,25 @@ def zal4b_wniosek():
             wniosek.zakres_obowiazkow = data.get('zakres_obowiazkow')
         if data.get('uzasadnienie'):
             wniosek.uzasadnienie = data.get('uzasadnienie')
-        
+
         if akcja == 'wyslij':
+            safe_nazwisko = current_user.nazwisko.split('(')[0].strip()
+            wniosek.podpis_studenta = f"{current_user.imie} {safe_nazwisko}"
+            wniosek.data_podpisu = date.today()
+            
             dokument.status = 'Submitted'
             praktyka.status = 'SCIEZKA_PRACA'
+            
+            from models import Uzytkownik, Powiadomienie
+            dziekanat_users = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'dyrektor'])).all()
+            for du in dziekanat_users:
+                notif = Powiadomienie(
+                    uzytkownik_id=du.id,
+                    tresc=f"Nowy wniosek (Zał. 4b) od studenta {current_user.imie} {safe_nazwisko}.",
+                    link=f"/dziekanat/weryfikuj_zal4b/{praktyka.id}"
+                )
+                db.session.add(notif)
+                
             db.session.commit()
             return jsonify({'success': True, 'message': 'Wniosek został złożony. Uruchomiono ścieżkę zaliczenia na podstawie pracy zawodowej.'})
         else:

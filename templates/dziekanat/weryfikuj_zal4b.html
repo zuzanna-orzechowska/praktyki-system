@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/weryfikuj_zal4b.js') }}"></script>
+<script>
+    const PRAKTYKA_ID = {{ praktyka_id }};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Weryfikacja Wniosku (Zał. 4b)
+    </h2>
+    <a href="{{ url_for('dziekanat.zal4b_lista') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Powrót do listy
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <!-- Właściwy wniosek -->
+    <div class="col-lg-10">
+        <div class="card shadow-sm border-0 mb-4 bg-light">
+            <div class="card-body p-5" style="border: 1px solid #dee2e6; max-width: 900px; margin: 0 auto; background-color: #fff; line-height: 1.6;">
+                <fieldset disabled>
+                    <div class="text-end mb-4">
+                        Elbląg, dnia <span id="data-wypelnienia" class="fw-bold"></span>
+                    </div>
+
+                    <div class="mb-5">
+                        <p class="mb-2">Kierunek studiów: <strong><span id="student-kierunek1"></span></strong></p>
+                        <p class="mb-2">Student / ka: <strong><span id="student-info"></span></strong></p>
+                        <p class="mb-2">Nr albumu: <strong><span id="student-album"></span></strong></p>
+                        <p class="mb-2">Kierunek studiów: <strong><span id="student-kierunek2"></span></strong></p>
+                        <div class="mb-2 d-flex align-items-center">
+                            <span class="me-2">Specjalność:</span>
+                            <input class="form-control form-control-sm w-50" id="specjalnosc" name="specjalnosc" readonly>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-5 fw-bold">
+                        <p class="mb-0">Dyrektor Instytutu Informatyki Stosowanej</p>
+                        <p class="mb-0">im. Krzysztofa Brzeskiego</p>
+                        <p class="mb-0 fw-normal mt-2">Za pośrednictwem Komisji do spraw praktyki zawodowej</p>
+                        <p class="mb-0 fw-normal">dla kierunku studiów informatyka</p>
+                    </div>
+
+                    <h5 class="text-center fw-bold mb-4" style="line-height: 1.4;">
+                        WNIOSEK O UBIEGANIE SIĘ ZALICZENIA EFEKTÓW UCZENIA SIĘ<br>
+                        PRZEWIDZIANYCH DLA PRAKTYKI ZAWODOWEJ NA PODSTAWIE PRACY<br>
+                        ZAWODOWEJ/STAŻU/ DZIAŁALNOŚCI GOSPODARCZEJ*
+                    </h5>
+
+                    <p class="text-center fw-bold text-decoration-underline mb-4">Wniosek</p>
+
+                    <p style="text-align: justify;" class="mb-4">
+                        Na podstawie § 4, ustęp 1 i 2 Regulaminu praktyk zawodowych w Instytucie Informatyki Stosowanej 
+                        im. Krzysztofa Brzeskiego ANS w Elblągu proszę o uznanie efektów uczenia się przewidzianych dla praktyki 
+                        zawodowej na podstawie pracy zawodowej/stażu/działalności gospodarczej*.
+                    </p>
+
+                    <div class="mb-4">
+                        <label for="uzasadnienie" class="form-label fw-bold">Uzasadnienie:</label>
+                        <textarea class="form-control bg-white" id="uzasadnienie" name="uzasadnienie" rows="4" readonly></textarea>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-light border rounded">
+                        <label class="form-label fw-bold">Dodatkowe szczegóły dotyczące zatrudnienia / działalności:</label>
+                        <div class="row mb-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="data_od" class="form-label small">Od dnia:</label>
+                                <input type="text" class="form-control form-control-sm bg-white" id="okres-od" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="data_do" class="form-label small">Do dnia:</label>
+                                <input type="text" class="form-control form-control-sm bg-white" id="okres-do" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stanowisko" class="form-label small">Zajmowane stanowisko:</label>
+                            <input type="text" class="form-control form-control-sm bg-white" id="stanowisko" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="zakres_obowiazkow" class="form-label small fw-bold">Krótki zakres obowiązków na stanowisku:</label>
+                            <textarea class="form-control form-control-sm bg-white" id="zakres-obowiazkow" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+
+                    <p style="text-align: justify;" class="mt-5 mb-3">
+                        Dla potwierdzenia uzyskania zakładanych dla praktyki zawodowej efektów uczenia się załączam n/w 
+                        dokumenty potwierdzające zakres realizowanych czynności zawodowych oraz czas ich realizacji w tym w szczególności:
+                    </p>
+                    <ol class="mb-4" style="line-height: 1.8;">
+                        <li>Umowę o pracę, zaświadczenie o odbyciu stażu lub wolontariatu</li>
+                        <li>Opis zajmowanego stanowiska pracy/kartę stanowiskową</li>
+                        <li>Zakres obowiązków realizowany w ramach stażu/wolontariatu</li>
+                        <li>Zaświadczenie z CEIDG lub KRS</li>
+                        <li>Inne dokumenty potwierdzające uzyskanie efektów uczenia się przewidzianych dla praktyki zawodowej</li>
+                    </ol>
+
+                    <hr class="my-4">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Załączniki dokumentujące zatrudnienie:</label>
+                        <div id="zalaczniki-list" class="list-group mt-2">
+                            <div class="text-muted small">Brak załączników.</div>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-5 pt-4">
+                        <div id="podpis-student" style="border-bottom: 1px dotted #000; height: 30px; width: 250px; display: inline-block; margin-bottom: 5px; font-family: cursive; color: #004a99; text-align: center; line-height: 30px;"></div><br>
+                        <small class="me-4 text-muted">Data i podpis studenta/ki</small>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+        
+        <!-- Sekcja decyzyjna -->
+        <div class="card border-0 shadow-sm mt-4 mb-5">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-primary text-center">Decyzja Dziekanatu</h5>
+            </div>
+            <div class="card-body p-4" id="decyzja-container">
+                <!-- Tu dynamicznie pojawią się przyciski lub status -->
+                <div class="text-center text-muted">Ładowanie...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

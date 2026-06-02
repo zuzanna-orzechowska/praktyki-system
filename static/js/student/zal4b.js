@@ -117,12 +117,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (checkbox) {
                     checkbox.checked = true;
                     checkbox.disabled = true;
-                    const dzisiajFormat = new Date(dokument.data_utworzenia || new Date()).toLocaleDateString('pl-PL');
-                    document.getElementById('podpis-student').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiajFormat}</span>${student.imie} ${safeNazwisko}`;
+                }
+                if (wniosek && wniosek.podpis_studenta) {
+                    const dataPod = wniosek.data_podpisu || new Date().toISOString().split('T')[0];
+                    const dzisiajFormat = new Date(dataPod).toLocaleDateString('pl-PL');
+                    const safePodpis = wniosek.podpis_studenta.split('(')[0].trim();
+                    document.getElementById('podpis-student').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiajFormat}</span>${safePodpis}`;
                 }
                 
                 const actionBtns = document.getElementById('action-buttons');
-                if(actionBtns) actionBtns.style.display = 'none';
+                if(actionBtns) {
+                    const buttons = actionBtns.querySelectorAll('button');
+                    buttons.forEach(btn => btn.disabled = true);
+                }
             }
         })
         .catch(err => console.error(err));

@@ -67,22 +67,33 @@
 <p class="text-muted mb-4">Wybierz kategorię dokumentów, którymi chcesz zarządzać.</p>
 
 <div class="row g-4">
-    <!-- Załącznik 9 -->
-    <div class="col-md-6 col-lg-6">
-        <a href="{{ url_for('dziekanat.zal9_lista') }}" class="usos-tile">
+    <!-- SEKCJA ZARZĄDZANIE -->
+    <div class="col-12 mb-1">
+        <h5 class="text-muted text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Zarządzanie</h5>
+        <hr class="mt-2 mb-0 text-muted">
+    </div>
+
+    <!-- Przypisz UOPZ -->
+    <div class="col-md-6 col-lg-6 mt-3">
+        <a href="{{ url_for('dziekanat.przypisz_uopz') }}" class="usos-tile">
             <div class="usos-tile-icon">
-                <i class="bi bi-clipboard-check"></i>
+                <i class="bi bi-person-lines-fill"></i>
             </div>
             <div class="usos-tile-content">
-                <h5>Oświadczenia (Zał. 9)</h5>
-                <p>Weryfikacja danych wprowadzonych przez studentów dot. wyboru miejsca praktyki.</p>
+                <h5>Przypisz UOPZ</h5>
+                <p>Zarządzanie i przypisywanie Uczelnianych Opiekunów Praktyk Zawodowych do studentów.</p>
             </div>
-            <span id="zal9-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
         </a>
     </div>
 
+    <!-- SEKCJA DOKUMENTY -->
+    <div class="col-12 mt-5 mb-1">
+        <h5 class="text-muted text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Dokumenty (Załączniki)</h5>
+        <hr class="mt-2 mb-0 text-muted">
+    </div>
+
     <!-- Porozumienia (Zał. 1) -->
-    <div class="col-md-6 col-lg-6">
+    <div class="col-md-6 col-lg-6 mt-3">
         <a href="{{ url_for('dziekanat.porozumienia') }}" class="usos-tile">
             <div class="usos-tile-icon">
                 <i class="bi bi-file-earmark-text"></i>
@@ -123,6 +134,33 @@
         </a>
     </div>
 
+    <!-- Efekty Uczenia (Zał. 4) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal4_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Efekty Uczenia (Zał. 4)</h5>
+                <p>Wgląd do potwierdzonych przez ZOPZ i UOPZ efektów uczenia się.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Wniosek Zaliczenie (Zał. 4b) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal4b_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-briefcase"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Zaliczenie pracy (Zał. 4b)</h5>
+                <p>Zarządzanie wnioskami o zaliczenie praktyki na podstawie aktywności zawodowej.</p>
+            </div>
+            <span id="zal4b-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
+        </a>
+    </div>
+
     <!-- Sprawozdania (Zał. 7, 7a) -->
     <div class="col-md-6 col-lg-6">
         <a href="{{ url_for('dziekanat.zal7_lista') }}" class="usos-tile">
@@ -136,18 +174,6 @@
         </a>
     </div>
 
-    <!-- Efekty Uczenia (Zał. 4) -->
-    <div class="col-md-6 col-lg-6">
-        <a href="{{ url_for('dziekanat.zal4_lista') }}" class="usos-tile">
-            <div class="usos-tile-icon">
-                <i class="bi bi-list-check"></i>
-            </div>
-            <div class="usos-tile-content">
-                <h5>Efekty Uczenia (Zał. 4)</h5>
-                <p>Wgląd do potwierdzonych przez ZOPZ i UOPZ efektów uczenia się.</p>
-            </div>
-        </a>
-    </div>
     <!-- Protokoły (Zał. 8) -->
     <div class="col-md-6 col-lg-6">
         <a href="{{ url_for('dziekanat.zal8_lista') }}" class="usos-tile">
@@ -158,6 +184,20 @@
                 <h5>Protokoły (Zał. 8)</h5>
                 <p>Archiwizacja i wgląd w protokoły egzaminu po zaliczeniu praktyki.</p>
             </div>
+        </a>
+    </div>
+
+    <!-- Załącznik 9 -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal9_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Oświadczenia (Zał. 9)</h5>
+                <p>Weryfikacja danych wprowadzonych przez studentów dot. wyboru miejsca praktyki.</p>
+            </div>
+            <span id="zal9-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
         </a>
     </div>
 </div>

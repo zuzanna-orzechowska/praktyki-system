@@ -15,7 +15,12 @@ def dashboard():
     zal9_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL9').count()
     
     porozumienia_count = 0
-    praktyki = db.session.query(Praktyka).filter(Praktyka.status != 'OCZEKUJE_NA_ZAL9', Praktyka.status != 'BRAK_ZGŁOSZENIA').all()
+    praktyki = db.session.query(Praktyka).filter(
+        Praktyka.status != 'OCZEKUJE_NA_ZAL9', 
+        Praktyka.status != 'BRAK_ZGŁOSZENIA',
+        Praktyka.status != 'SCIEZKA_PRACA',
+        Praktyka.status != 'ZAL4B_ZATWIERDZONE'
+    ).all()
     for p in praktyki:
         por = p.porozumienie
         if not por:
@@ -24,11 +29,13 @@ def dashboard():
             porozumienia_count += 1
             
     zal2a_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL2A').count()
+    zal4b_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL4B').count()
             
     return jsonify({
         'zal9_count': zal9_count,
         'porozumienia_count': porozumienia_count,
-        'zal2a_count': zal2a_count
+        'zal2a_count': zal2a_count,
+        'zal4b_count': zal4b_count
     })
 
 @dziekanat_api_bp.route('/zal9', methods=['GET'])
@@ -674,4 +681,120 @@ def dziennik_get(student_id):
         'praktyka': praktyka.to_dict(),
         'dokument': dokument.to_dict(),
         'wpisy': [w.to_dict() for w in wpisy]
+    })
+
+@dziekanat_api_bp.route('/zal4b', methods=['GET'])
+@login_required
+def zal4b_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    dokumenty_do_weryfikacji = db.session.query(Dokument)\
+        .filter(Dokument.status == 'Submitted', Dokument.typ_zalacznika == 'ZAL4B').all()
+        
+    dokumenty_w_trakcie = db.session.query(Dokument)\
+        .filter(Dokument.status == 'Returned', Dokument.typ_zalacznika == 'ZAL4B').order_by(Dokument.updated_at.desc()).all()
+        
+    dokumenty_zatwierdzone = db.session.query(Dokument)\
+        .filter(Dokument.status == 'Approved', Dokument.typ_zalacznika == 'ZAL4B').order_by(Dokument.updated_at.desc()).all()
+
+    def format_dokument(doc):
+        student = doc.praktyka.student
+        return {
+            'id': doc.id,
+            'praktyka_id': doc.praktyka_id,
+            'student_imie': student.uzytkownik.imie,
+            'student_nazwisko': student.uzytkownik.nazwisko,
+            'nr_albumu': student.nr_albumu,
+            'status': doc.status,
+            'data_zlozenia': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc.updated_at else ''
+        }
+
+    return jsonify({
+        'do_weryfikacji': [format_dokument(d) for d in dokumenty_do_weryfikacji],
+        'w_trakcie': [format_dokument(d) for d in dokumenty_w_trakcie],
+        'zatwierdzone': [format_dokument(d) for d in dokumenty_zatwierdzone]
+    })
+
+@dziekanat_api_bp.route('/weryfikuj_zal4b/<int:praktyka_id>', methods=['GET', 'POST'])
+@login_required
+def weryfikuj_zal4b(praktyka_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    student = praktyka.student
+    
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B').first()
+    if not dokument:
+        return jsonify({'error': 'Brak dokumentu ZAL4B'}), 404
+
+    from models import WniosekZaliczeniePraktyki
+    wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first()
+
+    if request.method == 'POST':
+        data = request.json
+        akcja = data.get('akcja')
+        
+        if akcja == 'zatwierdz':
+            dokument.status = 'Approved'
+            praktyka.status = 'ZAL4B_ZATWIERDZONE'
+            
+            notif_s = Powiadomienie(
+                uzytkownik_id=student.uzytkownik.id,
+                tresc="Dziekanat ostatecznie ZATWIERDZIŁ Twój wniosek o zaliczenie (Zał. 4b).",
+                link=f"/student/zal4b_wniosek"
+            )
+            db.session.add(notif_s)
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Wniosek o zaliczenie na podstawie pracy zawodowej (ZAL4B) został ostatecznie zatwierdzony!'})
+            
+        elif akcja == 'odrzuc':
+            dokument.status = 'Returned'
+            komentarz = data.get('komentarz_dziekanatu')
+            dokument.komentarz = komentarz if komentarz else "Odrzucono do poprawy."
+            
+            notif_s = Powiadomienie(
+                uzytkownik_id=student.uzytkownik.id,
+                tresc="Dziekanat ZWRÓCIŁ DO POPRAWY Twój wniosek o zaliczenie (Zał. 4b). Sprawdź uwagi.",
+                link=f"/student/zal4b_wniosek"
+            )
+            db.session.add(notif_s)
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'ZAL4B zwrócony do poprawy.'})
+            
+        elif akcja == 'odrzuc_calkowicie':
+            dokument.status = 'Rejected'
+            komentarz = data.get('komentarz_dziekanatu')
+            dokument.komentarz = komentarz if komentarz else "Ścieżka odrzucona przez Dziekanat."
+            
+            praktyka.status = 'BRAK_ZGŁOSZENIA'
+            
+            notif_s = Powiadomienie(
+                uzytkownik_id=student.uzytkownik.id,
+                tresc="Dziekanat CAŁKOWICIE ODRZUCIŁ Twoją ścieżkę zaliczenia na podstawie pracy. Wybierz ścieżkę od nowa.",
+                link=f"/student/dashboard"
+            )
+            db.session.add(notif_s)
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Ścieżka pracy została całkowicie odrzucona i zresetowana.'})
+
+    import json
+    zalaczniki = []
+    if wniosek and wniosek.zalaczniki_paths:
+        try:
+            zalaczniki = json.loads(wniosek.zalaczniki_paths)
+        except Exception:
+            pass
+
+    return jsonify({
+        'dokument': dokument.to_dict(),
+        'praktyka': praktyka.to_dict(),
+        'student': student.to_dict(),
+        'uzytkownik': student.uzytkownik.to_dict(),
+        'wniosek': wniosek.to_dict() if wniosek else None,
+        'zalaczniki': zalaczniki
     })

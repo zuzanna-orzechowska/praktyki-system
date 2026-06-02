@@ -25,7 +25,7 @@ def get_notifications():
 def mark_read(id):
     p = Powiadomienie.query.filter_by(id=id, uzytkownik_id=current_user.id).first()
     if p:
-        p.przeczytane = True
+        db.session.delete(p)
         db.session.commit()
         return jsonify({'success': True})
     return jsonify({'error': 'Nie znaleziono'}), 404
@@ -33,6 +33,6 @@ def mark_read(id):
 @notifications_api_bp.route('/mark_all_read', methods=['POST'])
 @login_required
 def mark_all_read():
-    Powiadomienie.query.filter_by(uzytkownik_id=current_user.id, przeczytane=False).update({'przeczytane': True})
+    Powiadomienie.query.filter_by(uzytkownik_id=current_user.id).delete()
     db.session.commit()
     return jsonify({'success': True})

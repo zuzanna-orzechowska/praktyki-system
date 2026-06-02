@@ -335,16 +335,18 @@
                             Panel Główny
                         </a>
                     </li>
+                    <li class="mt-3 mb-1 ms-3 text-muted small fw-bold text-uppercase" style="font-size: 0.75rem;">Zarządzanie</li>
                     <li>
                         <a href="{{ url_for('dziekanat.przypisz_uopz') }}"
                             class="{% if request.endpoint == 'dziekanat.przypisz_uopz' %}active{% endif %}">
                             Przypisz UOPZ
                         </a>
                     </li>
+                    <li class="mt-3 mb-1 ms-3 text-muted small fw-bold text-uppercase" style="font-size: 0.75rem;">Dokumenty (Załączniki)</li>
                     <li>
-                        <a href="{{ url_for('dziekanat.zal9_lista') }}"
-                            class="{% if request.endpoint == 'dziekanat.zal9_lista' %}active{% endif %}">
-                            Oświadczenia (Zał. 9)
+                        <a href="{{ url_for('dziekanat.porozumienia') }}"
+                            class="{% if request.endpoint == 'dziekanat.porozumienia' or request.endpoint == 'dziekanat.weryfikuj_porozumienie' %}active{% endif %}">
+                            Porozumienia i Programy (Zał. 1, 2)
                         </a>
                     </li>
                     <li>
@@ -354,15 +356,27 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('dziekanat.porozumienia') }}"
-                            class="{% if request.endpoint == 'dziekanat.porozumienia' or request.endpoint == 'dziekanat.weryfikuj_porozumienie' %}active{% endif %}">
-                            Porozumienia i Programy (Zał. 1, 2)
-                        </a>
-                    </li>
-                    <li>
                         <a href="{{ url_for('dziekanat.zal3_lista') }}"
                             class="{% if request.endpoint == 'dziekanat.zal3_lista' or request.endpoint == 'dziekanat.weryfikuj_zal3' %}active{% endif %}">
                             Karty Praktyki (Zał. 3)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.zal4_lista') }}"
+                            class="{% if 'dziekanat/zal4_lista' in request.path %}active{% endif %}">
+                            Efekty Uczenia (Zał. 4)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.zal4b_lista') }}"
+                            class="{% if 'dziekanat/zal4b_lista' in request.path %}active{% endif %}">
+                            Zaliczenie pracy (Zał. 4b)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.ankiety_lista') }}"
+                            class="{% if 'dziekanat/ankiety' in request.path %}active{% endif %}">
+                            Przegląd Ankiet (Zał. 5)
                         </a>
                     </li>
                     <li>
@@ -384,9 +398,9 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('dziekanat.ankiety_lista') }}"
-                            class="{% if 'dziekanat/ankiety' in request.path %}active{% endif %}">
-                            Przegląd Ankiet (Zał. 5)
+                        <a href="{{ url_for('dziekanat.zal9_lista') }}"
+                            class="{% if request.endpoint == 'dziekanat.zal9_lista' %}active{% endif %}">
+                            Oświadczenia (Zał. 9)
                         </a>
                     </li>
                 </ul>

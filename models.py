@@ -222,6 +222,10 @@ class WniosekZaliczeniePraktyki(db.Model, DictSerializable):
     
     #lista ścieżek do załączonych plików
     zalaczniki_paths = db.Column(db.Text) 
+
+    # Podpis studenta
+    podpis_studenta = db.Column(db.String(255), nullable=True)
+    data_podpisu = db.Column(db.Date, nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('wniosek_zaliczenie', uselist=False, cascade="all, delete-orphan"))
 

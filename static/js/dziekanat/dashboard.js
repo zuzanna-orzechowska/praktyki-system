@@ -40,6 +40,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     zal2aBadge.style.display = 'none';
                 }
             }
+            const zal4bBadge = document.getElementById('zal4b-badge');
+            if (zal4bBadge) {
+                if (data.zal4b_count > 0) {
+                    zal4bBadge.textContent = data.zal4b_count;
+                    zal4bBadge.style.display = 'inline-block';
+                } else {
+                    zal4bBadge.style.display = 'none';
+                }
+            }
         })
         .catch(err => console.error(err));
 });
