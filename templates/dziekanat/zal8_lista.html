@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Protokoły (Załącznik nr 8)
+        </h2>
+        <p class="text-muted mb-0">Zarządzanie protokołami zaliczenia praktyki</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Nr albumu</th>
+                        <th>Kierunek</th>
+                        <th class="text-end">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in studenci %}
+                    <tr>
+                        <td class="fw-bold">{{ s.uzytkownik.imie }} {{ s.uzytkownik.nazwisko }}</td>
+                        <td>{{ s.nr_albumu }}</td>
+                        <td>{{ s.kierunek }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('dziekanat.zal8_protokol', student_id=s.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-file-earmark-text"></i> Zobacz protokół
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">Brak studentów w bazie.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

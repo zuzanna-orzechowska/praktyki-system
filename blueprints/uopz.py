@@ -191,3 +191,85 @@ def zal6_lista():
 def dziennik(student_id):
     if current_user.rola != 'uopz': return redirect(url_for('index'))
     return render_template('uopz/weryfikuj_dziennik.html')
+
+@uopz_bp.route('/zal8_lista')
+@login_required
+def zal8_lista():
+    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    return render_template('uopz/zal8_lista.html')
+
+@uopz_bp.route('/zal8_protokol/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal8_protokol(student_id):
+    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    from models import Student, Praktyka, Dokument, KartaPraktyki, Protokol, Uzytkownik
+    from datetime import datetime
+    
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka:
+        flash('Student nie ma przypisanej praktyki.', 'warning')
+        return redirect(url_for('uopz.zal8_lista'))
+
+    dokument_karta = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL3').first()
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument_karta.id).first() if dokument_karta else None
+    
+    pracownicy = Uzytkownik.query.filter(Uzytkownik.rola.in_(['pracownik', 'uopz', 'dziekanat', 'dyrektor'])).all()
+    protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
+
+    if request.method == 'POST':
+        if not protokol:
+            protokol = Protokol(praktyka_id=praktyka.id)
+            db.session.add(protokol)
+            
+        def safe_float(val):
+            try:
+                return float(val.replace(',', '.'))
+            except (ValueError, TypeError, AttributeError):
+                return None
+                
+        protokol.instytucja_1 = request.form.get('instytucja_1')
+        protokol.okres_1 = request.form.get('okres_1')
+        protokol.instytucja_2 = request.form.get('instytucja_2')
+        protokol.okres_2 = request.form.get('okres_2')
+        
+        protokol.ocena_s = safe_float(request.form.get('ocena_s'))
+        protokol.ocena_u = safe_float(request.form.get('ocena_u'))
+        protokol.ocena_z = safe_float(request.form.get('ocena_z'))
+        
+        data_egz = request.form.get('data_egzaminu')
+        if data_egz:
+            try:
+                protokol.data_egzaminu = datetime.strptime(data_egz, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        protokol.przewodniczacy = request.form.get('przewodniczacy')
+        protokol.komisja_2 = request.form.get('komisja_2')
+        protokol.komisja_3 = request.form.get('komisja_3')
+        protokol.rola_3 = request.form.get('rola_3')
+        protokol.komisja_4 = request.form.get('komisja_4')
+        protokol.rola_4 = request.form.get('rola_4')
+        
+        protokol.pytanie_1 = request.form.get('pytanie_1')
+        protokol.ocena_czastkowa_1 = safe_float(request.form.get('ocena_czastkowa_1'))
+        protokol.pytanie_2 = request.form.get('pytanie_2')
+        protokol.ocena_czastkowa_2 = safe_float(request.form.get('ocena_czastkowa_2'))
+        protokol.pytanie_3 = request.form.get('pytanie_3')
+        protokol.ocena_czastkowa_3 = safe_float(request.form.get('ocena_czastkowa_3'))
+        
+        protokol.ocena_e = safe_float(request.form.get('ocena_e_manual'))
+        protokol.ocena_koncowa = safe_float(request.form.get('ocena_k'))
+        protokol.ocena_k_slownie = request.form.get('ocena_k_slownie')
+        
+        try:
+            db.session.commit()
+            flash('Zapisano protokół pomyślnie.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Błąd podczas zapisywania: {str(e)}', 'danger')
+            
+        return redirect(url_for('uopz.zal8_protokol', student_id=student.id))
+
+    return render_template('dokumenty/zal8_protokol.html', student=student, karta=karta, pracownicy=pracownicy, protokol=protokol)

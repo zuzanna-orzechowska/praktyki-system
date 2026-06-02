@@ -320,7 +320,8 @@
                             class="{% if 'uopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
                     <li><a href="{{ url_for('uopz.zal6_lista') }}"
                             class="{% if 'uopz/zal6_lista' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>
-                    <li><a href="#">Wnioski do oceny (Zał. 4a)</a></li>
+                    <li><a href="{{ url_for('uopz.zal8_lista') }}"
+                            class="{% if 'uopz/zal8_lista' in request.path %}active{% endif %}">Protokoły (Zał. 8)</a></li>
                     <li><a href="#">Hospitacje</a></li>
                 </ul>
                 {% endif %}
@@ -376,7 +377,12 @@
                             Sprawozdania (Zał. 7, 7a)
                         </a>
                     </li>
-                    <li><a href="#">Protokoły (Zał. 8)</a></li>
+                    <li>
+                        <a href="{{ url_for('dziekanat.zal8_lista') }}"
+                            class="{% if 'dziekanat/zal8_lista' in request.path %}active{% endif %}">
+                            Protokoły (Zał. 8)
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ url_for('dziekanat.ankiety_lista') }}"
                             class="{% if 'dziekanat/ankiety' in request.path %}active{% endif %}">

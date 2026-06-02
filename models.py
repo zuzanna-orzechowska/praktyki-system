@@ -148,6 +148,28 @@ class Protokol(db.Model, DictSerializable):
     ocena_koncowa = db.Column(db.Float)
     data_egzaminu = db.Column(db.Date)
     przewodniczacy = db.Column(db.String(255))
+    
+    instytucja_1 = db.Column(db.String(255))
+    okres_1 = db.Column(db.String(100))
+    instytucja_2 = db.Column(db.String(255))
+    okres_2 = db.Column(db.String(100))
+    
+    komisja_2 = db.Column(db.String(255))
+    komisja_3 = db.Column(db.String(255))
+    rola_3 = db.Column(db.String(255))
+    komisja_4 = db.Column(db.String(255))
+    rola_4 = db.Column(db.String(255))
+    
+    pytanie_1 = db.Column(db.Text)
+    ocena_czastkowa_1 = db.Column(db.Float)
+    pytanie_2 = db.Column(db.Text)
+    ocena_czastkowa_2 = db.Column(db.Float)
+    pytanie_3 = db.Column(db.Text)
+    ocena_czastkowa_3 = db.Column(db.Float)
+    
+    ocena_e = db.Column(db.Float)
+    ocena_k_slownie = db.Column(db.String(255))
+    
     plik_pdf_path = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

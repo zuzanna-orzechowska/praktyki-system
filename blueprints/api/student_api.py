@@ -566,8 +566,13 @@ def get_dokumenty_readonly():
     decyzja = None
     protokol = Protokol.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL8') else None
 
+    student_data = student.to_dict()
+    student_data['uzytkownik_imie'] = current_user.imie
+    student_data['uzytkownik_nazwisko'] = current_user.nazwisko
+    student_data['imie_i_nazwisko'] = f"{current_user.imie} {current_user.nazwisko}"
+
     return jsonify({
-        'student': student.to_dict(),
+        'student': student_data,
         'praktyka': praktyka.to_dict(),
         'dokument': dokument.to_dict() if dokument else None,
         'karta': karta.to_dict() if karta else None,

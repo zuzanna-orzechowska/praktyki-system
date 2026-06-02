@@ -5,151 +5,233 @@
 {% endblock %}
 
 {% block content %}
-<!-- WYLICZANIE WSTECZNE OCENY E NA POTRZEBY WIDOKU (Skoro jej nie przechowujemy w bazie) -->
+<!-- WYLICZANIE WSTECZNE OCENY E NA POTRZEBY WIDOKU -->
 {% set ocena_e = none %}
 {% if protokol and protokol.ocena_koncowa and protokol.ocena_s and protokol.ocena_u and protokol.ocena_z %}
-{% set ocena_e = ((protokol.ocena_koncowa - (0.1 * protokol.ocena_s) - (0.2 * protokol.ocena_u) - (0.3 *
-protokol.ocena_z)) / 0.4) | round(1) %}
-
+{% set ocena_e = ((protokol.ocena_koncowa - (0.1 * protokol.ocena_s) - (0.2 * protokol.ocena_u) - (0.3 * protokol.ocena_z)) / 0.4) | round(1) %}
+{% endif %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        
-        <a href="{{ url_for('uopz.teczka', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary mb-2"><i
-                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
-        
-        <h2
-            style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-            Protokół Zaliczenia (Zał. 8)</h2>
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="bi bi-arrow-left"></i> Wróć do Panelu</a>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Protokół Zaliczenia (Zał. 8)
+        </h2>
     </div>
 
     {% if protokol and protokol.ocena_koncowa %}
     <span class="badge bg-success fs-6">Praktyka Zaliczona</span>
     {% else %}
     <span class="badge bg-secondary fs-6">Oczekuje na Egzamin</span>
-    
+    {% endif %}
 </div>
 
 <div class="alert alert-secondary border-0 shadow-sm mb-4">
     <i class="bi bi-info-circle-fill me-2"></i>
-    <strong>Informacja:</strong> Protokół wystawia komisja po odbytym egzaminie weryfikującym[cite: 11].
+    <strong>Informacja:</strong> Protokół wystawia komisja po odbytym egzaminie weryfikującym.
 </div>
 
 <div class="card shadow-sm border-0 mb-5">
     <div class="card-body p-5 bg-white">
+        <div class="text-end mb-3 text-muted fw-bold">
+            Załącznik nr 8
+        </div>
+        <div class="mb-4 text-muted">
+            <strong>Akademia Nauk Stosowanych w Elblągu<br>Instytut Informatyki Stosowanej</strong><br>
+            <em>im. Krzysztofa Brzeskiego</em>
+        </div>
 
-        <h4 class="text-center fw-bold mb-5">PROTOKÓŁ ZALICZENIA PRAKTYKI ZAWODOWEJ</h4>
+        <h4 class="text-center fw-bold mb-4">PROTOKÓŁ ZALICZENIA PRAKTYKI ZAWODOWEJ (PZ)</h4>
 
-        <div class="row mb-5 text-center">
-            <div class="col-md-6 border-end">
-                <p class="text-muted mb-1">Student / Nr albumu:</p>
-                <p class="fw-bold fs-5"><span data-bind="student.uzytkownik.imie"></span> <span data-bind="student.uzytkownik.nazwisko"></span> (<span data-bind="student.nr_albumu"></span>)</p>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <strong class="me-2 text-nowrap">Student:</strong>
+                    <input type="text" class="form-control bg-light" data-bind="student.imie_i_nazwisko" readonly>
+                </div>
             </div>
             <div class="col-md-6">
-                <p class="text-muted mb-1">Data egzaminu:</p>
-                <p class="fw-bold fs-5">{% if protokol and protokol.data_egzaminu %}<span data-bind="protokol.data_egzaminu"></span>{% else
-                    %}Oczekuje...</p>
+                <div class="d-flex align-items-center">
+                    <strong class="me-2 text-nowrap">Nr albumu:</strong>
+                    <input type="text" class="form-control bg-light w-50" data-bind="student.nr_albumu" readonly>
+                </div>
             </div>
         </div>
 
-        <h5 class="fw-bold border-bottom pb-2 mb-3">Zestawienie Ocen Cząstkowych</h5>
+        <h5 class="fw-bold border-bottom pb-2 mb-3">Miejsce i okres realizacji PZ:</h5>
         <table class="table table-bordered text-center align-middle mb-4">
             <thead class="table-light">
                 <tr>
-                    <th style="width: 25%">Ocena za sprawozdanie (S)</th>
-                    <th style="width: 25%">Ocena UOPZ (U)</th>
-                    <th style="width: 25%">Ocena ZOPZ (Z)</th>
-                    <th style="width: 25%">Ocena z Egzaminu (E)</th>
+                    <th style="width: 5%">Lp.</th>
+                    <th style="width: 65%">Nazwa instytucji (zakładu pracy), w której student odbył praktykę</th>
+                    <th style="width: 30%">Okres / liczba dni</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td class="fs-4 {% if not protokol or not protokol.ocena_s %}text-danger">
-                        {% if protokol and protokol.ocena_s %}<span data-bind="protokol.ocena_s"></span>{% else %} Brak 
-                    </td>
-                    <td class="fs-4 {% if not protokol or not protokol.ocena_u %}text-danger">
-                        {% if protokol and protokol.ocena_u %}<span data-bind="protokol.ocena_u"></span>{% else %} Brak 
-                    </td>
-                    <td class="fs-4 {% if not protokol or not protokol.ocena_z %}text-danger">
-                        {% if protokol and protokol.ocena_z %}<span data-bind="protokol.ocena_z"></span>{% else %} Brak 
-                    </td>
-                    <td class="fs-4 fw-bold text-primary">
-                        {% if ocena_e %}<span data-bind="ocena_e"></span>{% else %} Brak 
+                    <td class="fw-bold">1</td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.instytucja_1" readonly></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.okres_1" readonly></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">2</td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.instytucja_2" readonly></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.okres_2" readonly></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h5 class="fw-bold border-bottom pb-2 mb-3 mt-4">Zestawienie Ocen Cząstkowych</h5>
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-12">
+                <div class="p-3 border rounded bg-light d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2 text-nowrap">Ocena za sprawozdanie (S*) =</strong>
+                        <input type="text" class="form-control text-center bg-white" data-bind="protokol.ocena_s" style="width: 80px;" readonly>
+                    </div>
+                    <div class="text-end">
+                        <input type="text" class="form-control d-inline-block bg-white" placeholder="Podpis..." style="width: 250px;" readonly>
+                        <br><small class="text-muted">(data i podpis uczelnianego opiekuna praktyki)</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light h-100 d-flex align-items-center">
+                    <strong class="me-3">Ocena UOPZ (U*) =</strong>
+                    <input type="text" class="form-control text-center w-50 bg-white" data-bind="protokol.ocena_u" readonly>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="p-3 border rounded bg-light h-100 d-flex align-items-center">
+                    <strong class="me-3">Ocena ZOPZ (Z*) =</strong>
+                    <input type="text" class="form-control text-center w-50 bg-white" data-bind="protokol.ocena_z" readonly>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold border-bottom pb-2 mb-3 mt-4">Skład komisji i Pytania Egzaminacyjne</h5>
+        
+        <div class="p-3 border rounded bg-light mb-4">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <strong>Skład komisji:</strong>
+                </div>
+                <div class="col-md-4 d-flex align-items-center">
+                    <strong class="me-2 text-nowrap">Data zaliczenia:</strong>
+                    <input type="text" class="form-control bg-white" data-bind="protokol.data_egzaminu" readonly>
+                </div>
+            </div>
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">1.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.przewodniczacy" readonly>
+                </div>
+                <div class="col-auto">— Przewodniczący Komisji</div>
+            </div>
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">2.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.komisja_2" readonly>
+                </div>
+                <div class="col-auto">— Uczelniany opiekun praktyki zawodowej</div>
+            </div>
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">3.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.komisja_3" readonly>
+                </div>
+                <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto bg-white" data-bind="protokol.rola_3" readonly></div>
+            </div>
+            
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">4.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.komisja_4" readonly>
+                </div>
+                <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto bg-white" data-bind="protokol.rola_4" readonly></div>
+            </div>
+        </div>
+
+        <table class="table table-bordered text-center align-middle mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 5%">Lp.</th>
+                    <th style="width: 70%">Pytania / mini zadania zawodowe</th>
+                    <th style="width: 25%">Oceny cząstkowe<br><small class="fw-normal text-muted">(w skali od 2 do 5)</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold">1</td>
+                    <td class="bg-light"><textarea class="form-control-plaintext bg-transparent" data-bind="protokol.pytanie_1" rows="2" readonly></textarea></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent text-center" data-bind="protokol.ocena_czastkowa_1" readonly></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">2</td>
+                    <td class="bg-light"><textarea class="form-control-plaintext bg-transparent" data-bind="protokol.pytanie_2" rows="2" readonly></textarea></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent text-center" data-bind="protokol.ocena_czastkowa_2" readonly></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">3</td>
+                    <td class="bg-light"><textarea class="form-control-plaintext bg-transparent" data-bind="protokol.pytanie_3" rows="2" readonly></textarea></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent text-center" data-bind="protokol.ocena_czastkowa_3" readonly></td>
+                </tr>
+                <tr class="table-light fw-bold">
+                    <td colspan="2" class="text-end">Łączna ocena za mini zadania (średnia arytmetyczna) - E:</td>
+                    <td class="bg-light text-center text-primary fs-5">
+                        <input type="text" class="form-control-plaintext text-center fw-bold text-primary" data-bind="protokol.ocena_e_manual" readonly>
                     </td>
                 </tr>
             </tbody>
         </table>
 
-        {% if not protokol or not protokol.ocena_s or not protokol.ocena_u or not protokol.ocena_z %}
-        <div class="alert alert-warning text-center small py-2 mb-5">
-            <i class="bi bi-exclamation-triangle"></i> Brakuje niektórych ocen cząstkowych! Uzupełnij je w Karcie
-            Praktyki (Zał. 3), aby móc wyliczyć ocenę końcową.
-        </div>
-        
-
-        <!-- WYLICZENIE OCENY -->
-        <div class="p-4 bg-light border rounded text-center mb-5">
-            <p class="text-muted mb-2">Algorytm wyliczania oceny końcowej[cite: 11]:</p>
-            <p class="fw-bold mb-3" style="font-family: monospace; font-size: 1.2rem;">0,4·E + 0,1·S + 0,2·U + 0,3·Z = K
-            </p>
-            <h4 class="fw-bold mb-0 text-success">
-                Ocena Końcowa (K):
-                {% if protokol and protokol.ocena_koncowa %}
-                <span data-bind="protokol.ocena_koncowa"></span>
-                {% else %}
-                <span class="text-muted">Brak wyliczenia</span>
-                
-            </h4>
-        </div>
-
-        <!-- PANEL EDYCJI DLA UOPZ -->
-        
-        <form method="POST" class="p-4 border border-primary rounded bg-white shadow-sm mb-5">
-            <h5 class="fw-bold text-primary mb-3"><i class="bi bi-pencil-square"></i> Panel Egzaminacyjny UOPZ</h5>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Data egzaminu:</label>
-                    <input type="date" class="form-control" name="data_egzaminu"
-                        value="{{ protokol.data_egzaminu if protokol else '' }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Przewodniczący Komisji:</label>
-                    <input type="text" class="form-control" name="przewodniczacy" placeholder="Imię i nazwisko"
-                        value="{{ protokol.przewodniczacy if protokol else current_user.imie ~ ' ' ~ current_user.nazwisko }}"
-                        required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Ocena z Egzaminu (E):</label>
-                    <select name="ocena_e" class="form-select" required>
-                        <option value="">Wybierz...</option>
-                        <option value="2.0" {% if ocena_e==2.0 %}selected>2.0 - Niedostateczny</option>
-                        <option value="3.0" {% if ocena_e==3.0 %}selected>3.0 - Dostateczny</option>
-                        <option value="3.5" {% if ocena_e==3.5 %}selected>3.5 - Dostateczny Plus</option>
-                        <option value="4.0" {% if ocena_e==4.0 %}selected>4.0 - Dobry</option>
-                        <option value="4.5" {% if ocena_e==4.5 %}selected>4.5 - Dobry Plus</option>
-                        <option value="5.0" {% if ocena_e==5.0 %}selected>5.0 - Bardzo Dobry</option>
-                    </select>
-                </div>
-            </div>
-            <div class="text-end mt-4">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-calculator"></i> Zapisz i przelicz ocenę
-                    końcową</button>
-            </div>
-        </form>
-        
-
-        <div class="row mt-4">
-            <div class="col-md-6 text-center">
-                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
-                <small class="text-muted">Przewodniczący Komisji</small><br>
-                <strong class="text-primary">{% if protokol and protokol.przewodniczacy %}<span data-bind="protokol.przewodniczacy"></span></strong>
-            </div>
-            <div class="col-md-6 text-center mt-4 mt-md-0">
-                <hr style="width: 70%; margin: 0 auto; border-color: #6c757d;">
-                <small class="text-muted">Członkowie Komisji</small>
+        <div class="p-4 bg-light border rounded text-center mb-4">
+            <p class="text-muted mb-2">Algorytm wyliczania oceny końcowej:</p>
+            <p class="fw-bold mb-3" style="font-family: monospace; font-size: 1.2rem;">0,4·E + 0,1·S + 0,2·U + 0,3·Z = K</p>
+            <div class="d-flex justify-content-center align-items-center">
+                <h4 class="fw-bold mb-0 text-success me-3">Ocena Końcowa (K):</h4>
+                <input type="text" class="form-control text-center fw-bold fs-4 text-success bg-white" data-bind="protokol.ocena_koncowa" style="width: 120px;" readonly>
             </div>
         </div>
 
+        <div class="p-4 border rounded mb-4">
+            <div class="row align-items-center mb-5">
+                <div class="col-md-8 d-flex align-items-center">
+                    <strong class="me-3 fs-5">Zaliczam praktykę zawodową na ocenę (K):</strong>
+                    <input type="text" class="form-control fw-bold text-center bg-white" data-bind="protokol.ocena_k_slownie" style="width: 250px;" readonly>
+                </div>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-md-12 text-end mb-4">
+                    <small class="text-muted d-block mb-1">Przewodniczący Komisji</small>
+                    <input type="text" class="form-control d-inline-block text-center" style="width: 250px;" disabled placeholder="Miejsce na podpis">
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12"><strong class="text-muted">Członkowie Komisji:</strong></div>
+                <div class="col-md-4 mt-2">
+                    <small>2)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                </div>
+                <div class="col-md-4 mt-2">
+                    <small>3)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                </div>
+                <div class="col-md-4 mt-2">
+                    <small>4)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3 small text-muted" style="font-size: 0.8rem; text-align: justify;">
+            *) U i Z – oceny odpowiednio Opiekuna uczelnianego i Opiekuna zakładowego zapisane w Karcie praktyki zawodowej (w przypadku praktyki dzielonej, oceny: U, Z - wyznacza się jako średnią arytmetyczną odpowiednich ocen cząstkowych uzyskanych na zakończenie każdej z odbytych części praktyki)
+        </div>
     </div>
 </div>
 {% endblock %}
