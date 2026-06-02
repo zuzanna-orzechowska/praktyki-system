@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const dokument = data.dokument;
             
             // Populate common elements if they exist
-            populateIfExist('student-info', `${student.imie} ${student.nazwisko}`);
+            const safeNazwisko = (student.nazwisko || '').split('(')[0].trim();
+            populateIfExist('student-info', `${student.imie} ${safeNazwisko}`);
             populateIfExist('student-album', student.nr_albumu);
             populateIfExist('student-kierunek', student.kierunek);
             

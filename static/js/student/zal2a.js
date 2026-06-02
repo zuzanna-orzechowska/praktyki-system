@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Header
             document.getElementById('header-kierunek1').textContent = data.student.kierunek || 'Informatyka';
             document.getElementById('header-kierunek2').textContent = data.student.kierunek || 'Informatyka';
-            document.getElementById('header-student').textContent = (data.student.imie || '') + ' ' + (data.student.nazwisko || '');
+            const safeNazwisko = (data.student.nazwisko || '').split('(')[0].trim();
+            document.getElementById('header-student').textContent = (data.student.imie || '') + ' ' + safeNazwisko;
             document.getElementById('header-album').textContent = data.student.nr_albumu || '';
             
             const specInput = document.getElementById('input-specjalnosc');

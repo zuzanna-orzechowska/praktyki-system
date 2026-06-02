@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const dokument = data.dokument;
             
             // Populate text elements
-            document.getElementById('student-info').textContent = `${student.imie} ${student.nazwisko}`;
+            const safeNazwisko = (student.nazwisko || '').split('(')[0].trim();
+            document.getElementById('student-info').textContent = `${student.imie} ${safeNazwisko}`;
             document.getElementById('student-album').textContent = student.nr_albumu;
             
             // Populate form fields

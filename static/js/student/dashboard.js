@@ -16,28 +16,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const uzytkownik = data.uzytkownik;
             const praktyka = data.praktyka;
 
-            document.getElementById('student-greeting').textContent = `Witaj, ${uzytkownik.imie} ${uzytkownik.nazwisko}!`;
-
-            const statusBadge = document.getElementById('student-status-badge');
-
-            const statusMap = {
-                'BRAK_ZGŁOSZENIA': ['Brak zgłoszenia', 'secondary'],
-                'OCZEKUJE_NA_ZAL9': ['Oczekuje na załącznik 9', 'warning text-dark'],
-                'ZAL9_ZATWIERDZONE': ['Zał. 9 zatwierdzony', 'success'],
-                'SCIEZKA_PRACA': ['Zaliczenie z pracy', 'info text-dark'],
-                'PROGRAM_UZGODNIONY': ['Program uzgodniony', 'primary'],
-                'SKIEROWANIE_WYDANE': ['Skierowanie wydane', 'success'],
-                'PRAKTYKA_W_TOKU': ['Praktyka w toku', 'warning text-dark'],
-                'DOKUMENTY_ZLOZONE': ['Dokumenty złożone', 'info text-dark'],
-                'EGZAMIN': ['Egzamin', 'info text-dark'],
-                'ZALICZONA': ['Praktyka zaliczona', 'success']
-            };
+            const safeNazwisko = (uzytkownik.nazwisko || '').split('(')[0].trim();
+            document.getElementById('student-greeting').textContent = `Witaj, ${uzytkownik.imie} ${safeNazwisko}!`;
 
             const status = praktyka ? praktyka.status : null;
-            const [statusText, statusColor] = status && statusMap[status] ? statusMap[status] : ['Brak zgłoszenia', 'secondary'];
-
-            statusBadge.textContent = statusText;
-            statusBadge.className = `badge bg-${statusColor}`;
 
             const alertsContainer = document.getElementById('alerts-container');
             alertsContainer.innerHTML = '';

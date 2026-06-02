@@ -126,6 +126,10 @@ def auth_callback(provider):
         name_parts = user_info.get('name', 'Nieznane Nieznane').split(' ', 1)
         imie = name_parts[0]
         nazwisko = name_parts[1] if len(name_parts) > 1 else ''
+        
+    import re
+    imie = re.sub(r'\s*\(\d+\)\s*', '', imie).strip()
+    nazwisko = re.sub(r'\s*\(\d+\)\s*', '', nazwisko).strip()
 
     user = Uzytkownik.query.filter_by(email=email).first()
     
@@ -134,19 +138,10 @@ def auth_callback(provider):
         domain = email.split('@')[1] if '@' in email else ''
         nr_albumu = email.split('@')[0] if domain == 'student.ans-elblag.pl' else None
         
-        if email == 'Kaprulcia@outlook.com': #DO TESTOW KONTO ADMINA POZNIEJ TO ZMIENIC
-            rola = 'admin'
-            aktywny = 1
-        elif email == 'orzechosiaa.searchw@gmail.com': #EMAIL DO WYKASOWANIA W PRZYSZLOSCI TYLK ODO CELOW TESTOWYCH
-            rola = 'dziekanat'
-            aktywny = 1
-        elif email == 'zuzannaorzechowska4@gmail.com':
-            rola = 'uopz'
-            aktywny = 1
-        elif domain == 'student.ans-elblag.pl': #TUTAJ MA BYĆ IF
+        if domain == 'student.ans-elblag.pl':
             rola = 'student'
             aktywny = 1
-        elif domain == 'ans-elblag.pl': #TUTAJ PÓŹNIEJ ZAIMPLEMENTOWAĆ  ŻE TA ROLA JEST NAJPIERW OOCZEUKJACA I ADMIN MUSI ZATWIERDZIC
+        elif domain == 'ans-elblag.pl':
             rola = 'oczekujacy_pracownik' 
             aktywny = 0 
         else:
