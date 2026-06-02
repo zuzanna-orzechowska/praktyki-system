@@ -1,7 +1,6 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('form');
-    
-    // Fetch data and populate form
+
     fetch('/api/student/zal9_oswiadczenie?t=' + new Date().getTime(), { cache: 'no-store' })
         .then(response => {
             if (response.status === 401 || response.status === 403) {
@@ -15,17 +14,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(data.error);
                 return;
             }
-            
+
             const student = data.student;
             const praktyka = data.praktyka;
             const oswiadczenie = data.oswiadczenie;
             const dokument = data.dokument;
-            
+
             // Populate text elements
             const safeNazwisko = (student.nazwisko || '').split('(')[0].trim();
             document.getElementById('student-info').textContent = `${student.imie} ${safeNazwisko}`;
             document.getElementById('student-album').textContent = student.nr_albumu;
-            
+
             // Populate form fields
             if (oswiadczenie) {
                 setValue('miejscowosc', oswiadczenie.miejscowosc);
@@ -39,10 +38,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 setValue('osoba_upowazniona_imie', oswiadczenie.osoba_upowazniona_imie);
                 setValue('osoba_upowazniona_nazwisko', oswiadczenie.osoba_upowazniona_nazwisko);
                 setValue('osoba_upowazniona_stanowisko', oswiadczenie.osoba_upowazniona_stanowisko);
-                
+
                 setValue('rok_studiow', oswiadczenie.rok_studiow || student.rok_studiow);
                 setValue('kierunek', oswiadczenie.kierunek || student.kierunek);
-                
+
                 if (oswiadczenie.skan_path) {
                     const skanContainer = document.getElementById('skan-container');
                     skanContainer.innerHTML = `
@@ -57,40 +56,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 setValue('rok_studiow', student.rok_studiow);
                 setValue('kierunek', student.kierunek);
             }
-            
+
             if (praktyka) {
                 setValue('data_start', praktyka.data_start);
                 setValue('data_end', praktyka.data_end);
             }
-            
+
             // Handle statuses and readonly fields
             if (dokument && dokument.status !== 'Draft' && dokument.status !== 'Rejected') {
                 const fieldset = document.getElementById('form-fieldset');
                 if (fieldset) fieldset.setAttribute('disabled', 'disabled');
-                
+
                 const actionBtns = document.getElementById('action-buttons');
                 if (actionBtns) {
                     actionBtns.classList.remove('d-flex');
                     actionBtns.classList.add('d-none');
                 }
-                
+
                 const skanInput = document.getElementById('skan_dokumentu');
                 if (skanInput) skanInput.style.display = 'none';
                 const labels = form.querySelectorAll('label[for="skan_dokumentu"]');
                 labels.forEach(l => l.style.display = 'none');
-                
+
                 const deleteBtns = document.querySelectorAll('#skan-container button');
                 deleteBtns.forEach(b => b.style.display = 'none');
-                
+
                 // Add explicit status message
                 let statusText = 'Oczekuje na weryfikację przez Dziekanat';
                 let alertType = 'alert-info';
-                
+
                 if (dokument.status === 'Approved') {
                     statusText = 'Zaakceptowane przez Dziekanat';
                     alertType = 'alert-success';
                 }
-                
+
                 const existingAlert = document.getElementById('status-alert-banner');
                 if (!existingAlert) {
                     const statusBanner = document.createElement('div');
@@ -113,47 +112,47 @@ function setValue(name, value) {
 
 function submitForm(akcjaValue) {
     const form = document.querySelector('form');
-    
+
     if (akcjaValue === 'zapisz' || akcjaValue === 'wyslij') {
         if (!form.reportValidity()) {
             return;
         }
-        
+
         const skanContainer = document.getElementById('skan-container');
         const fileInput = document.getElementById('skan_dokumentu');
         const isUploaded = skanContainer.innerHTML.includes('Wgrano plik');
         const isSelected = fileInput && fileInput.files && fileInput.files.length > 0;
-        
+
         if (!isUploaded && !isSelected) {
             alert('Wgranie skanu dokumentu jest wymagane. Proszę wybrać plik przed zapisaniem.');
             return;
         }
     }
-    
+
     const buttons = document.querySelectorAll('#action-buttons button');
     buttons.forEach(btn => btn.disabled = true);
-    
+
     const formData = new FormData(form);
     formData.append('akcja', akcjaValue);
-    
+
     fetch('/api/student/zal9_oswiadczenie', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        const alertContainer = document.getElementById('alerts-container');
-        if (data.success) {
-            alertContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            setTimeout(() => { window.location.reload(); }, 1500);
-        } else {
-            alertContainer.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-        }
-        window.scrollTo(0, 0);
-    })
-    .catch(err => console.error(err));
+        .then(response => response.json())
+        .then(data => {
+            const alertContainer = document.getElementById('alerts-container');
+            if (data.success) {
+                alertContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                setTimeout(() => { window.location.reload(); }, 1500);
+            } else {
+                alertContainer.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+            window.scrollTo(0, 0);
+        })
+        .catch(err => console.error(err));
 }
 
-document.querySelector('form').addEventListener('submit', function(e) {
+document.querySelector('form').addEventListener('submit', function (e) {
     e.preventDefault();
 });

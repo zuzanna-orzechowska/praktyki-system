@@ -482,8 +482,13 @@ def zal4b_wniosek():
     wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first() if dokument else None
     
     if request.method == 'POST':
-        data = request.json
-        if not data:
+        # Obsługa wysyłania przez FormData z JS
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            data = request.form
+        else:
+            data = request.json or {}
+
+        if not data and not request.files:
             return jsonify({'error': 'Brak danych'}), 400
             
         if not dokument:
@@ -495,20 +500,72 @@ def zal4b_wniosek():
             wniosek = WniosekZaliczeniePraktyki(dokument_id=dokument.id)
             db.session.add(wniosek)
             
+        akcja = data.get('akcja')
+        
+        import json
+        
+        if akcja == 'dodaj_zalacznik':
+            zalaczniki = []
+            if wniosek.zalaczniki_paths:
+                try:
+                    zalaczniki = json.loads(wniosek.zalaczniki_paths)
+                except Exception:
+                    # Migracja ze starego formatu (pojedynczy string z nazwą pliku)
+                    if len(wniosek.zalaczniki_paths) > 5:
+                        zalaczniki = [{"path": wniosek.zalaczniki_paths, "opis": "Załącznik (stary format)"}]
+            
+            if 'nowy_plik' in request.files:
+                file = request.files['nowy_plik']
+                if file and file.filename != '':
+                    filename = secure_filename(f"ZAL4B_{student.nr_albumu}_{int(datetime.now().timestamp())}_{file.filename}")
+                    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    
+                    opis = data.get('opis', '')
+                    zalaczniki.append({"path": f"uploads/{filename}", "opis": opis})
+                    
+                    wniosek.zalaczniki_paths = json.dumps(zalaczniki)
+                    db.session.commit()
+                    return jsonify({'success': True, 'message': 'Załącznik dodany'})
+            return jsonify({'success': False, 'message': 'Brak pliku do wgrania.'})
+            
+        if akcja == 'usun_zalacznik':
+            idx = int(data.get('index', -1))
+            if wniosek.zalaczniki_paths:
+                try:
+                    zalaczniki = json.loads(wniosek.zalaczniki_paths)
+                    if 0 <= idx < len(zalaczniki):
+                        usun_plik = zalaczniki.pop(idx)
+                        try:
+                            nazwa_pliku = usun_plik['path'].replace('uploads/', '')
+                            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], nazwa_pliku))
+                        except Exception:
+                            pass
+                        wniosek.zalaczniki_paths = json.dumps(zalaczniki)
+                        db.session.commit()
+                        return jsonify({'success': True, 'message': 'Załącznik usunięty'})
+                except Exception:
+                    pass
+            return jsonify({'success': False, 'message': 'Błąd usuwania załącznika'})
+
         if 'specjalnosc' in data:
             student.specjalnosc = data.get('specjalnosc')
 
         try:
-            wniosek.okres_zatrudnienia_od = datetime.strptime(data.get('data_od'), '%Y-%m-%d').date()
-            wniosek.okres_zatrudnienia_do = datetime.strptime(data.get('data_do'), '%Y-%m-%d').date()
+            if data.get('data_od'):
+                wniosek.okres_zatrudnienia_od = datetime.strptime(data.get('data_od'), '%Y-%m-%d').date()
+            if data.get('data_do'):
+                wniosek.okres_zatrudnienia_do = datetime.strptime(data.get('data_do'), '%Y-%m-%d').date()
         except (ValueError, TypeError):
             pass
             
-        wniosek.stanowisko = data.get('stanowisko')
-        wniosek.zakres_obowiazkow = data.get('zakres_obowiazkow')
-        wniosek.uzasadnienie = data.get('uzasadnienie')
+        if data.get('stanowisko'):
+            wniosek.stanowisko = data.get('stanowisko')
+        if data.get('zakres_obowiazkow'):
+            wniosek.zakres_obowiazkow = data.get('zakres_obowiazkow')
+        if data.get('uzasadnienie'):
+            wniosek.uzasadnienie = data.get('uzasadnienie')
         
-        akcja = data.get('akcja')
         if akcja == 'wyslij':
             dokument.status = 'Submitted'
             praktyka.status = 'SCIEZKA_PRACA'
@@ -518,8 +575,12 @@ def zal4b_wniosek():
             db.session.commit()
             return jsonify({'success': True, 'message': 'Szkic wniosku został zapisany.'})
             
+    student_dict = student.to_dict()
+    student_dict['imie'] = student.uzytkownik.imie
+    student_dict['nazwisko'] = student.uzytkownik.nazwisko
+
     return jsonify({
-        'student': student.to_dict(),
+        'student': student_dict,
         'dokument': dokument.to_dict() if dokument else None,
         'wniosek': wniosek.to_dict() if wniosek else None,
         'praktyka': praktyka.to_dict()
