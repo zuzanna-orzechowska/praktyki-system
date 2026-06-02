@@ -15,7 +15,7 @@ def dashboard():
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').all()
-    pracownicy = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'uopz', 'admin'])).all()
+    pracownicy = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'uopz', 'admin', 'dyrektor', 'pracownik'])).all()
     opiekunowie = Uzytkownik.query.filter_by(rola='zopz').all()
     
     zgloszenia_zopz = Oswiadczenie.query.join(Dokument).filter(Dokument.status == 'AwaitingAccount').all()

@@ -29,6 +29,7 @@ class Uzytkownik(db.Model, UserMixin, DictSerializable):
     
     auth_provider = db.Column(db.String(50), default="microsoft")
     external_id = db.Column(db.String(255), unique=True)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
     def is_active(self):

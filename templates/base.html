@@ -396,9 +396,7 @@
                 <ul class="sidebar-menu">
                     <li><a href="{{ url_for('admin.dashboard') }}">Zarządzaj kontami
                     {% set pending = pending_accounts_count() %}
-                    {% if pending > 0 %}
-                    <span class="badge bg-danger ms-2">{{ pending }}</span>
-                    {% endif %}
+                    <span class="badge bg-danger ms-2" id="nav-admin-badge" {% if pending == 0 %}style="display: none;"{% endif %}>{{ pending }}</span>
                     </a></li>
                 </ul>
                 {% endif %}

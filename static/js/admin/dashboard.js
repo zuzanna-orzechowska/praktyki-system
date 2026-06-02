@@ -50,12 +50,19 @@ function loadDashboard() {
             const zgloszenia = data.zgloszenia_zopz || [];
             
             const badge = document.getElementById('oczekujacy-badge');
+            const navBadge = document.getElementById('nav-admin-badge');
             const totalOczekujacy = oczekujacy.length + zgloszenia.length;
+            
             if (totalOczekujacy > 0) {
                 badge.textContent = totalOczekujacy;
                 badge.style.display = 'inline-block';
+                if (navBadge) {
+                    navBadge.textContent = totalOczekujacy;
+                    navBadge.style.display = 'inline-block';
+                }
             } else {
                 badge.style.display = 'none';
+                if (navBadge) navBadge.style.display = 'none';
             }
             
             const tableOczekujacy = document.getElementById('oczekujacy-table');
@@ -68,8 +75,11 @@ function loadDashboard() {
                             <td>${u.email}</td>
                             <td>
                                 <select id="rola-${u.id}" class="form-select form-select-sm d-inline-block w-auto me-2">
+                                    <option value="" selected disabled>Wybierz rolę...</option>
                                     <option value="dziekanat">Dziekanat</option>
                                     <option value="uopz">UOPZ</option>
+                                    <option value="dyrektor">Dyrektor</option>
+                                    <option value="pracownik">Pracownik</option>
                                 </select>
                                 <button type="button" class="btn btn-sm btn-success" onclick="akceptujPracownika(${u.id})">Akceptuj</button>
                             </td>
@@ -144,6 +154,11 @@ function loadDashboard() {
 
 function akceptujPracownika(id) {
     const rola = document.getElementById(`rola-${id}`).value;
+    if (!rola) {
+        alert('Proszę najpierw wybrać rolę z listy.');
+        return;
+    }
+    
     fetch(`/api/admin/akceptuj_pracownika/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
