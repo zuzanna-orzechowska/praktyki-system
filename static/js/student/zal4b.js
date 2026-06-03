@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     fetch('/api/student/zal4b_wniosek')
         .then(response => {
             if (response.status === 401 || response.status === 403) {
@@ -12,27 +12,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(data.error);
                 return;
             }
-            
+
             const student = data.student;
             const wniosek = data.wniosek;
             const dokument = data.dokument;
-            
-            // Populate text elements
+
             const safeNazwisko = (student.nazwisko || '').split('(')[0].trim();
             document.getElementById('student-info').textContent = `${student.imie} ${safeNazwisko}`;
             document.getElementById('student-album').textContent = student.nr_albumu;
-            
+
             if (document.getElementById('student-kierunek1')) document.getElementById('student-kierunek1').textContent = student.kierunek || 'Informatyka';
             if (document.getElementById('student-kierunek2')) document.getElementById('student-kierunek2').textContent = student.kierunek || 'Informatyka';
-            
+
             if (document.getElementById('data-wypelnienia')) {
                 const dzisiaj = new Date().toLocaleDateString('pl-PL');
                 document.getElementById('data-wypelnienia').textContent = dzisiaj;
             }
-            
+
             const checkbox = document.getElementById('zloz_podpis');
             if (checkbox) {
-                checkbox.addEventListener('change', function() {
+                checkbox.addEventListener('change', function () {
                     if (this.checked) {
                         const dzisiajFormat = new Date().toLocaleDateString('pl-PL');
                         document.getElementById('podpis-student').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiajFormat}</span>${student.imie} ${safeNazwisko}`;
@@ -41,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
-            
-            const updateCounters = function() {
+
+            const updateCounters = function () {
                 const uza = document.getElementById('uzasadnienie');
                 const uzaCounter = document.getElementById('uzasadnienie_counter');
                 if (uza && uzaCounter) {
@@ -50,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     uzaCounter.textContent = `Znaków: ${len} / min. 400`;
                     uzaCounter.className = len >= 400 ? 'text-success small fw-bold' : 'text-danger small fw-bold';
                 }
-                
+
                 const zak = document.getElementById('zakres_obowiazkow');
                 const zakCounter = document.getElementById('zakres_obowiazkow_counter');
                 if (zak && zakCounter) {
@@ -59,31 +58,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     zakCounter.className = len >= 200 ? 'text-success small fw-bold' : 'text-danger small fw-bold';
                 }
             };
-            
+
             const uzaInput = document.getElementById('uzasadnienie');
             if (uzaInput) uzaInput.addEventListener('input', updateCounters);
-            
+
             const zakInput = document.getElementById('zakres_obowiazkow');
             if (zakInput) zakInput.addEventListener('input', updateCounters);
-            
-            // Populate form fields
+
             if (wniosek) {
                 setValue('data_od', wniosek.okres_zatrudnienia_od);
                 setValue('data_do', wniosek.okres_zatrudnienia_do);
                 setValue('stanowisko', wniosek.stanowisko);
                 setValue('zakres_obowiazkow', wniosek.zakres_obowiazkow);
                 setValue('uzasadnienie', wniosek.uzasadnienie);
-                
+
                 if (wniosek.zalaczniki_paths) {
                     let zalaczniki = [];
                     try {
                         zalaczniki = JSON.parse(wniosek.zalaczniki_paths);
                     } catch (e) {
                         if (wniosek.zalaczniki_paths.length > 5) {
-                            zalaczniki = [{path: wniosek.zalaczniki_paths, opis: 'Załącznik'}];
+                            zalaczniki = [{ path: wniosek.zalaczniki_paths, opis: 'Załącznik' }];
                         }
                     }
-                    
+
                     const skanContainer = document.getElementById('skan-container');
                     if (zalaczniki.length > 0) {
                         skanContainer.innerHTML = '';
@@ -95,25 +93,24 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <i class="bi bi-file-earmark-check text-success"></i> 
                                         <strong>${zal.opis || 'Brak opisu'}</strong> <small class="text-muted">(${filename})</small>
                                     </div>
-                                    ${dokument && dokument.status !== 'Draft' ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" onclick="usunZalacznik(${idx})"><i class="bi bi-trash"></i></button>`}
+                                    ${dokument && dokument.status !== 'Draft' && dokument.status !== 'Returned' ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" onclick="usunZalacznik(${idx})"><i class="bi bi-trash"></i></button>`}
                                 </div>
                             `;
                         });
                     }
                 }
             }
-            
+
             setValue('specjalnosc', student.specjalnosc);
             updateCounters();
-            
-            // Handle statuses and readonly fields
-            if (dokument && dokument.status !== 'Draft' && dokument.status !== 'Rejected') {
+
+            if (dokument && dokument.status !== 'Draft' && dokument.status !== 'Rejected' && dokument.status !== 'Returned') {
                 const inputs = document.querySelectorAll('input, textarea');
                 inputs.forEach(input => input.setAttribute('readonly', 'readonly'));
-                
+
                 const uploadContainer = document.getElementById('upload-new-container');
-                if(uploadContainer) uploadContainer.style.display = 'none';
-                
+                if (uploadContainer) uploadContainer.style.display = 'none';
+
                 if (checkbox) {
                     checkbox.checked = true;
                     checkbox.disabled = true;
@@ -124,11 +121,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     const safePodpis = wniosek.podpis_studenta.split('(')[0].trim();
                     document.getElementById('podpis-student').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiajFormat}</span>${safePodpis}`;
                 }
-                
+
                 const actionBtns = document.getElementById('action-buttons');
-                if(actionBtns) {
+                if (actionBtns) {
                     const buttons = actionBtns.querySelectorAll('button');
                     buttons.forEach(btn => btn.disabled = true);
+                }
+            }
+
+            if (dokument && (dokument.status === 'Returned' || dokument.status === 'Rejected')) {
+                const actionBtns = document.getElementById('action-buttons');
+                if (actionBtns) {
+                    const alertDiv = document.createElement('div');
+                    const alertClass = dokument.status === 'Returned' ? 'alert-warning' : 'alert-danger';
+                    const headingText = dokument.status === 'Returned' ? 'Wniosek zwrócony do poprawy' : 'Ścieżka odrzucona przez Dziekanat';
+                    
+                    alertDiv.className = `alert ${alertClass} mb-4 shadow-sm`;
+                    alertDiv.innerHTML = `<h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> ${headingText}</h5><hr><p class="mb-0"><strong>Uwagi dziekanatu:</strong> ${dokument.komentarz || 'Brak uwag'}</p>`;
+                    actionBtns.parentNode.insertBefore(alertDiv, actionBtns);
                 }
             }
         })
@@ -144,7 +154,7 @@ function setValue(name, value) {
 
 function submitForm(akcjaValue) {
     const form = document.getElementById('zal4b-form');
-    
+
     if (akcjaValue === 'zapisz' || akcjaValue === 'wyslij') {
         const uza = document.getElementById('uzasadnienie').value;
         const zak = document.getElementById('zakres_obowiazkow').value;
@@ -157,7 +167,7 @@ function submitForm(akcjaValue) {
             return;
         }
     }
-    
+
     if (akcjaValue === 'wyslij') {
         if (!form.reportValidity()) {
             return;
@@ -167,42 +177,42 @@ function submitForm(akcjaValue) {
             alert('Musisz złożyć podpis cyfrowy pod dokumentem przed jego formalnym wysłaniem.');
             return;
         }
-        
+
         const skanContainer = document.getElementById('skan-container');
         const hasUploads = skanContainer.querySelectorAll('.alert').length > 0;
-        
+
         if (!hasUploads) {
             alert('Musisz dodać wymagane załączniki z odpowiednimi opisami by móc wysłać wniosek.');
             return;
         }
     }
-    
+
     const buttons = document.querySelectorAll('#action-buttons button');
     buttons.forEach(btn => btn.disabled = true);
-    
+
     const formData = new FormData(form);
     formData.append('akcja', akcjaValue);
-    
+
     fetch('/api/student/zal4b_wniosek', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        const alertContainer = document.getElementById('alerts-container');
-        if (data.success) {
-            alertContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            setTimeout(() => { window.location.reload(); }, 1500);
-        } else {
-            alertContainer.innerHTML = `<div class="alert alert-danger">${data.message || data.error}</div>`;
+        .then(response => response.json())
+        .then(data => {
+            const alertContainer = document.getElementById('alerts-container');
+            if (data.success) {
+                alertContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                setTimeout(() => { window.location.reload(); }, 1500);
+            } else {
+                alertContainer.innerHTML = `<div class="alert alert-danger">${data.message || data.error}</div>`;
+                buttons.forEach(btn => btn.disabled = false);
+            }
+            window.scrollTo(0, 0);
+        })
+        .catch(err => {
+            console.error(err);
             buttons.forEach(btn => btn.disabled = false);
-        }
-        window.scrollTo(0, 0);
-    })
-    .catch(err => {
-        console.error(err);
-        buttons.forEach(btn => btn.disabled = false);
-    });
+        });
 }
 
 function dodajZalacznik() {
@@ -212,21 +222,21 @@ function dodajZalacznik() {
         alert('Najpierw wybierz plik.');
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('akcja', 'dodaj_zalacznik');
     formData.append('nowy_plik', plikInput.files[0]);
     formData.append('opis', opisInput.value.trim());
-    
+
     fetch('/api/student/zal4b_wniosek', { method: 'POST', body: formData })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert(data.error || data.message);
-        }
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || data.message);
+            }
+        });
 }
 
 function usunZalacznik(idx) {
@@ -235,12 +245,12 @@ function usunZalacznik(idx) {
     formData.append('akcja', 'usun_zalacznik');
     formData.append('index', idx);
     fetch('/api/student/zal4b_wniosek', { method: 'POST', body: formData })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) window.location.reload();
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) window.location.reload();
+        });
 }
 
-document.getElementById('zal4b-form').addEventListener('submit', function(e) {
+document.getElementById('zal4b-form').addEventListener('submit', function (e) {
     e.preventDefault();
 });

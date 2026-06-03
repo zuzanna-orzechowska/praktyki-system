@@ -52,9 +52,40 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `;
             } else {
-                let dziennikTile = '';
-                if (status !== 'SCIEZKA_PRACA') {
-                    dziennikTile = `
+                let tilesHtml = ``;
+
+                if (status === 'SCIEZKA_PRACA' || status === 'ZAL4B_ZATWIERDZONE') {
+                    tilesHtml += `
+                    <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal4b_wniosek" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-briefcase"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Wniosek o zaliczenie (Zał. 4b)</h5>
+                                <p>Twój wniosek o zaliczenie praktyki na podstawie pracy.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal7a_sprawozdanie" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-journal-check"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Sprawozdanie z pracy (Zał. 7a)</h5>
+                                <p>Twoje sprawozdanie podsumowujące wykonaną pracę.</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+                        <a href="/student/zal4a_decyzja" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-file-earmark-check"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Decyzja (Zał. 4a)</h5>
+                                <p>Decyzja w sprawie zaliczenia praktyki zawodowej.</p>
+                            </div>
+                        </a>
+                    </div>
+                    `;
+                } else {
+                    tilesHtml += `
                     <div class="col-md-6 col-lg-6">
                         <a href="/student/dziennik" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-journal-text"></i></div>
@@ -64,20 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </a>
                     </div>
-                    `;
-                }
-
-                tilesContainer.innerHTML = `
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/dashboard" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-person-badge"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Panel praktyk</h5>
-                                <p>Sprawdź swoje dane oraz szczegóły procesu zaliczania praktyk.</p>
-                            </div>
-                        </a>
-                    </div>
-                    ${dziennikTile}
                     <div class="col-md-12 col-lg-12 mb-3">
                         <a href="/student/porozumienie" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-file-earmark-text"></i></div>
@@ -115,6 +132,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     </div>
                     <div class="col-md-6 col-lg-6">
+                        <a href="/student/sprawozdanie" class="usos-tile">
+                            <div class="usos-tile-icon"><i class="bi bi-file-text"></i></div>
+                            <div class="usos-tile-content">
+                                <h5>Sprawozdanie (Zał. 7)</h5>
+                                <p>Sprawozdanie z przebiegu praktyki zawodowej.</p>
+                            </div>
+                        </a>
+                    </div>
+                    `;
+                }
+
+                tilesHtml += `
+                    <div class="col-md-6 col-lg-6">
                         <a href="/student/zal5_ankieta" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-ui-radios"></i></div>
                             <div class="usos-tile-content">
@@ -123,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-6 col-lg-6">
+                    <div class="col-md-12 col-lg-12 mb-3">
                         <a href="/dokumenty" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-folder2-open"></i></div>
                             <div class="usos-tile-content">
@@ -133,6 +163,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     </div>
                 `;
+
+                tilesContainer.innerHTML = tilesHtml;
             }
         })
         .catch(err => console.error(err));

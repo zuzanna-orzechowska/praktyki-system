@@ -265,7 +265,7 @@
                             class="{% if 'zal4b_wniosek' in request.path %}active{% endif %}">Wniosek o zaliczenie (Zał.
                             4b)</a></li>
 
-                    {% elif praktyka.status == 'SCIEZKA_PRACA' %}
+                    {% elif praktyka.status in ['SCIEZKA_PRACA', 'ZAL4B_ZATWIERDZONE'] %}
                     <!-- ŚCIEŻKA 2: Zaliczenie na podst. pracy -->
                     <div class="sidebar-section-title mt-3 text-primary">Ścieżka: Praca Zawodowa</div>
                     <li><a href="/student/zal4b_wniosek"
