@@ -24,13 +24,20 @@ def dashboard():
 
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
+    zal7a_status = None
+    if praktyka:
+        zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+        if zal7a:
+            zal7a_status = zal7a.status
+    
     powiadomienia = []
     
     return jsonify({
         'student': student.to_dict(),
         'praktyka': praktyka.to_dict() if praktyka else None,
         'uzytkownik': current_user.to_dict(),
-        'powiadomienia': powiadomienia
+        'powiadomienia': powiadomienia,
+        'zal7a_status': zal7a_status
     })
 
 @student_api_bp.route('/dziennik', methods=['GET', 'POST'])

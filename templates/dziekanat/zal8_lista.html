@@ -29,9 +29,15 @@
                         <td>{{ s.nr_albumu }}</td>
                         <td>{{ s.kierunek }}</td>
                         <td class="text-end">
-                            <a href="{{ url_for('dziekanat.zal8_protokol', student_id=s.id) }}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-file-earmark-text"></i> Zobacz protokół
+                            {% if s.praktyki and s.praktyki[0].status in ['ZAL4B_ZATWIERDZONE', 'SCIEZKA_PRACA', 'ZALICZONA'] and s.praktyki[0].dokumenty|selectattr('typ_zalacznika', 'equalto', 'ZAL4B')|list|length > 0 %}
+                            <a href="{{ url_for('dziekanat.zal8a_protokol', student_id=s.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-file-earmark-text"></i> Zobacz protokół (Zał. 8a)
                             </a>
+                            {% else %}
+                            <a href="{{ url_for('dziekanat.zal8_protokol', student_id=s.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-file-earmark-text"></i> Zobacz protokół (Zał. 8)
+                            </a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% else %}

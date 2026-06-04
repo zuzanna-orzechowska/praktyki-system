@@ -574,3 +574,89 @@ def zal8_protokol(student_id):
         return redirect(url_for('dziekanat.zal8_protokol', student_id=student.id))
         
     return render_template('dokumenty/zal8_protokol.html', student=student, karta=karta, pracownicy=pracownicy, protokol=protokol)
+
+@dziekanat_bp.route('/zal8a_protokol/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def zal8a_protokol(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    from models import Student, Praktyka, Protokol, Uzytkownik, Powiadomienie
+    from datetime import datetime
+    
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    if not praktyka:
+        flash('Student nie ma przypisanej praktyki.', 'warning')
+        return redirect(url_for('dziekanat.zal8_lista'))
+
+    pracownicy = Uzytkownik.query.filter(Uzytkownik.rola.in_(['pracownik', 'uopz', 'dziekanat', 'dyrektor'])).all()
+    protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
+
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        if not protokol:
+            protokol = Protokol(praktyka_id=praktyka.id)
+            db.session.add(protokol)
+            
+        def safe_float(val):
+            if val is None: return None
+            try:
+                return float(val.replace(',', '.'))
+            except (ValueError, TypeError, AttributeError):
+                return None
+                
+        protokol.instytucja_1 = request.form.get('instytucja_1')
+        protokol.okres_1 = request.form.get('okres_1')
+        protokol.instytucja_2 = request.form.get('instytucja_2')
+        protokol.okres_2 = request.form.get('okres_2')
+        
+        protokol.ocena_s = safe_float(request.form.get('ocena_s'))
+        protokol.podpis_opiekuna_s = request.form.get('podpis_opiekuna_s')
+        
+        data_egz = request.form.get('data_egzaminu')
+        if data_egz:
+            try:
+                protokol.data_egzaminu = datetime.strptime(data_egz, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        protokol.przewodniczacy = request.form.get('przewodniczacy')
+        protokol.komisja_2 = request.form.get('komisja_2')
+        protokol.komisja_3 = request.form.get('komisja_3')
+        protokol.rola_3 = request.form.get('rola_3')
+        protokol.komisja_4 = request.form.get('komisja_4')
+        protokol.rola_4 = request.form.get('rola_4')
+        
+        protokol.pytanie_1 = request.form.get('pytanie_1')
+        protokol.ocena_czastkowa_1 = safe_float(request.form.get('ocena_czastkowa_1'))
+        protokol.pytanie_2 = request.form.get('pytanie_2')
+        protokol.ocena_czastkowa_2 = safe_float(request.form.get('ocena_czastkowa_2'))
+        protokol.pytanie_3 = request.form.get('pytanie_3')
+        protokol.ocena_czastkowa_3 = safe_float(request.form.get('ocena_czastkowa_3'))
+        
+        protokol.ocena_e = safe_float(request.form.get('ocena_e_manual'))
+        protokol.ocena_koncowa = safe_float(request.form.get('ocena_k'))
+        protokol.ocena_k_slownie = request.form.get('ocena_k_slownie')
+        protokol.podpis_przewodniczacego = request.form.get('podpis_przewodniczacego')
+        
+        try:
+            if akcja == 'zakoncz':
+                praktyka.status = 'ZALICZONA'
+                notif = Powiadomienie(
+                    uzytkownik_id=student.uzytkownik_id,
+                    tresc="Gratulacje! Twoja praktyka została ostatecznie ZALICZONA na podstawie protokołu komisji egzaminacyjnej.",
+                    link=url_for('student.dashboard')
+                )
+                db.session.add(notif)
+                flash('Praktyka została pomyślnie zaliczona i zakończona!', 'success')
+            else:
+                flash('Zapisano protokół (szkic) pomyślnie.', 'success')
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Błąd podczas zapisywania: {str(e)}', 'danger')
+            
+        return redirect(url_for('dziekanat.zal8a_protokol', student_id=student.id))
+        
+    return render_template('dokumenty/zal8a_protokol.html', student=student, pracownicy=pracownicy, protokol=protokol)

@@ -23,6 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const alertsContainer = document.getElementById('alerts-container');
             alertsContainer.innerHTML = '';
+            
+            if (status === 'ZALICZONA') {
+                alertsContainer.innerHTML = `
+                <div class="alert alert-success border-0 shadow-sm mb-4 d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-3 fs-3 text-success"></i>
+                    <div>
+                        <h5 class="mb-1 fw-bold text-success">Gratulacje! Praktyka Zaliczona!</h5>
+                        <p class="mb-0">Komisja Egzaminacyjna pozytywnie oceniła Twoją praktykę (Protokół nr 8/8a).</p>
+                    </div>
+                </div>
+                `;
+            }
 
             const tilesContainer = document.getElementById('dashboard-tiles');
             tilesContainer.innerHTML = '';
@@ -54,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 let tilesHtml = ``;
 
-                if (status === 'SCIEZKA_PRACA' || status === 'ZAL4B_ZATWIERDZONE') {
+                if (status === 'SCIEZKA_PRACA' || status === 'ZAL4B_ZATWIERDZONE' || (status === 'ZALICZONA' && data.dokumenty && data.dokumenty['ZAL4B'])) {
                     tilesHtml += `
                     <div class="col-md-6 col-lg-6">
                         <a href="/student/zal4b_wniosek" class="usos-tile">
@@ -84,6 +96,33 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     </div>
                     `;
+                    
+                    const zal7a_status = data.zal7a_status;
+                    if (zal7a_status === 'Approved') {
+                        tilesHtml += `
+                        <div class="col-md-6 col-lg-6">
+                            <a href="/student/zal8a_protokol" class="usos-tile">
+                                <div class="usos-tile-icon"><i class="bi bi-award"></i></div>
+                                <div class="usos-tile-content">
+                                    <h5>Protokół (Zał. 8a)</h5>
+                                    <p>Wygeneruj ostateczny protokół zaliczenia praktyk.</p>
+                                </div>
+                            </a>
+                        </div>
+                        `;
+                    } else {
+                        tilesHtml += `
+                        <div class="col-md-6 col-lg-6">
+                            <div class="usos-tile" style="opacity: 0.6; cursor: not-allowed;" title="Najpierw uzyskaj zatwierdzenie Sprawozdania (Zał. 7a) od Dyrektora">
+                                <div class="usos-tile-icon"><i class="bi bi-lock-fill"></i></div>
+                                <div class="usos-tile-content">
+                                    <h5>Protokół (Zał. 8a)</h5>
+                                    <p>Wymaga zatwierdzenia Sprawozdania (Zał. 7a).</p>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                    }
                 } else {
                     tilesHtml += `
                     <div class="col-md-6 col-lg-6">

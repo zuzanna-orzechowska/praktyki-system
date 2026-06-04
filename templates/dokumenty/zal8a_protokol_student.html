@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/student/readonly_docs.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<!-- WYLICZANIE WSTECZNE OCENY E NA POTRZEBY WIDOKU -->
+{% set ocena_e = none %}
+{% if protokol and protokol.ocena_koncowa and protokol.ocena_s and protokol.ocena_u and protokol.ocena_z %}
+{% set ocena_e = ((protokol.ocena_koncowa - (0.1 * protokol.ocena_s) - (0.2 * protokol.ocena_u) - (0.3 * protokol.ocena_z)) / 0.4) | round(1) %}
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="bi bi-arrow-left"></i> Wróć do Panelu</a>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Protokół Zaliczenia (Zał. 8a)
+        </h2>
+    </div>
+
+    {% if protokol and protokol.ocena_koncowa %}
+    <span class="badge bg-success fs-6">Praktyka Zaliczona</span>
+    {% else %}
+    <span class="badge bg-secondary fs-6">Oczekuje na Egzamin</span>
+    {% endif %}
+</div>
+
+<div class="alert alert-secondary border-0 shadow-sm mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Informacja:</strong> Protokół wystawia komisja po odbytym egzaminie weryfikującym.
+</div>
+
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-body p-5 bg-white">
+        <div class="text-end mb-3 text-muted fw-bold">
+            Załącznik nr 8
+        </div>
+        <div class="mb-4 text-muted">
+            <strong>Akademia Nauk Stosowanych w Elblągu<br>Instytut Informatyki Stosowanej</strong><br>
+            <em>im. Krzysztofa Brzeskiego</em>
+        </div>
+
+        <h4 class="text-center fw-bold mb-4">PROTOKÓŁ ZALICZENIA PRAKTYKI ZAWODOWEJ (PZ)</h4>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <strong class="me-2 text-nowrap">Student:</strong>
+                    <input type="text" class="form-control bg-light" data-bind="student.imie_i_nazwisko" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <strong class="me-2 text-nowrap">Nr albumu:</strong>
+                    <input type="text" class="form-control bg-light w-50" data-bind="student.nr_albumu" readonly>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold border-bottom pb-2 mb-3">Miejsce i okres realizacji PZ:</h5>
+        <table class="table table-bordered text-center align-middle mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 5%">Lp.</th>
+                    <th style="width: 65%">Nazwa instytucji (zakładu pracy), w której student odbył praktykę</th>
+                    <th style="width: 30%">Okres / liczba dni</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold">1</td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.instytucja_1" readonly></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.okres_1" readonly></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">2</td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.instytucja_2" readonly></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent" data-bind="protokol.okres_2" readonly></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h5 class="fw-bold border-bottom pb-2 mb-3 mt-4">Zestawienie Ocen Cząstkowych</h5>
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-12">
+                <div class="p-3 border rounded bg-light d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2 text-nowrap">Ocena za sprawozdanie (S*) =</strong>
+                        <input type="text" class="form-control text-center bg-white" data-bind="protokol.ocena_s" style="width: 80px;" readonly>
+                    </div>
+                    <div class="text-end">
+                        <input type="text" class="form-control d-inline-block bg-white" data-bind="protokol.podpis_opiekuna_s" placeholder="Podpis..." style="width: 250px;" readonly>
+                        <br><small class="text-muted">(data i podpis uczelnianego opiekuna praktyki)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="fw-bold border-bottom pb-2 mb-3 mt-4">Skład komisji i Pytania Egzaminacyjne</h5>
+        
+        <div class="p-3 border rounded bg-light mb-4">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <strong>Skład komisji:</strong>
+                </div>
+                <div class="col-md-4 d-flex align-items-center">
+                    <strong class="me-2 text-nowrap">Data zaliczenia:</strong>
+                    <input type="text" class="form-control bg-white" data-bind="protokol.data_egzaminu" readonly>
+                </div>
+            </div>
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">1.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.przewodniczacy" readonly>
+                </div>
+                <div class="col-auto">— Przewodniczący Komisji</div>
+            </div>
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">2.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.komisja_2" readonly>
+                </div>
+                <div class="col-auto">— Uczelniany opiekun praktyki zawodowej</div>
+            </div>
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">3.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.komisja_3" readonly>
+                </div>
+                <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto bg-white" data-bind="protokol.rola_3" readonly></div>
+            </div>
+            
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">4.</div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control bg-white" data-bind="protokol.komisja_4" readonly>
+                </div>
+                <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto bg-white" data-bind="protokol.rola_4" readonly></div>
+            </div>
+        </div>
+
+        <table class="table table-bordered text-center align-middle mb-4">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 5%">Lp.</th>
+                    <th style="width: 70%">Pytania / mini zadania zawodowe</th>
+                    <th style="width: 25%">Oceny cząstkowe<br><small class="fw-normal text-muted">(w skali od 2 do 5)</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold">1</td>
+                    <td class="bg-light"><textarea class="form-control-plaintext bg-transparent" data-bind="protokol.pytanie_1" rows="2" readonly></textarea></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent text-center" data-bind="protokol.ocena_czastkowa_1" readonly></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">2</td>
+                    <td class="bg-light"><textarea class="form-control-plaintext bg-transparent" data-bind="protokol.pytanie_2" rows="2" readonly></textarea></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent text-center" data-bind="protokol.ocena_czastkowa_2" readonly></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">3</td>
+                    <td class="bg-light"><textarea class="form-control-plaintext bg-transparent" data-bind="protokol.pytanie_3" rows="2" readonly></textarea></td>
+                    <td class="bg-light"><input type="text" class="form-control-plaintext bg-transparent text-center" data-bind="protokol.ocena_czastkowa_3" readonly></td>
+                </tr>
+                <tr class="table-light fw-bold">
+                    <td colspan="2" class="text-end">Łączna ocena za mini zadania (średnia arytmetyczna) - E:</td>
+                    <td class="bg-light text-center text-primary fs-5">
+                        <input type="text" class="form-control-plaintext text-center fw-bold text-primary" data-bind="protokol.ocena_e_manual" readonly>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="p-4 bg-light border rounded text-center mb-4">
+            <p class="text-muted mb-2">Ocena Końcowa:</p>
+            <p class="fw-bold mb-3" style="font-size: 1.1rem;">Ocena wyznaczana przez Komisję Egzaminacyjną (na podstawie ocen E i S).</p>
+            <div class="d-flex justify-content-center align-items-center">
+                <h4 class="fw-bold mb-0 text-success me-3">Ocena Końcowa (K):</h4>
+                <input type="text" class="form-control text-center fw-bold fs-4 text-success bg-white" data-bind="protokol.ocena_koncowa" style="width: 120px;" readonly>
+            </div>
+        </div>
+
+        <div class="p-4 border rounded mb-4">
+            <div class="row align-items-center mb-5">
+                <div class="col-md-8 d-flex align-items-center">
+                    <strong class="me-3 fs-5">Zaliczam praktykę zawodową na ocenę (K):</strong>
+                    <input type="text" class="form-control fw-bold text-center bg-white" data-bind="protokol.ocena_k_slownie" style="width: 250px;" readonly>
+                </div>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-md-12 text-end mb-4">
+                    <small class="text-muted d-block mb-1">Przewodniczący Komisji</small>
+                    <input type="text" class="form-control d-inline-block text-center" data-bind="protokol.podpis_przewodniczacego" style="width: 250px;" disabled placeholder="Miejsce na podpis">
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12"><strong class="text-muted">Członkowie Komisji:</strong></div>
+                <div class="col-md-4 mt-2">
+                    <small>2)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                </div>
+                <div class="col-md-4 mt-2">
+                    <small>3)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                </div>
+                <div class="col-md-4 mt-2">
+                    <small>4)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3 small text-muted" style="font-size: 0.8rem; text-align: justify;">
+            *) Formularz uproszczony dla Ścieżki Zawodowej (brak oceny U i Z wynikających z odbywania typowej praktyki).
+        </div>
+    </div>
+</div>
+{% endblock %}

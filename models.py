@@ -171,6 +171,8 @@ class Protokol(db.Model, DictSerializable):
     
     ocena_e = db.Column(db.Float)
     ocena_k_slownie = db.Column(db.String(255))
+    podpis_opiekuna_s = db.Column(db.String(255))
+    podpis_przewodniczacego = db.Column(db.String(255))
     
     plik_pdf_path = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

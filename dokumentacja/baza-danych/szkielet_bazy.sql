@@ -185,6 +185,8 @@ CREATE TABLE protokol (
     ocena_czastkowa_3 REAL,
     ocena_e         REAL,
     ocena_k_slownie TEXT,
+    podpis_opiekuna_s TEXT,
+    podpis_przewodniczacego TEXT,
     plik_pdf_path   TEXT,
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

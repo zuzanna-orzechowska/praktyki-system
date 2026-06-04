@@ -395,7 +395,40 @@ def zal7a_sprawozdanie():
 @login_required
 def zal8_protokol():
     if current_user.rola != 'student': return redirect(url_for('index'))
+    
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    if not praktyka:
+        flash('Brak przypisanej praktyki.', 'warning')
+        return redirect(url_for('student.dashboard'))
+        
+    zal7 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first()
+    zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    
+    if (not zal7 or zal7.status != 'Approved') and (not zal7a or zal7a.status != 'Approved'):
+        flash('Sprawozdanie musi zostać najpierw zatwierdzone przez Dyrektora Instytutu.', 'danger')
+        return redirect(url_for('student.dashboard'))
+        
     return render_template('dokumenty/zal8_protokol_student.html')
+
+@student_bp.route('/zal8a_protokol')
+@login_required
+def zal8a_protokol():
+    if current_user.rola != 'student': return redirect(url_for('index'))
+    
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    if not praktyka:
+        flash('Brak przypisanej praktyki.', 'warning')
+        return redirect(url_for('student.dashboard'))
+        
+    zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    
+    if not zal7a or zal7a.status != 'Approved':
+        flash('Sprawozdanie (Zał. 7a) musi zostać najpierw zatwierdzone przez Dyrektora Instytutu.', 'danger')
+        return redirect(url_for('student.dashboard'))
+        
+    return render_template('dokumenty/zal8a_protokol_student.html', student=student, protokol=praktyka.protokol, praktyka=praktyka)
 
 
 @student_bp.route('/zal9_oswiadczenie', methods=['GET'])

@@ -27,7 +27,13 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('btn-zal4').href = `/uopz/zal4_efekty/${studentId}`;
             document.getElementById('btn-zal7').href = `/uopz/zal7_sprawozdanie/${studentId}`;
             document.getElementById('btn-zal7a').href = `/uopz/zal7a_sprawozdanie/${studentId}`;
-            document.getElementById('btn-zal8').href = `/uopz/zal8_protokol/${studentId}`;
+            
+            if (data.dokumenty && data.dokumenty['ZAL4B']) {
+                document.getElementById('btn-zal8').href = `/uopz/zal8a_protokol/${studentId}`;
+                document.getElementById('btn-zal8').textContent = 'Wypełnij Protokół (Zał. 8a)';
+            } else {
+                document.getElementById('btn-zal8').href = `/uopz/zal8_protokol/${studentId}`;
+            }
             
             const btnZal6 = document.getElementById('btn-zal6');
             if (btnZal6) {
