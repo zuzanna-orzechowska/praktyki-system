@@ -222,12 +222,25 @@ class WniosekZaliczeniePraktyki(db.Model, DictSerializable):
     
     #lista ścieżek do załączonych plików
     zalaczniki_paths = db.Column(db.Text) 
+    uzupelnienia_paths = db.Column(db.Text) # JSON dla załączników uzupełniających
 
     # Podpis studenta
     podpis_studenta = db.Column(db.String(255), nullable=True)
     data_podpisu = db.Column(db.Date, nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('wniosek_zaliczenie', uselist=False, cascade="all, delete-orphan"))
+
+class DecyzjaZal4a(db.Model, DictSerializable):
+    __tablename__ = 'decyzja_zal4a'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    rodzaj_zaliczenia = db.Column(db.String(100)) # 'pracy zawodowej', 'stażu', 'działalności gospodarczej'
+    wymiar_godzin = db.Column(db.Integer)
+    ogolny_wynik = db.Column(db.String(50)) # 'uzyskał/a', 'nie uzyskał/a', 'uzyskał/a częściowo'
+    podpis_dyrektora = db.Column(db.String(255), nullable=True)
+    data_podpisania = db.Column(db.Date, nullable=True)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('decyzja_zal4a', uselist=False, cascade="all, delete-orphan"))
 
 class Oswiadczenie(db.Model, DictSerializable):
     __tablename__ = 'oswiadczenie'

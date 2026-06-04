@@ -49,6 +49,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     zal4bBadge.style.display = 'none';
                 }
             }
+            
+            const zal4aBadge = document.getElementById('zal4a-badge');
+            if (zal4aBadge) {
+                if (data.zal4a_count > 0) {
+                    zal4aBadge.textContent = data.zal4a_count;
+                    zal4aBadge.style.display = 'inline-block';
+                } else {
+                    zal4aBadge.style.display = 'none';
+                }
+            }
         })
         .catch(err => console.error(err));
 });

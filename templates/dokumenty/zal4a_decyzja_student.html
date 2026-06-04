@@ -13,59 +13,108 @@
 
 <div class="alert alert-info border-0 shadow-sm mb-4">
     <i class="bi bi-info-circle-fill me-2"></i>
-    <strong>Informacja:</strong> Tutaj pojawią się decyzje Uczelnianego Opiekuna Praktyk oraz Dyrektora Instytutu, jeśli
-    złożyłeś wniosek o zaliczenie praktyki na poczet pracy zawodowej (Zał. 4b).
+    <strong>Informacja:</strong> Tutaj pojawią się decyzje odnośnie zaliczenia praktyki na poczet pracy zawodowej.
 </div>
 
-<div class="card shadow-sm border-0 mb-5">
-    <div class="card-body p-5 bg-white">
-
-        <h4 class="text-center fw-bold mb-5">DECYZJA O UZNANIU EFEKTÓW UCZENIA SIĘ<br>Z TYTUŁU PRACY ZAWODOWEJ</h4>
-
-        <div class="bg-light p-3 mb-4 rounded border">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-1"><strong>Student/ka:</strong> <span data-bind="current_user.imie"></span> <span data-bind="current_user.nazwisko"></span></p>
-                    <p class="mb-0"><strong>Kierunek studiów:</strong> <span data-bind="student.kierunek"></span></p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-1"><strong>Nr albumu:</strong> <span data-bind="student.nr_albumu"></span></p>
-                    <p class="mb-0"><strong>Rok studiów:</strong> <span data-bind="student.rok_studiow"></span></p>
-                </div>
-            </div>
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body p-5" style="border: 1px solid #dee2e6; max-width: 900px; margin: 0 auto; background-color: #fff; line-height: 1.6;">
+        
+        <div class="text-end mb-4 fw-bold">
+            Załącznik nr 4a
         </div>
 
-        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2">Opinia Uczelnianego Opiekuna Praktyk Zawodowych (UOPZ)</h5>
-        <div
-            class="p-4 border rounded mb-4 {% if dokument and dokument.status == 'Zaakceptowany_UOPZ' %}bg-success text-white{% elif dokument and dokument.status == 'Odrzucony_UOPZ' %}bg-danger text-white{% else %}bg-light text-muted">
-            {% if dokument and dokument.status in ['Zaakceptowany_UOPZ', 'Zatwierdzony'] %}
-            <p><i class="bi bi-check-circle-fill"></i> Po zapoznaniu się z wnioskiem studenta i załączoną dokumentacją:
-                <strong>Opiniuję pozytywnie</strong>
-            </p>
-            {% elif dokument and dokument.status in ['Odrzucony_UOPZ', 'Odrzucony'] %}
-            <p><i class="bi bi-x-circle-fill"></i> Po zapoznaniu się z wnioskiem studenta i załączoną dokumentacją:
-                <strong>Opiniuję negatywnie</strong>
-            </p>
-            {% else %}
-            <p class="mb-0 text-center"><i class="bi bi-hourglass-split"></i> Oczekuje na opinię UOPZ</p>
-            
+        <h5 class="text-center fw-bold mb-5" style="line-height: 1.4;">
+            POTWIERDZENIE UZYSKANIA<br>
+            EFEKTÓW UCZENIA SIĘ W RAMACH PRAKTYKI ZAWODOWEJ NA PODSTAWIE<br>
+            ZATRUDNIENIA/STAŻU/DZIAŁALNOŚCI GOSPODARCZEJ*
+        </h5>
+
+        <div class="mb-5">
+            <p class="mb-2">Kierunek studiów: <strong><span data-bind="student.kierunek"></span></strong></p>
+            <p class="mb-2">Student / ka: <strong><span id="student-info"></span></strong></p>
+            <p class="mb-2">Nr albumu: <strong><span id="student-album"></span></strong></p>
+            <p class="mb-2">Specjalność: <strong><span data-bind="student.specjalnosc"></span></strong></p>
         </div>
 
-        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2">Decyzja Dyrektora Instytutu</h5>
-        <div
-            class="p-4 border rounded {% if dokument and dokument.status == 'Zatwierdzony' %}border-success{% elif dokument and dokument.status == 'Odrzucony' %}border-danger{% else %}bg-light text-muted">
-            {% if dokument and dokument.status == 'Zatwierdzony' %}
-            <p class="text-success"><i class="bi bi-check-circle-fill"></i> Na podstawie § 9 ust 1 regulaminu:
-                <strong>Wyrażam zgodę</strong> na uznanie pracy zarobkowej (prowadzenia działalności) na poczet praktyki
-                zawodowej.
-            </p>
-            {% elif dokument and dokument.status == 'Odrzucony' %}
-            <p class="text-danger"><i class="bi bi-x-circle-fill"></i> Na podstawie § 9 ust 1 regulaminu: <strong>Nie
-                    wyrażam zgody</strong> na uznanie pracy zarobkowej (prowadzenia działalności) na poczet praktyki
-                zawodowej.</p>
-            {% else %}
-            <p class="mb-0 text-center"><i class="bi bi-hourglass-split"></i> Oczekuje na decyzję Dyrektora</p>
-            
+        <p style="text-align: justify;" class="mb-4">
+            W ramach <strong><span data-bind="decyzja.rodzaj_zaliczenia">.........</span></strong> w wymiarze <strong><span data-bind="decyzja.wymiar_godzin">.........</span></strong> godzin <strong><span data-bind="decyzja.ogolny_wynik">.........</span></strong> zakładane dla praktyki zawodowej efekty uczenia się:
+        </p>
+
+        <table class="table table-bordered align-middle">
+            <thead class="text-center bg-light">
+                <tr>
+                    <th style="width: 70%">Efekty uczenia się</th>
+                    <th style="width: 30%">Potwierdzenie uzyskania efektów</th>
+                </tr>
+            </thead>
+            <tbody>
+                    {% if lista_statyczna %}
+                        {% for efekt in lista_statyczna %}
+                        {% set kod = "%02d"|format(loop.index) %}
+                        <tr data-efekt-kod="{{ kod }}">
+                            <td class="px-3">
+                                <div class="d-flex">
+                                    <span class="me-3 fw-bold">{{ kod }}</span>
+                                    <span>{{ efekt }}</span>
+                                </div>
+                            </td>
+                            <td class="text-start px-4" style="font-size: 0.9rem;">
+                                <div class="ocena-1 text-muted">(&nbsp;&nbsp;) uzyskał/a</div>
+                                <div class="ocena-2 text-muted">(&nbsp;&nbsp;) uzyskał/a częściowo</div>
+                                <div class="ocena-3 text-muted">(&nbsp;&nbsp;) nie uzyskał/a</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    fetch(window.location.pathname.replace('/student/', '/api/student/'))
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.efekty) {
+                                data.efekty.forEach(e => {
+                                    const tr = document.querySelector(`tr[data-efekt-kod="${e.kod_efektu}"]`);
+                                    if (tr && e.uzyskany) {
+                                        const div = tr.querySelector(`.ocena-${e.uzyskany}`);
+                                        if (div) {
+                                            div.innerHTML = div.innerHTML.replace('(&nbsp;&nbsp;)', '(<strong>X</strong>)');
+                                            div.classList.remove('text-muted');
+                                            div.classList.add('fw-bold');
+                                        }
+                                    }
+                                });
+                            }
+                            if (data.dokument && data.dokument.komentarz) {
+                                document.getElementById('ocena-merytoryczna').textContent = data.dokument.komentarz;
+                            }
+                            if (data.decyzja && data.decyzja.podpis_dyrektora) {
+                                let dateStr = '';
+                                if (data.decyzja.data_podpisania) {
+                                    const d = new Date(data.decyzja.data_podpisania);
+                                    const dd = String(d.getDate()).padStart(2, '0');
+                                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                    const yyyy = d.getFullYear();
+                                    dateStr = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dd}.${mm}.${yyyy}</span>`;
+                                }
+                                const cleanPodpis = data.decyzja.podpis_dyrektora.split('(')[0].trim();
+                                document.getElementById('podpis-dyrektora-container').innerHTML = 
+                                    `${dateStr}<span style="font-family: cursive; color: #004a99;">${cleanPodpis}</span>`;
+                            }
+                        });
+                });
+            </script>
+
+        <div class="mt-5 mb-5">
+            <p class="mb-3">Potwierdzenie merytorycznej oceny dokumentacji złożonej przez studenta ze wskazaniem jakie elementy efektów uczenia się zaliczonych częściowo powinny zostać uzupełnione:</p>
+            <div id="ocena-merytoryczna" class="p-3 bg-white" style="border: 1px dotted #000; min-height: 80px; width: 100%; margin-bottom: 20px;"></div>
+        </div>
+
+        <div class="text-end mt-5 pt-4">
+            <div id="podpis-dyrektora-container" style="border-bottom: 1px dotted #000; height: 30px; width: 350px; display: inline-block; margin-bottom: 5px; text-align: center;"></div><br>
+            <small class="text-muted">data, podpis Przewodniczącego Komisji do spraw praktyk</small>
         </div>
 
     </div>

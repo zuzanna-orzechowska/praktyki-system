@@ -30,12 +30,23 @@ def dashboard():
             
     zal2a_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL2A').count()
     zal4b_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL4B').count()
+    
+    # zal4a_count to te co mają ZAL4B_ZATWIERDZONE, ale nie mają zatwierdzonego ZAL4A
+    praktyki_4b = db.session.query(Praktyka).filter(Praktyka.status == 'ZAL4B_ZATWIERDZONE').all()
+    praktyki_4a = db.session.query(Praktyka).join(Dokument).filter(Dokument.typ_zalacznika == 'ZAL4A').all()
+    wszystkie_4a = set(praktyki_4b + praktyki_4a)
+    zal4a_count = 0
+    for p in wszystkie_4a:
+        doc = Dokument.query.filter_by(praktyka_id=p.id, typ_zalacznika='ZAL4A').first()
+        if not doc or doc.status != 'Zatwierdzony':
+            zal4a_count += 1
             
     return jsonify({
         'zal9_count': zal9_count,
         'porozumienia_count': porozumienia_count,
         'zal2a_count': zal2a_count,
-        'zal4b_count': zal4b_count
+        'zal4b_count': zal4b_count,
+        'zal4a_count': zal4a_count
     })
 
 @dziekanat_api_bp.route('/zal9', methods=['GET'])
@@ -784,11 +795,18 @@ def weryfikuj_zal4b(praktyka_id):
 
     import json
     zalaczniki = []
-    if wniosek and wniosek.zalaczniki_paths:
-        try:
-            zalaczniki = json.loads(wniosek.zalaczniki_paths)
-        except Exception:
-            pass
+    uzupelnienia = []
+    if wniosek:
+        if wniosek.zalaczniki_paths:
+            try:
+                zalaczniki = json.loads(wniosek.zalaczniki_paths)
+            except Exception:
+                pass
+        if wniosek.uzupelnienia_paths:
+            try:
+                uzupelnienia = json.loads(wniosek.uzupelnienia_paths)
+            except Exception:
+                pass
 
     return jsonify({
         'dokument': dokument.to_dict(),
@@ -796,5 +814,6 @@ def weryfikuj_zal4b(praktyka_id):
         'student': student.to_dict(),
         'uzytkownik': student.uzytkownik.to_dict(),
         'wniosek': wniosek.to_dict() if wniosek else None,
-        'zalaczniki': zalaczniki
+        'zalaczniki': zalaczniki,
+        'uzupelnienia': uzupelnienia
     })

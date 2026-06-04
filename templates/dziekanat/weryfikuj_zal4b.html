@@ -3,7 +3,7 @@
 {% block extra_head %}
 <script src="{{ url_for('static', filename='js/dziekanat/weryfikuj_zal4b.js') }}"></script>
 <script>
-    const PRAKTYKA_ID = {{ praktyka_id }};
+    const PRAKTYKA_ID = "{{ praktyka_id }}";
 </script>
 {% endblock %}
 
@@ -104,6 +104,12 @@
                         <label class="form-label fw-bold">Załączniki dokumentujące zatrudnienie:</label>
                         <div id="zalaczniki-list" class="list-group mt-2">
                             <div class="text-muted small">Brak załączników.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-4" id="uzupelnienia-section" style="display: none;">
+                        <h6 class="form-label fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill"></i> Dokumenty uzupełniające:</h6>
+                        <div id="uzupelnienia-list" class="list-group mt-2">
                         </div>
                     </div>
 

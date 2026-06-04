@@ -140,10 +140,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </a>
                     </div>
-                    `;
-                }
-
-                tilesHtml += `
                     <div class="col-md-6 col-lg-6">
                         <a href="/student/zal5_ankieta" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-ui-radios"></i></div>
@@ -153,6 +149,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </a>
                     </div>
+                    `;
+                }
+
+                tilesHtml += `
                     <div class="col-md-12 col-lg-12 mb-3">
                         <a href="/dokumenty" class="usos-tile">
                             <div class="usos-tile-icon"><i class="bi bi-folder2-open"></i></div>

@@ -146,6 +146,40 @@
         </div>
     </div>
 
+    <div id="uzupelnienia-section" class="card shadow-sm border-0 mb-4 d-none" style="border-left: 4px solid #f0ad4e !important;">
+        <div class="card-header bg-warning text-dark py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Wymagane Uzupełnienia</h5>
+        </div>
+        <div class="card-body p-4 bg-white">
+            <p class="mb-3">Dyrektor Instytutu zaznaczył braki w dokumentacji lub konieczność dodatkowych wyjaśnień. Prosimy o załączenie dodatkowych dokumentów uzupełniających poniżej:</p>
+            
+            <div id="uzupelnienia-container" class="mt-2 mb-3">
+                <div class="text-muted small">Brak uzupełnień.</div>
+            </div>
+            
+            <div id="upload-uzup-container" class="p-3 bg-light border rounded shadow-sm">
+                <h6 class="small fw-bold mb-2">Dodaj dokument uzupełniający</h6>
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <input class="form-control form-control-sm" type="file" id="nowy_uzupelnienie_plik" accept=".pdf,.jpg,.png,.zip,.docx">
+                    </div>
+                    <div class="col-md-5">
+                        <input class="form-control form-control-sm" type="text" id="nowy_uzupelnienie_opis" placeholder="Krótki opis uzupełnienia">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-sm btn-warning w-100 fw-bold" onclick="dodajUzupelnienie()"><i class="bi bi-upload"></i> Wgraj</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mt-4">
+                <button type="button" class="btn btn-success" id="btn-wyslij-uzupelnienia" onclick="if(confirm('Czy na pewno chcesz wysłać uzupełnienia do Dziekanatu?')) submitForm('wyslij_uzupelnienia');">
+                    <i class="bi bi-envelope-check"></i> Wyślij Uzupełnienia do Akceptacji
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between mb-5" id="action-buttons">
         <button type="button" class="btn btn-outline-primary" onclick="submitForm('zapisz')">
             <i class="bi bi-save"></i> Zapisz jako szkic

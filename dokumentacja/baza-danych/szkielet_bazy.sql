@@ -263,6 +263,20 @@ CREATE TABLE wniosek_zaliczenie_praktyki (
     okres_zatrudnienia_do   DATE NOT NULL,
     stanowisko              TEXT NOT NULL,
     zalaczniki_paths        TEXT,
+    uzupelnienia_paths      TEXT,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 13a. DECYZJA (Zał. 4a)
+-- ------------------------------------------------------------
+CREATE TABLE decyzja_zal4a (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id             INTEGER NOT NULL UNIQUE,
+    rodzaj_zaliczenia       TEXT,
+    wymiar_godzin           INTEGER,
+    ogolny_wynik            TEXT,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );

@@ -157,6 +157,147 @@ def weryfikuj_zal4b(praktyka_id):
         return redirect(url_for('index'))
     return render_template('dziekanat/weryfikuj_zal4b.html', praktyka_id=praktyka_id)
 
+@dziekanat_bp.route('/zal4a_lista')
+@login_required
+def zal4a_lista():
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    
+    # Lista praktyk, które mają zatwierdzone ZAL4B, więc można do nich stworzyć ZAL4A
+    praktyki = Praktyka.query.filter(Praktyka.status == 'ZAL4B_ZATWIERDZONE').all()
+    # Dodatkowo te, które już mają ZAL4A w bazie
+    praktyki_z_4a = Praktyka.query.join(Dokument).filter(Dokument.typ_zalacznika == 'ZAL4A').all()
+    
+    wszystkie = set(praktyki + praktyki_z_4a)
+    
+    do_oceny = []
+    zatwierdzone = []
+    
+    for p in wszystkie:
+        doc = Dokument.query.filter_by(praktyka_id=p.id, typ_zalacznika='ZAL4A').first()
+        item = {
+            'student_id': p.student.id,
+            'imie': p.student.uzytkownik.imie,
+            'nazwisko': p.student.uzytkownik.nazwisko,
+            'nr_albumu': p.student.nr_albumu,
+            'status': doc.status if doc and doc.status != 'Draft' else ('Szkic decyzji' if doc and doc.status == 'Draft' else 'Oczekuje na decyzję'),
+            'data': doc.updated_at.strftime('%Y-%m-%d %H:%M') if doc else '-'
+        }
+        if doc and doc.status == 'Zatwierdzony':
+            zatwierdzone.append(item)
+        else:
+            do_oceny.append(item)
+            
+    return render_template('dziekanat/zal4a_lista.html', do_oceny=do_oceny, zatwierdzone=zatwierdzone)
+
+@dziekanat_bp.route('/weryfikuj_zal4a/<int:student_id>', methods=['GET', 'POST'])
+@login_required
+def weryfikuj_zal4a(student_id):
+    if current_user.rola not in ['dziekanat', 'dyrektor']:
+        return redirect(url_for('index'))
+    
+    student = Student.query.get_or_404(student_id)
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first() if praktyka else None
+    
+    if not dokument:
+        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A', utworzony_przez=current_user.id)
+        db.session.add(dokument)
+        db.session.commit()
+    
+    from models import EfektUczenia, DecyzjaZal4a
+    from datetime import date
+    
+    decyzja = DecyzjaZal4a.query.filter_by(dokument_id=dokument.id).first()
+    if not decyzja:
+        decyzja = DecyzjaZal4a(dokument_id=dokument.id)
+        db.session.add(decyzja)
+        db.session.commit()
+    
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        komentarz = request.form.get('komentarz')
+        dokument.komentarz = komentarz
+        
+        decyzja.rodzaj_zaliczenia = request.form.get('rodzaj_zaliczenia')
+        wymiar_godzin = request.form.get('wymiar_godzin')
+        if wymiar_godzin:
+            decyzja.wymiar_godzin = int(wymiar_godzin)
+        decyzja.ogolny_wynik = request.form.get('ogolny_wynik')
+            
+        podpis = request.form.get('podpis_dyrektora')
+        if podpis == '1' and current_user.rola == 'dyrektor':
+            decyzja.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
+            decyzja.data_podpisania = date.today()
+        
+        from blueprints.student import lista_wymaganych_efektow
+        for i, efekt in enumerate(lista_wymaganych_efektow):
+            kod = f"{i+1:02d}"
+            ocena = request.form.get(f'ocena_{kod}')
+            if ocena:
+                efekt_obj = EfektUczenia.query.filter_by(dokument_id=dokument.id, kod_efektu=kod).first()
+                if not efekt_obj:
+                    efekt_obj = EfektUczenia(dokument_id=dokument.id, kod_efektu=kod, opis_efektu=efekt)
+                    db.session.add(efekt_obj)
+                efekt_obj.uzyskany = int(ocena)
+        
+        if akcja == 'zatwierdz' and current_user.rola == 'dyrektor':
+            dokument.status = 'Zatwierdzony'
+            dokument.uwagi_opiekuna = f"Podpisano przez: {current_user.imie} {current_user.nazwisko}"
+            
+            if decyzja.ogolny_wynik == 'nie uzyskał/a':
+                zal4b = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B').first()
+                if zal4b:
+                    zal4b.status = 'Rejected'
+                    zal4b.komentarz = "Dyrektor wydał decyzję negatywną (nie uzyskał/a). Ścieżka zaliczenia na podstawie pracy została odrzucona."
+                
+                praktyka.status = 'BRAK_ZGŁOSZENIA'
+                
+                from models import Powiadomienie
+                notif_s = Powiadomienie(
+                    uzytkownik_id=student.uzytkownik.id,
+                    tresc="Dyrektor wydał decyzję NEGATYWNĄ (Zał. 4a). Twoja ścieżka zawodowa została odrzucona. Wybierz ścieżkę od nowa na pulpicie.",
+                    link=f"/student/dashboard"
+                )
+                db.session.add(notif_s)
+                flash('Decyzja została zatwierdzona. Z powodu oceny "nie uzyskał/a", wniosek został automatycznie odrzucony, a student cofnięty do wyboru ścieżki.', 'success')
+            else:
+                flash('Decyzja została zatwierdzona.', 'success')
+        elif akcja == 'zwroc_do_uzupelnienia':
+            dokument.status = 'Returned'
+            zal4b = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B').first()
+            if zal4b:
+                zal4b.status = 'Returned'
+                zal4b.komentarz = komentarz
+            
+            from models import Powiadomienie
+            notif = Powiadomienie(
+                uzytkownik_id=student.uzytkownik_id,
+                tresc=f"Decyzja Dyrektora (Zał. 4a) wymaga uzupełnień w Załączniku 4b.",
+                link=f"/student/zal4b_wniosek"
+            )
+            db.session.add(notif)
+            flash('Zwrócono wniosek do uzupełnienia przez studenta.', 'warning')
+        else:
+            dokument.status = 'Draft'
+            flash('Zmiany zostały zapisane.', 'info')
+            
+        db.session.commit()
+        return redirect(url_for('dziekanat.weryfikuj_zal4a', student_id=student.id))
+        
+    efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all() if dokument else []
+    
+    from blueprints.student import lista_wymaganych_efektow
+    
+    return render_template('dziekanat/weryfikuj_zal4a.html', 
+                           student=student, 
+                           praktyka=praktyka, 
+                           dokument=dokument, 
+                           efekty=efekty, 
+                           decyzja=decyzja,
+                           lista_statyczna=lista_wymaganych_efektow)
+
+
 @dziekanat_bp.route('/zal4_lista')
 @login_required
 def zal4_lista():

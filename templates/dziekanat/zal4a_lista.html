@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Decyzje o uznaniu praktyki (Zał. 4a)
+    </h2>
+</div>
+
+<ul class="nav nav-tabs" id="zal4aTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="do-oceny-tab" data-bs-toggle="tab" data-bs-target="#do-oceny"
+            type="button" role="tab" aria-controls="do-oceny" aria-selected="true">
+            Do oceny i podpisania
+            {% if do_oceny|length > 0 %}
+            <span class="badge bg-danger ms-1">{{ do_oceny|length }}</span>
+            {% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="zatwierdzone-tab" data-bs-toggle="tab" data-bs-target="#zatwierdzone"
+            type="button" role="tab" aria-controls="zatwierdzone" aria-selected="false">
+            Zatwierdzone i Podpisane
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="zal4aTabsContent">
+    <div class="tab-pane fade show active p-3 bg-white border border-top-0" id="do-oceny" role="tabpanel"
+        aria-labelledby="do-oceny-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Nr albumu</th>
+                        <th>Data zmiany</th>
+                        <th>Status</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in do_oceny %}
+                    <tr>
+                        <td>{{ item.imie }} {{ item.nazwisko }}</td>
+                        <td>{{ item.nr_albumu }}</td>
+                        <td>{{ item.data }}</td>
+                        <td><span class="badge bg-warning text-dark">{{ item.status }}</span></td>
+                        <td>
+                            <a href="{{ url_for('dziekanat.weryfikuj_zal4a', student_id=item.student_id) }}" class="btn btn-sm btn-primary">Oceń efekty (Zał. 4a)</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">Brak dokumentów do oceny.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-pane fade p-3 bg-white border border-top-0" id="zatwierdzone" role="tabpanel"
+        aria-labelledby="zatwierdzone-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Nr albumu</th>
+                        <th>Data podpisania</th>
+                        <th>Status</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in zatwierdzone %}
+                    <tr>
+                        <td>{{ item.imie }} {{ item.nazwisko }}</td>
+                        <td>{{ item.nr_albumu }}</td>
+                        <td>{{ item.data }}</td>
+                        <td><span class="badge bg-success">{{ item.status }}</span></td>
+                        <td>
+                            <a href="{{ url_for('dziekanat.weryfikuj_zal4a', student_id=item.student_id) }}" class="btn btn-sm btn-outline-secondary">Podgląd</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">Brak zatwierdzonych dokumentów.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

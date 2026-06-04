@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie, KartaPraktyki, Powiadomienie
+from models import Student, Praktyka, Dokument, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, Ankieta, Oswiadczenie, KartaPraktyki, Powiadomienie
 from datetime import datetime
 from werkzeug.utils import secure_filename
+import re
+import json
 import os
 
 lista_wymaganych_efektow = [
@@ -166,8 +168,6 @@ def sprawozdanie():
             dokument.status = 'OczekujeZOPZ'
             db.session.commit()
             
-            # Wysłanie powiadomień
-            from models import Powiadomienie
             if praktyka.zaklad and praktyka.zaklad.zopz_id:
                 powiadomienie_zopz = Powiadomienie(
                     uzytkownik_id=praktyka.zaklad.zopz_id,
@@ -225,8 +225,6 @@ def zal4_efekty():
     if dokument:
         efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all()
 
-
-    import re
     opinia_text = dokument.uwagi_opiekuna if dokument and dokument.uwagi_opiekuna else ''
     podpis_uopz = None
     data_podpisu_uopz = None
@@ -254,7 +252,7 @@ def zal4_efekty():
 @login_required
 def zal4a_decyzja():
     if current_user.rola != 'student': return redirect(url_for('index'))
-    return render_template('dokumenty/zal4a_decyzja_student.html')
+    return render_template('dokumenty/zal4a_decyzja_student.html', lista_statyczna=lista_wymaganych_efektow)
 
 @student_bp.route('/zal4b_wniosek', methods=['GET'])
 @login_required
@@ -301,8 +299,6 @@ def zal5_ankieta():
         return redirect(url_for('student.dashboard'))
 
     if request.method == 'POST':
-        import json
-        from models import Ankieta, Uzytkownik, Powiadomienie
         
         odpowiedzi = []
         for i in range(1, 15):

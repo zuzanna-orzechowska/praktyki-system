@@ -548,6 +548,45 @@ def zal4b_wniosek():
                     pass
             return jsonify({'success': False, 'message': 'Błąd usuwania załącznika'})
 
+        if akcja == 'dodaj_uzupelnienie':
+            uzupelnienia = []
+            if wniosek.uzupelnienia_paths:
+                try:
+                    uzupelnienia = json.loads(wniosek.uzupelnienia_paths)
+                except Exception:
+                    pass
+            if 'nowy_plik' in request.files:
+                file = request.files['nowy_plik']
+                if file and file.filename != '':
+                    filename = secure_filename(f"ZAL4B_UZUP_{student.nr_albumu}_{int(datetime.now().timestamp())}_{file.filename}")
+                    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    opis = data.get('opis', '')
+                    uzupelnienia.append({"path": f"uploads/{filename}", "opis": opis})
+                    wniosek.uzupelnienia_paths = json.dumps(uzupelnienia)
+                    db.session.commit()
+                    return jsonify({'success': True, 'message': 'Dokument uzupełniający dodany'})
+            return jsonify({'success': False, 'message': 'Brak pliku do wgrania.'})
+
+        if akcja == 'usun_uzupelnienie':
+            idx = int(data.get('index', -1))
+            if wniosek.uzupelnienia_paths:
+                try:
+                    uzupelnienia = json.loads(wniosek.uzupelnienia_paths)
+                    if 0 <= idx < len(uzupelnienia):
+                        usun_plik = uzupelnienia.pop(idx)
+                        try:
+                            nazwa_pliku = usun_plik['path'].replace('uploads/', '')
+                            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], nazwa_pliku))
+                        except Exception:
+                            pass
+                        wniosek.uzupelnienia_paths = json.dumps(uzupelnienia)
+                        db.session.commit()
+                        return jsonify({'success': True, 'message': 'Dokument uzupełniający usunięty'})
+                except Exception:
+                    pass
+            return jsonify({'success': False, 'message': 'Błąd usuwania uzupełnienia'})
+
         if 'specjalnosc' in data:
             student.specjalnosc = data.get('specjalnosc')
 
@@ -586,6 +625,22 @@ def zal4b_wniosek():
                 
             db.session.commit()
             return jsonify({'success': True, 'message': 'Wniosek został złożony. Uruchomiono ścieżkę zaliczenia na podstawie pracy zawodowej.'})
+
+        if akcja == 'wyslij_uzupelnienia':
+            dokument.status = 'Uzupełniono'
+            from models import Uzytkownik, Powiadomienie
+            safe_nazwisko = current_user.nazwisko.split('(')[0].strip()
+            dziekanat_users = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'dyrektor'])).all()
+            for du in dziekanat_users:
+                notif = Powiadomienie(
+                    uzytkownik_id=du.id,
+                    tresc=f"Student {current_user.imie} {safe_nazwisko} dodał uzupełnienia do wniosku (Zał. 4b).",
+                    link=f"/dziekanat/weryfikuj_zal4b/{praktyka.id}"
+                )
+                db.session.add(notif)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Uzupełnienia zostały przesłane.'})
+            
         else:
             db.session.commit()
             return jsonify({'success': True, 'message': 'Szkic wniosku został zapisany.'})
@@ -594,11 +649,20 @@ def zal4b_wniosek():
     student_dict['imie'] = student.uzytkownik.imie
     student_dict['nazwisko'] = student.uzytkownik.nazwisko
 
+    zal4a_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
+    zal4a_decyzja = None
+    if zal4a_doc:
+        from models import DecyzjaZal4a
+        d4a = DecyzjaZal4a.query.filter_by(dokument_id=zal4a_doc.id).first()
+        if d4a:
+            zal4a_decyzja = d4a.to_dict()
+
     return jsonify({
         'student': student_dict,
         'dokument': dokument.to_dict() if dokument else None,
         'wniosek': wniosek.to_dict() if wniosek else None,
-        'praktyka': praktyka.to_dict()
+        'praktyka': praktyka.to_dict(),
+        'zal4a_decyzja': zal4a_decyzja
     })
 
 @student_api_bp.route('/edytuj_dane', methods=['POST'])
@@ -639,13 +703,21 @@ def get_dokumenty_readonly():
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika=typ_zal).first() if typ_zal else None
     
     karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL3') else None
-    decyzja = None
+    
+    from models import DecyzjaZal4a
+    decyzja = DecyzjaZal4a.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL4A') else None
+    
     protokol = Protokol.query.filter_by(dokument_id=dokument.id).first() if (dokument and typ_zal == 'ZAL8') else None
 
     student_data = student.to_dict()
     student_data['uzytkownik_imie'] = current_user.imie
     student_data['uzytkownik_nazwisko'] = current_user.nazwisko
+    student_data['imie'] = current_user.imie
+    student_data['nazwisko'] = current_user.nazwisko
     student_data['imie_i_nazwisko'] = f"{current_user.imie} {current_user.nazwisko}"
+
+    from models import EfektUczenia
+    efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).all() if dokument else []
 
     return jsonify({
         'student': student_data,
@@ -653,7 +725,8 @@ def get_dokumenty_readonly():
         'dokument': dokument.to_dict() if dokument else None,
         'karta': karta.to_dict() if karta else None,
         'decyzja': decyzja.to_dict() if decyzja else None,
-        'protokol': protokol.to_dict() if protokol else None
+        'protokol': protokol.to_dict() if protokol else None,
+        'efekty': [e.to_dict() for e in efekty]
     })
 
 @student_api_bp.route('/zal2a_harmonogram', methods=['GET', 'POST'])

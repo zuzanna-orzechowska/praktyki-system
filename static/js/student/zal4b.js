@@ -129,16 +129,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            if (dokument && (dokument.status === 'Returned' || dokument.status === 'Rejected')) {
+            if (dokument && (dokument.status === 'Returned' || dokument.status === 'Rejected' || dokument.status === 'Uzupełniono')) {
                 const actionBtns = document.getElementById('action-buttons');
                 if (actionBtns) {
+                    actionBtns.style.display = 'none'; // Ukryj dolne przyciski, by nie mylić studenta
                     const alertDiv = document.createElement('div');
-                    const alertClass = dokument.status === 'Returned' ? 'alert-warning' : 'alert-danger';
-                    const headingText = dokument.status === 'Returned' ? 'Wniosek zwrócony do poprawy' : 'Ścieżka odrzucona przez Dziekanat';
+                    let alertClass = 'alert-danger';
+                    let headingText = 'Ścieżka odrzucona przez Dziekanat';
+                    if (dokument.status === 'Returned') { alertClass = 'alert-warning'; headingText = 'Wniosek zwrócony do poprawy'; }
+                    if (dokument.status === 'Uzupełniono') { alertClass = 'alert-info'; headingText = 'Wniosek oczekuje na weryfikację uzupełnień'; }
                     
                     alertDiv.className = `alert ${alertClass} mb-4 shadow-sm`;
                     alertDiv.innerHTML = `<h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> ${headingText}</h5><hr><p class="mb-0"><strong>Uwagi dziekanatu:</strong> ${dokument.komentarz || 'Brak uwag'}</p>`;
                     actionBtns.parentNode.insertBefore(alertDiv, actionBtns);
+                }
+            }
+
+            // Obsługa uzupełnień dla ZAL4A (częściowo/zwrócono)
+            const zal4a_decyzja = data.zal4a_decyzja;
+            if (zal4a_decyzja && (zal4a_decyzja.ogolny_wynik === 'uzyskał/a częściowo' || dokument.status === 'Returned')) {
+                const sec = document.getElementById('uzupelnienia-section');
+                if (sec) sec.classList.remove('d-none');
+                
+                if (wniosek && wniosek.uzupelnienia_paths) {
+                    let uzup = [];
+                    try { uzup = JSON.parse(wniosek.uzupelnienia_paths); } catch(e) {}
+                    const con = document.getElementById('uzupelnienia-container');
+                    if (uzup.length > 0 && con) {
+                        con.innerHTML = '';
+                        uzup.forEach((z, idx) => {
+                            const filename = z.path.split('/').pop();
+                            con.innerHTML += `
+                                <div class="alert alert-secondary d-flex justify-content-between align-items-center p-2 mb-2">
+                                    <div>
+                                        <i class="bi bi-file-earmark-plus text-primary"></i> 
+                                        <strong>${z.opis || 'Brak opisu'}</strong> <small class="text-muted">(${filename})</small>
+                                    </div>
+                                    ${dokument.status === 'Uzupełniono' ? '' : `<button type="button" class="btn btn-sm btn-outline-danger" onclick="usunUzupelnienie(${idx})"><i class="bi bi-trash"></i></button>`}
+                                </div>
+                            `;
+                        });
+                    }
+                }
+                
+                if (dokument.status === 'Uzupełniono') {
+                    if (document.getElementById('upload-uzup-container')) document.getElementById('upload-uzup-container').style.display = 'none';
+                    if (document.getElementById('btn-wyslij-uzupelnienia')) document.getElementById('btn-wyslij-uzupelnienia').style.display = 'none';
                 }
             }
         })
@@ -243,6 +279,42 @@ function usunZalacznik(idx) {
     if (!confirm('Na pewno usunąć ten załącznik?')) return;
     const formData = new FormData();
     formData.append('akcja', 'usun_zalacznik');
+    formData.append('index', idx);
+    fetch('/api/student/zal4b_wniosek', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) window.location.reload();
+        });
+}
+
+function dodajUzupelnienie() {
+    const plikInput = document.getElementById('nowy_uzupelnienie_plik');
+    const opisInput = document.getElementById('nowy_uzupelnienie_opis');
+    if (!plikInput.files.length) {
+        alert('Najpierw wybierz plik uzupełniający.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('akcja', 'dodaj_uzupelnienie');
+    formData.append('nowy_plik', plikInput.files[0]);
+    formData.append('opis', opisInput.value.trim());
+
+    fetch('/api/student/zal4b_wniosek', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || data.message);
+            }
+        });
+}
+
+function usunUzupelnienie(idx) {
+    if (!confirm('Na pewno usunąć to uzupełnienie?')) return;
+    const formData = new FormData();
+    formData.append('akcja', 'usun_uzupelnienie');
     formData.append('index', idx);
     fetch('/api/student/zal4b_wniosek', { method: 'POST', body: formData })
         .then(res => res.json())

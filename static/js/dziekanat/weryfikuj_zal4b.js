@@ -59,6 +59,27 @@ function loadWniosekData() {
                 });
             }
 
+            // Uzupełnienia
+            const uzupSection = document.getElementById('uzupelnienia-section');
+            const uzupList = document.getElementById('uzupelnienia-list');
+            if (data.uzupelnienia && data.uzupelnienia.length > 0) {
+                uzupSection.style.display = 'block';
+                uzupList.innerHTML = '';
+                data.uzupelnienia.forEach((zal, idx) => {
+                    const nazwa = zal.path.split('/').pop();
+                    const opis = zal.opis || 'Brak opisu';
+                    const linkHtml = `
+                        <a href="/static/${zal.path}" target="_blank" class="list-group-item list-group-item-action border-warning">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1"><i class="bi bi-file-earmark-plus text-warning"></i> ${nazwa}</h6>
+                            </div>
+                            <p class="mb-1 text-muted small">${opis}</p>
+                        </a>
+                    `;
+                    uzupList.insertAdjacentHTML('beforeend', linkHtml);
+                });
+            }
+
             // Decyzja
             renderDecyzja(data.dokument.status, data.dokument.komentarz);
         })
@@ -84,8 +105,9 @@ function renderDecyzja(status, komentarz) {
                 ${komentarz ? `<hr><small>Uwagi: ${komentarz}</small>` : ''}
             </div>
         `;
-    } else if (status === 'Submitted') {
+    } else if (status === 'Submitted' || status === 'Uzupełniono') {
         container.innerHTML = `
+            ${status === 'Uzupełniono' ? '<div class="alert alert-info mb-3"><i class="bi bi-info-circle-fill"></i> Student przesłał uzupełnienia dokumentacji. Prosimy o weryfikację.</div>' : ''}
             <div class="mb-3">
                 <label class="form-label small fw-bold text-muted">Uwagi do poprawy/odrzucenia (wymagane)</label>
                 <textarea id="komentarz-dziekanatu" class="form-control mb-3" rows="3" placeholder="Wpisz uwagi..."></textarea>
