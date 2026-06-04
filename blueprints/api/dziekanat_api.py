@@ -41,12 +41,18 @@ def dashboard():
         if not doc or doc.status != 'Zatwierdzony':
             zal4a_count += 1
             
+    zal7_count = db.session.query(Dokument).filter(
+        Dokument.typ_zalacznika.in_(['ZAL7', 'ZAL7A']),
+        Dokument.status.in_(['Weryfikacja UOPZ', 'Weryfikacja Dyrektor'])
+    ).count()
+            
     return jsonify({
         'zal9_count': zal9_count,
         'porozumienia_count': porozumienia_count,
         'zal2a_count': zal2a_count,
         'zal4b_count': zal4b_count,
-        'zal4a_count': zal4a_count
+        'zal4a_count': zal4a_count,
+        'zal7_count': zal7_count
     })
 
 @dziekanat_api_bp.route('/zal9', methods=['GET'])
@@ -622,7 +628,7 @@ def zal7_lista():
 
     for d in dokumenty:
         fd = format_dokument(d)
-        if d.status == 'Weryfikacja UOPZ':
+        if d.status == 'Weryfikacja UOPZ' or d.status == 'Weryfikacja Dyrektor':
             do_akcji.append(fd)
         elif d.status in ['Draft', 'Weryfikacja ZOPZ', 'OczekujeZOPZ', 'Weryfikacja', 'Rejected']:
             w_toku.append(fd)

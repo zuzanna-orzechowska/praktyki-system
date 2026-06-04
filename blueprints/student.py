@@ -261,11 +261,135 @@ def zal4b_wniosek():
         return redirect(url_for('index'))
     return render_template('dokumenty/zal4b_wniosek_student.html')
 
-@student_bp.route('/zal7a_sprawozdanie', methods=['GET'])
+@student_bp.route('/zal7a_pdf', methods=['GET'])
+@login_required
+def zal7a_pdf():
+    if current_user.rola != 'student': return redirect(url_for('index'))
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    if not dokument:
+        flash('Nie znaleziono dokumentu.', 'danger')
+        return redirect(url_for('student.zal7a_sprawozdanie'))
+        
+    sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
+    
+    from utils.pdf_generator import generate_zal7a_pdf
+    from flask import send_file
+    
+    pdf_buffer = generate_zal7a_pdf(student, praktyka, sprawozdanie)
+    
+    return send_file(
+        pdf_buffer,
+        as_attachment=False,
+        download_name=f'Zalacznik_7a_{student.nr_albumu}.pdf',
+        mimetype='application/pdf'
+    )
+
+@student_bp.route('/zal7a_sprawozdanie', methods=['GET', 'POST'])
 @login_required
 def zal7a_sprawozdanie():
     if current_user.rola != 'student': return redirect(url_for('index'))
-    return render_template('dokumenty/zal7a_sprawozdanie_student.html')
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    if not dokument:
+        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A', utworzony_przez=current_user.id)
+        db.session.add(dokument)
+        db.session.commit()
+        
+    sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
+    
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        charakterystyka = request.form.get('charakterystyka', '').strip()
+        opis = request.form.get('opis', '').strip()
+        wiedza = request.form.get('wiedza', '').strip()
+        rok_akademicki = request.form.get('rok_akademicki', '').strip()
+        miejsce_pracy = request.form.get('miejsce_pracy', '').strip()
+        
+        if not sprawozdanie:
+            sprawozdanie = Sprawozdanie(dokument_id=dokument.id)
+            db.session.add(sprawozdanie)
+            
+        sprawozdanie.charakterystyka = charakterystyka
+        sprawozdanie.opis_prac = opis
+        sprawozdanie.wiedza_umiejetnosci = wiedza
+        
+        generate_signature = request.form.get('generateSignature')
+        if generate_signature:
+            import datetime
+            imie_nazwisko = f"{current_user.imie} {current_user.nazwisko.split('(')[0].strip()}"
+            dzisiaj = datetime.date.today().strftime('%d.%m.%Y')
+            sprawozdanie.podpis_studenta = f"{dzisiaj}   {imie_nazwisko}"
+        else:
+            sprawozdanie.podpis_studenta = None
+        
+        if rok_akademicki:
+            student.rok_akademicki = rok_akademicki
+            
+        if miejsce_pracy:
+            if not praktyka.zaklad:
+                from models import ZakladPracy
+                nowy_zaklad = ZakladPracy(nazwa=miejsce_pracy)
+                db.session.add(nowy_zaklad)
+                db.session.flush()
+                praktyka.zaklad_id = nowy_zaklad.id
+            else:
+                praktyka.zaklad.nazwa = miejsce_pracy
+        
+        if akcja == 'wyslij':
+            if len(charakterystyka) < 50 or len(opis) < 50 or len(wiedza) < 50:
+                flash('Błąd wysyłania! Niektóre sekcje są zbyt krótkie.', 'danger')
+            else:
+                import os
+                from werkzeug.utils import secure_filename
+                
+                plik = request.files.get('skan_pdf')
+                if plik and plik.filename != '':
+                    filename = secure_filename(f"zal7a_skan_{student.nr_albumu}_{plik.filename}")
+                    from flask import current_app
+                    save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    plik.save(save_path)
+                    dokument.plik_path = f"uploads/{filename}"
+                
+                if not dokument.plik_path:
+                    flash('Musisz wgrać zeskanowany dokument z podpisem, aby wysłać go do weryfikacji!', 'danger')
+                    return redirect(url_for('student.zal7a_sprawozdanie'))
+
+                dokument.status = 'Weryfikacja Dyrektor'
+                db.session.commit()
+                
+                from models import Uzytkownik, Powiadomienie
+                dyrektor = Uzytkownik.query.filter_by(rola='dyrektor').first()
+                if dyrektor:
+                    notif = Powiadomienie(
+                        uzytkownik_id=dyrektor.id,
+                        tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał skan Sprawozdania (Zał. 7a) do oceny.",
+                        link=url_for('dziekanat.zal7_lista')
+                    )
+                    db.session.add(notif)
+                    db.session.commit()
+                flash('Sprawozdanie przesłane do Dyrektora!', 'success')
+                return redirect(url_for('student.dashboard'))
+        else:
+            import os
+            from werkzeug.utils import secure_filename
+            plik = request.files.get('skan_pdf')
+            if plik and plik.filename != '':
+                filename = secure_filename(f"zal7a_skan_{student.nr_albumu}_{plik.filename}")
+                from flask import current_app
+                save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                plik.save(save_path)
+                dokument.plik_path = f"uploads/{filename}"
+
+            dokument.status = 'Draft'
+            db.session.commit()
+            flash('Szkic sprawozdania został zapisany.', 'info')
+            
+    return render_template('dokumenty/zal7a_sprawozdanie_student.html', student=student, praktyka=praktyka, dokument=dokument, sprawozdanie=sprawozdanie)
 
 @student_bp.route('/zal8_protokol')
 @login_required

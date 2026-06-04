@@ -97,6 +97,7 @@ class Dokument(db.Model, DictSerializable):
     status = db.Column(db.String(50), default='Draft')
     plik_path = db.Column(db.String(255), nullable=True)
     uwagi_opiekuna = db.Column(db.Text, nullable=True)
+    uwagi_dyrektora = db.Column(db.Text, nullable=True)
     utworzony_przez = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
     komentarz = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -186,6 +187,8 @@ class Sprawozdanie(db.Model, DictSerializable):
     uwagi_zopz = db.Column(db.Text, nullable=True)
     podpis_zopz = db.Column(db.String(255), nullable=True)
     podpis_uopz = db.Column(db.String(255), nullable=True)
+    podpis_studenta = db.Column(db.String(255), nullable=True)
+    podpis_dyrektora = db.Column(db.String(255), nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
 

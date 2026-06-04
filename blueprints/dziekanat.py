@@ -112,7 +112,7 @@ def zal7_lista():
         return redirect(url_for('index'))
     return render_template('dziekanat/zal7_lista.html')
 
-@dziekanat_bp.route('/zal7_sprawozdanie/<int:student_id>')
+@dziekanat_bp.route('/zal7_sprawozdanie/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal7_sprawozdanie(student_id):
     if current_user.rola not in ['dziekanat', 'dyrektor']:
@@ -121,9 +121,36 @@ def zal7_sprawozdanie(student_id):
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first() if praktyka else None
     sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    
+    if request.method == 'POST' and current_user.rola == 'dyrektor':
+        akcja = request.form.get('akcja')
+        dokument.uwagi_dyrektora = request.form.get('uwagi_dyrektora')
+        
+        if not request.form.get('generateSignatureDyrektor'):
+            flash('Złożenie podpisu cyfrowego jest wymagane!', 'danger')
+            return redirect(url_for('dziekanat.zal7_sprawozdanie', student_id=student.id))
+            
+        if akcja == 'zatwierdz':
+            dokument.status = 'Approved'
+            sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
+            from models import Powiadomienie
+            notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor zaakceptował Twoje Sprawozdanie (Zał. 7).", link="/student/zal7_sprawozdanie")
+            db.session.add(notif)
+            db.session.commit()
+            flash('Sprawozdanie zatwierdzone przez Dyrektora.', 'success')
+        elif akcja == 'odrzuc':
+            dokument.status = 'Rejected'
+            sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
+            from models import Powiadomienie
+            notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor odrzucił Twoje Sprawozdanie (Zał. 7) do poprawy.", link="/student/zal7_sprawozdanie")
+            db.session.add(notif)
+            db.session.commit()
+            flash('Sprawozdanie odrzucone przez Dyrektora do poprawy.', 'warning')
+        return redirect(url_for('dziekanat.zal7_lista'))
+        
     return render_template('dokumenty/zal7_sprawozdanie.html', student=student, praktyka=praktyka, dokument=dokument, sprawozdanie=sprawozdanie)
 
-@dziekanat_bp.route('/zal7a_sprawozdanie/<int:student_id>')
+@dziekanat_bp.route('/zal7a_sprawozdanie/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal7a_sprawozdanie(student_id):
     if current_user.rola not in ['dziekanat', 'dyrektor']:
@@ -132,6 +159,46 @@ def zal7a_sprawozdanie(student_id):
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first() if praktyka else None
     sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
+    
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        
+        if current_user.rola == 'dyrektor':
+            if not request.form.get('generateSignatureDyrektor'):
+                flash('Złożenie podpisu cyfrowego jest wymagane!', 'danger')
+                return redirect(url_for('dziekanat.zal7a_sprawozdanie', student_id=student.id))
+                
+            dokument.uwagi_dyrektora = request.form.get('uwagi_dyrektora')
+            if akcja == 'zatwierdz':
+                dokument.status = 'Approved'
+                sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
+                from models import Powiadomienie
+                notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor zaakceptował Twoje Sprawozdanie (Zał. 7a).", link="/student/zal7a_sprawozdanie")
+                db.session.add(notif)
+                db.session.commit()
+                flash('Zatwierdzono sprawozdanie.', 'success')
+            elif akcja == 'odrzuc':
+                dokument.status = 'Rejected'
+                sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
+                from models import Powiadomienie
+                notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor odrzucił Twoje Sprawozdanie (Zał. 7a) do poprawy.", link="/student/zal7a_sprawozdanie")
+                db.session.add(notif)
+                db.session.commit()
+                flash('Odrzucono sprawozdanie do poprawy.', 'warning')
+            return redirect(url_for('dziekanat.zal7_lista'))
+        else:
+            dokument.uwagi_opiekuna = request.form.get('uwagi_opiekuna')
+            if akcja == 'zatwierdz_i_podpisz':
+                dokument.status = 'Approved'
+                sprawozdanie.podpis_uopz = f"{current_user.imie} {current_user.nazwisko}"
+                db.session.commit()
+                flash('Zatwierdzono sprawozdanie.', 'success')
+            elif akcja == 'odrzuc':
+                dokument.status = 'Rejected'
+                db.session.commit()
+                flash('Odrzucono sprawozdanie do poprawy.', 'warning')
+            return redirect(url_for('dziekanat.zal7_lista'))
+        
     return render_template('dokumenty/zal7a_sprawozdanie.html', student=student, praktyka=praktyka, dokument=dokument, sprawozdanie=sprawozdanie)
 
 @dziekanat_bp.route('/dziennik/<int:student_id>')

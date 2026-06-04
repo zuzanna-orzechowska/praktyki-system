@@ -59,6 +59,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     zal4aBadge.style.display = 'none';
                 }
             }
+            
+            const zal7Badge = document.getElementById('zal7-badge');
+            if (zal7Badge) {
+                if (data.zal7_count > 0) {
+                    zal7Badge.textContent = data.zal7_count;
+                    zal7Badge.style.display = 'inline-block';
+                } else {
+                    zal7Badge.style.display = 'none';
+                }
+            }
         })
         .catch(err => console.error(err));
 });

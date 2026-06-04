@@ -1,64 +1,80 @@
 {% extends "base.html" %}
 
-
-{% block extra_head %}
-<script src="{{ url_for('static', filename='js/student/zal7a.js') }}"></script>
-{% endblock %}
-
-
+{% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        
-        <a href="" class="btn btn-sm btn-outline-secondary mb-2"><i
-                class="bi bi-arrow-left"></i> Wróć do Teczki</a>
-        
         <h2
             style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
             Sprawozdanie z Pracy Zawodowej (Zał. 7a)</h2>
     </div>
 
-    
+    {% if dokument and dokument.status == 'Approved' %}
     <span class="badge bg-success fs-6">Zatwierdzone</span>
-    
+    {% elif dokument and dokument.status == 'Rejected' %}
     <span class="badge bg-danger fs-6">Do poprawy</span>
-    
+    {% elif dokument and dokument.status == 'Weryfikacja UOPZ' %}
+    <span class="badge bg-warning text-dark fs-6">Oczekuje na weryfikację UOPZ</span>
+    {% else %}
     <span class="badge bg-primary">Dokument Edytowalny</span>
-    
-    <span class="badge bg-warning text-dark fs-6">Oczekuje na weryfikację</span>
-    
+    {% endif %}
 </div>
 
-
-<div class="alert alert-dangerinfo shadow-sm border-0 mb-4">
+{% if dokument and dokument.uwagi_opiekuna %}
+<div class="alert alert-{% if dokument.status == 'Rejected' %}danger{% else %}info{% endif %} shadow-sm border-0 mb-4">
     <i class="bi bi-chat-left-text-fill me-2"></i> <strong>Uwagi od Opiekuna Uczelnianego:</strong> {{
     dokument.uwagi_opiekuna }}
 </div>
+{% endif %}
 
-
-<div class="card shadow-sm border-0 mb-4 bg-light">
-    <div class="card-body">
-        <div class="d-flex justify-content-between mb-1">
-            <p class="mb-0"><strong>Student:</strong> {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}</p>
-            <p class="mb-0"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
-        </div>
-        <p class="mb-1"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
-        <p class="mb-1"><strong>Specjalność:</strong> {{ student.specjalnosc or '........................................................................' }}</p>
-        <p class="mb-1"><strong>Studia:</strong> {{ student.tryb_studiow or 'inżynierskie stacjonarne' }}</p>
-        <p class="mb-1"><strong>Rok ak.:</strong> {{ student.rok_akademicki or '.....................................' }}</p>
-        
-        <p class="mb-0 mt-3 border-top pt-2"><strong>Miejsce pracy/działalności:</strong> {{ praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak' }}</p>
-    </div>
+{% if dokument and dokument.uwagi_dyrektora %}
+<div class="alert alert-{% if dokument.status == 'Rejected' %}danger{% else %}info{% endif %} shadow-sm border-0 mb-4">
+    <i class="bi bi-chat-left-text-fill me-2"></i> <strong>Uwagi od Dyrektora Instytutu:</strong> {{
+    dokument.uwagi_dyrektora }}
 </div>
+{% endif %}
 
-<form id="zal7a-form" method="POST" action="">
-    {% set is_readonly = 'readonly disabled' if current_user.rola != 'student' or (dokument and dokument.status not in ['Draft', 'Rejected']) else '' %}
+
+<form method="POST" enctype="multipart/form-data">
+    {% set is_readonly = 'readonly disabled' if current_user.rola != 'student' or (dokument and dokument.status not in
+    ['Draft', 'Rejected']) else '' %}
+
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-1">
+                <p class="mb-0"><strong>Student:</strong> {{ student.uzytkownik.imie }} {{
+                    student.uzytkownik.nazwisko.split('(')[0]|trim }}</p>
+                <p class="mb-0"><strong>Nr albumu:</strong> {{ student.nr_albumu }}</p>
+            </div>
+            <p class="mb-1"><strong>Kierunek:</strong> {{ student.kierunek }}</p>
+            <p class="mb-1"><strong>Specjalność:</strong> {{ student.specjalnosc or
+                '........................................................................' }}</p>
+            <p class="mb-1"><strong>Studia:</strong> inżynierskie niestacjonarne</p>
+
+            <div class="d-flex align-items-center mb-1 mt-2">
+                <strong class="me-2">Rok ak.:</strong>
+                <input type="text" name="rok_akademicki" class="form-control form-control-sm" style="width: 150px;"
+                    value="{{ student.rok_akademicki or '' }}" placeholder="np. 2023/2024" {{ is_readonly }}>
+            </div>
+
+            <div class="d-flex align-items-center mt-3 border-top pt-2">
+                <strong class="me-2">Miejsce pracy/działalności:</strong>
+                <input type="text" name="miejsce_pracy" class="form-control form-control-sm flex-grow-1"
+                    style="max-width: 400px;" value="{{ praktyka.zaklad.nazwa if praktyka.zaklad else '' }}"
+                    placeholder="Pełna nazwa firmy/zakładu" {{ is_readonly }}>
+            </div>
+        </div>
+    </div>
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white fw-bold text-uppercase">I. Charakterystyka miejsca pracy</div>
         <div class="card-body">
-            <p class="text-muted small fst-italic mb-2">(Krótki opis instytucji, w której odbywała się praca lub działalność)</p>
-            <textarea class="form-control mb-2" name="charakterystyka" rows="4" required minlength="50" maxlength="5000" {{ is_readonly
+            <p class="text-muted small fst-italic mb-1">(Krótki opis instytucji, w której odbywała się praca lub
+                działalność)</p>
+            <textarea class="form-control" name="charakterystyka" id="charakterystyka" rows="4" required minlength="400"
+                maxlength="5000" {{ is_readonly
                 }}>{% if sprawozdanie %}{{ sprawozdanie.charakterystyka }}{% endif %}</textarea>
+            <div id="charakterystyka_msg" class="text-end small mt-1 text-danger d-none">Zbyt krótko: <span
+                    id="charakterystyka_count">0</span> / 400 znaków</div>
         </div>
     </div>
 
@@ -66,106 +82,161 @@
         <div class="card-header bg-white fw-bold text-uppercase">II. Opis i analiza wykonywanych prac</div>
         <div class="card-body">
             <p class="text-muted small fst-italic mb-1">(Syntetyczny opis wykonanych prac)</p>
-            <p class="text-danger small mb-3">/Student opisuje w sposób syntetyczny, jakie zadania wykonywał (<strong>jego zdaniem</strong> najważniejsze)/</p>
-            <textarea class="form-control mb-2" name="opis" rows="6" required minlength="50" maxlength="5000" {{ is_readonly
-                }}>{% if sprawozdanie %}{{ sprawozdanie.opis_prac }}{% endif %}</textarea>
+            <p class="text-danger small mb-3">/Student opisuje w sposób syntetyczny, jakie zadania wykonywał w trakcie
+                pracy zawodowej (<strong>jego zdaniem</strong> najważniejsze)/</p>
+            <textarea class="form-control" name="opis" id="opis" rows="6" required minlength="400" maxlength="5000" {{
+                is_readonly }}>{% if sprawozdanie %}{{ sprawozdanie.opis_prac }}{% endif %}</textarea>
+            <div id="opis_msg" class="text-end small mt-1 text-danger d-none">Zbyt krótko: <span
+                    id="opis_count">0</span> / 400 znaków</div>
         </div>
     </div>
 
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white fw-bold text-uppercase">III. Wiedza i umiejętności uzyskane w trakcie pracy zawodowej lub działalności</div>
+        <div class="card-header bg-white fw-bold text-uppercase">III. Wiedza i umiejętności uzyskane w trakcie pracy
+            zawodowej</div>
         <div class="card-body">
-            <p class="text-muted small fst-italic mb-1">(Samoocena w zakresie nabytych kompetencji oraz osiągniętych efektów uczenia się)</p>
-            <p class="text-danger small mb-3">/Student opisuje, jakie kompetencje nabył oraz dokonuje samooceny w zakresie osiągniętych efektów uczenia się. Cytuje po kolei zakładane efekty uczenia się i wykazuje wykonane prace, które prowadziły do ich osiągnięcia/</p>
-            <textarea class="form-control mb-2" name="wiedza" rows="6" required minlength="50" maxlength="5000" {{ is_readonly
-                }}>{% if sprawozdanie %}{{ sprawozdanie.wiedza_umiejetnosci }}{% endif %}</textarea>
+            <p class="text-muted small fst-italic mb-1">(Samoocena w zakresie nabytych kompetencji oraz osiągniętych
+                efektów uczenia się)</p>
+            <p class="text-danger small mb-3">/Student szczegółowo opisuje, jakie kompetencje nabył w trakcie
+                wykonywanej pracy zawodowej oraz dokonuje samooceny w zakresie osiągniętych efektów uczenia się. Cytuje
+                po kolei efekty uczenia się i wykazuje wykonane prace, które prowadziły do ich osiągnięcia/</p>
+            <textarea class="form-control" name="wiedza" id="wiedza" rows="8" required minlength="400" maxlength="5000"
+                {{ is_readonly }}>{% if sprawozdanie %}{{ sprawozdanie.wiedza_umiejetnosci }}{% endif %}</textarea>
+            <div id="wiedza_msg" class="text-end small mt-1 text-danger d-none">Zbyt krótko: <span
+                    id="wiedza_count">0</span> / 400 znaków</div>
         </div>
     </div>
 
-    
-    {% if current_user.rola == 'student' and (not dokument or dokument.status in ['Draft', 'Rejected']) %}
-    <div class="form-check mb-4 d-flex justify-content-end">
-        <div>
-            <input class="form-check-input" type="checkbox" id="generateSignature" required>
-            <label class="form-check-label ms-2" for="generateSignature">
-                Wygeneruj podpis elektroniczny na sprawozdaniu (z aktualną datą)
-            </label>
-        </div>
-    </div>
-    
-    <div class="mt-4 mb-4 d-flex justify-content-end">
-        <div class="text-center" style="width: 250px;">
-            <div id="signaturePlaceholder" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
-            </div>
-            <small>data i podpis studenta</small>
-        </div>
-    </div>
+    {% if not is_readonly %}
+    <div class="card shadow-sm border-0 mb-4 border-top border-primary border-3">
+        <div class="card-body">
+            <h5 class="card-title fw-bold">Kroki postępowania:</h5>
+            <ol class="mb-4">
+                <li>Wypełnij powyższe sekcje sprawozdania (Charakterystyka, Opis, Wiedza i umiejętności).</li>
+                <li>Kliknij <strong>Zapisz Szkic</strong> aby zapisać swoją pracę.</li>
+                <li>Pobierz formularz jako PDF, wydrukuj i podpisz. Uzyskaj również podpis przełożonego.</li>
+                <li>Zeskanuj podpisany dokument i wgraj go poniżej, a następnie prześlij do weryfikacji przez Dyrektora
+                    Instytutu.</li>
+            </ol>
 
-    <div class="d-flex justify-content-end gap-2 mb-5" id="action-buttons">
-        <button type="submit" name="akcja" value="szkic" class="btn btn-outline-secondary" formnovalidate onclick="document.getElementById('akcja_ukryta').value='szkic';"><i class="bi bi-pencil"></i> Zapisz Szkic</button>
-        <button type="submit" name="akcja" value="wyslij" class="btn btn-success" id="submitBtn" onclick="document.getElementById('akcja_ukryta').value='wyslij';"><i class="bi bi-send"></i> Zatwierdź i Wyślij (do UOPZ)</button>
-        <input type="hidden" id="akcja_ukryta" value="wyslij">
-    </div>
-
-    <script>
-        document.getElementById('generateSignature').addEventListener('change', function() {
-            if(this.checked) {
-                const dzisiaj = new Date().toISOString().split('T')[0];
-                const imieNazwisko = "{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}";
-                document.getElementById('signaturePlaceholder').innerHTML = '<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">' + dzisiaj + '</span>' + imieNazwisko;
-            } else {
-                document.getElementById('signaturePlaceholder').innerHTML = '';
-            }
-        });
-    </script>
-    {% elif sprawozdanie %}
-    <div class="row text-center mt-5 mb-5 pt-4">
-        <div class="col-6">
-            <div id="podpis-uopz" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
-                {% if sprawozdanie.podpis_uopz %}
-                <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ dokument.updated_at.strftime('%Y-%m-%d') if dokument and dokument.updated_at else '' }}</span>
-                <span>{{ sprawozdanie.podpis_uopz }}</span>
+            <div class="mb-4">
+                <label for="skan" class="form-label fw-bold">Wgraj podpisany skan Sprawozdania (PDF):</label>
+                <input class="form-control" type="file" id="skan" name="skan_pdf" accept="application/pdf">
+                {% if dokument and dokument.plik_path %}
+                <div class="mt-2 text-success">
+                    <i class="bi bi-check-circle-fill"></i> Wgrano już plik: <a
+                        href="{{ url_for('static', filename=dokument.plik_path) }}" target="_blank">Pobierz aktualny
+                        skan</a>
+                </div>
                 {% endif %}
             </div>
-            <small>data i podpis opiekuna uczelnianego</small>
-        </div>
-        <div class="col-6">
-            <div id="signaturePlaceholder" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
-                <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ dokument.updated_at.strftime('%Y-%m-%d') if dokument and dokument.updated_at else '' }}</span>
-                <span>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}</span>
+
+            {% if current_user.rola == 'student' and (not dokument or dokument.status in ['Draft', 'Rejected']) %}
+            <div class="form-check mb-4 d-flex justify-content-end">
+                <div>
+                    <input class="form-check-input" type="checkbox" id="generateSignature" name="generateSignature" {%
+                        if sprawozdanie and sprawozdanie.podpis_studenta %}checked{% endif %}>
+                    <label class="form-check-label ms-2" for="generateSignature">
+                        Wygeneruj podpis elektroniczny studenta
+                    </label>
+                </div>
             </div>
-            <small>data i podpis studenta</small>
+
+            <div class="mt-4 mb-4 d-flex justify-content-end">
+                <div class="text-center" style="width: 250px;">
+                    <div id="signaturePlaceholder"
+                        style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
+                    </div>
+                    <small>podpis studenta</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" name="akcja" value="szkic" class="btn btn-outline-secondary" formnovalidate><i
+                        class="bi bi-pencil"></i> Zapisz Szkic</button>
+                {% if sprawozdanie and (sprawozdanie.charakterystyka or sprawozdanie.opis_prac) %}
+                <a href="{{ url_for('student.zal7a_pdf') }}" target="_blank" class="btn btn-primary"><i
+                        class="bi bi-file-earmark-pdf"></i> Pobierz PDF do druku</a>
+                {% else %}
+                <button type="button" class="btn btn-secondary" disabled
+                    title="Najpierw uzupełnij pola i kliknij Zapisz Szkic"><i class="bi bi-file-earmark-pdf"></i>
+                    Pobierz PDF do druku</button>
+                {% endif %}
+                <button type="submit" name="akcja" value="wyslij" id="btnWyslij" class="btn btn-success" {% if not
+                    (dokument and dokument.plik_path) %}disabled title="Musisz najpierw załączyć podpisany skan" {%
+                    endif %}><i class="bi bi-send"></i> Wyślij skan do Dyrektora</button>
+            </div>
+        </div>
+    </div>
+    {% elif dokument and dokument.plik_path %}
+    <div class="card shadow-sm border-0 mb-4 border-top border-success border-3">
+        <div class="card-body text-center p-4">
+            <h5 class="mb-3">Zeskanowany i podpisany dokument</h5>
+            <a href="{{ url_for('static', filename=dokument.plik_path) }}" target="_blank"
+                class="btn btn-lg btn-success">
+                <i class="bi bi-file-earmark-pdf"></i> Podgląd Wgranego Skantu
+            </a>
         </div>
     </div>
     {% endif %}
+</form>
 
-<!-- PANEL WERYFIKACJI DLA UOPZ -->
+{% if current_user.rola == 'student' %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const signatureCheckbox = document.getElementById('generateSignature');
+        if (signatureCheckbox) {
+            const updateSignature = function () {
+                if (signatureCheckbox.checked) {
+                    const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                    const imieNazwisko = `{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}`;
+                    document.getElementById('signaturePlaceholder').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 15px;">${dzisiaj}</span>${imieNazwisko}`;
+                } else {
+                    document.getElementById('signaturePlaceholder').innerHTML = '';
+                }
+            };
+            signatureCheckbox.addEventListener('change', updateSignature);
+            updateSignature();
+        }
 
-<div class="card shadow-sm border-0 border-top border-primary border-3 mb-5">
-    <div class="card-header bg-white fw-bold"><i class="bi bi-shield-check text-primary"></i> Weryfikacja Sprawozdania
-        SN (UOPZ)</div>
-    <div class="card-body">
-        <form method="POST">
-            <div class="mb-3">
-                <label class="form-label">Uwagi do sprawozdania:</label>
-                <textarea name="uwagi_opiekuna" class="form-control"
-                    rows="3"></textarea>
-            </div>
+        const skanInput = document.getElementById('skan');
+        const btnWyslij = document.getElementById('btnWyslij');
+        const maJuzPlik = "{{ 'true' if dokument and dokument.plik_path else 'false' }}" === "true";
 
-            <div class="alert alert-secondary small">
-                Zgodnie z dokumentacją, w przypadku własnej działalności gospodarczej, podpis pod sprawozdaniem składa
-                UOPZ. W przypadku pracy na etacie podpisuje bezpośredni przełożony (ZOPZ).
-            </div>
+        if (skanInput && btnWyslij) {
+            skanInput.addEventListener('change', function () {
+                if (this.files.length > 0 || maJuzPlik) {
+                    btnWyslij.disabled = false;
+                    btnWyslij.removeAttribute('title');
+                } else {
+                    btnWyslij.disabled = true;
+                    btnWyslij.title = "Musisz najpierw załączyć podpisany skan";
+                }
+            });
+        }
 
-            <div class="d-flex justify-content-end gap-2">
-                <button type="submit" name="akcja" value="odrzuc" class="btn btn-outline-danger"><i
-                        class="bi bi-x-circle"></i> Odrzuć do poprawy</button>
-                <button type="submit" name="akcja" value="zatwierdz_i_podpisz" class="btn btn-success"><i
-                        class="bi bi-check-circle"></i> Zatwierdź (i złóż podpis uczelniany)</button>
-            </div>
-        </form>
-    </div>
-</div>
-
+        const fields = ['charakterystyka', 'opis', 'wiedza'];
+        fields.forEach(function (fieldId) {
+            const el = document.getElementById(fieldId);
+            const countEl = document.getElementById(fieldId + '_count');
+            const msgEl = document.getElementById(fieldId + '_msg');
+            if (el && countEl && msgEl) {
+                const updateCount = function () {
+                    const len = el.value.length;
+                    if (len < 400) {
+                        countEl.textContent = len;
+                        msgEl.classList.remove('d-none');
+                    } else {
+                        msgEl.classList.add('d-none');
+                    }
+                };
+                el.addEventListener('input', updateCount);
+                updateCount();
+            }
+        });
+    });
+</script>
+{% endif %}
 
 {% endblock %}

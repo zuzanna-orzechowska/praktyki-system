@@ -28,6 +28,12 @@
     <i class="bi bi-chat-left-text-fill me-2"></i> <strong>Uwagi od Opiekuna Zakładowego (ZOPZ):</strong> {{ sprawozdanie.uwagi_zopz }}
 </div>
 {% endif %}
+
+{% if dokument and dokument.uwagi_dyrektora %}
+<div class="alert alert-{% if dokument.status == 'Rejected' %}danger{% else %}info{% endif %} shadow-sm border-0 mb-4">
+    <i class="bi bi-chat-left-text-fill me-2"></i> <strong>Uwagi od Dyrektora Instytutu:</strong> {{ dokument.uwagi_dyrektora }}
+</div>
+{% endif %}
 {% if dokument and dokument.uwagi_opiekuna %}
 <div class="alert alert-{% if dokument.status == 'Rejected' %}danger{% else %}info{% endif %} shadow-sm border-0 mb-4">
     <i class="bi bi-chat-left-text-fill me-2"></i> <strong>Uwagi od Opiekuna Uczelnianego (UOPZ):</strong> {{ dokument.uwagi_opiekuna }}
@@ -117,13 +123,31 @@
     </script>
     {% elif sprawozdanie %}
     <div class="row text-center mt-5 mb-5 pt-4">
-        <div class="col-6">
+        <div class="col-4">
+            <div id="podpis-dyrektora" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
+                {% if sprawozdanie.podpis_dyrektora %}
+                <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ dokument.updated_at.strftime('%Y-%m-%d') if dokument and dokument.updated_at else '' }}</span>
+                <span>{{ sprawozdanie.podpis_dyrektora }}</span>
+                {% endif %}
+            </div>
+            <small>data i podpis dyrektora</small>
+            
+            {% if current_user.rola == 'dyrektor' and dokument and dokument.status in ['Weryfikacja Dyrektor', 'Weryfikacja UOPZ'] %}
+            <div class="mt-2 form-check d-flex justify-content-center">
+                <input class="form-check-input me-2" type="checkbox" name="generateSignatureDyrektor" id="generateSignatureDyrektor" form="dyrektor-weryfikacja-form" required>
+                <label class="form-check-label fw-bold text-dark" for="generateSignatureDyrektor">
+                    Złóż podpis cyfrowy pod dokumentem
+                </label>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-4">
             <div id="podpis-zopz" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
                 {% if sprawozdanie.podpis_zopz %}{{ sprawozdanie.podpis_zopz }}{% endif %}
             </div>
             <small>podpis zakładowego opiekuna<br>praktyki</small>
         </div>
-        <div class="col-6">
+        <div class="col-4">
             <div id="podpis-student" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99;">
                 {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}
             </div>
@@ -197,5 +221,42 @@
         </form>
     </div>
 </div>
+{% endif %}
+
+<!-- PANEL WERYFIKACJI DLA DYREKTORA -->
+{% if current_user.rola == 'dyrektor' and dokument and dokument.status in ['Weryfikacja Dyrektor', 'Weryfikacja UOPZ'] %}
+<div class="card shadow-sm border-0 border-top border-danger border-3 mb-5">
+    <div class="card-header bg-white fw-bold"><i class="bi bi-shield-check text-danger"></i> Ostateczna Weryfikacja Sprawozdania (Dyrektor)</div>
+    <div class="card-body">
+        <form method="POST" id="dyrektor-weryfikacja-form">
+            <div class="mb-3">
+                <label class="form-label">Uwagi dla studenta (opcjonalnie przy akceptacji, wymagane przy odrzuceniu):</label>
+                <textarea name="uwagi_dyrektora" class="form-control" rows="3">{{ dokument.uwagi_dyrektora if dokument and dokument.uwagi_dyrektora else '' }}</textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" name="akcja" value="odrzuc" class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> Odrzuć do poprawy</button>
+                <button type="submit" name="akcja" value="zatwierdz" class="btn btn-success"><i class="bi bi-check-circle"></i> Zatwierdź i Podpisz</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dyrektorCheckbox = document.getElementById('generateSignatureDyrektor');
+        if (dyrektorCheckbox) {
+            dyrektorCheckbox.addEventListener('change', function() {
+                if(this.checked) {
+                    const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                    const imieNazwisko = `{{ current_user.imie }} {{ current_user.nazwisko }}`;
+                    document.getElementById('podpis-dyrektora').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                } else {
+                    document.getElementById('podpis-dyrektora').innerHTML = `{% if sprawozdanie and sprawozdanie.podpis_dyrektora %}<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ dokument.updated_at.strftime('%Y-%m-%d') if dokument and dokument.updated_at else '' }}</span>{{ sprawozdanie.podpis_dyrektora }}{% endif %}`;
+                }
+            });
+        }
+    });
+</script>
 {% endif %}
 {% endblock %}
