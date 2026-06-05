@@ -156,7 +156,7 @@
                 <button type="submit" name="akcja" value="szkic" class="btn btn-outline-secondary" formnovalidate><i
                         class="bi bi-pencil"></i> Zapisz Szkic</button>
                 {% if sprawozdanie and (sprawozdanie.charakterystyka or sprawozdanie.opis_prac) %}
-                <a href="{{ url_for('student.zal7a_pdf') }}" target="_blank" class="btn btn-primary"><i
+                <a href="{{ url_for('student.generate_pdf', typ_dokumentu='ZAL7A') }}" target="_blank" class="btn btn-primary"><i
                         class="bi bi-file-earmark-pdf"></i> Pobierz PDF do druku</a>
                 {% else %}
                 <button type="button" class="btn btn-secondary" disabled

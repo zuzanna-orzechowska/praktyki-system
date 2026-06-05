@@ -1,42 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;"><i class="bi bi-folder2-open me-2"></i>Dokumenty i Regulaminy</h2>
+<p class="text-muted mb-4">Poniżej znajdziesz wszystkie niezbędne dokumenty, regulaminy oraz instrukcje dotyczące praktyk studenckich.</p>
+
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-        <h2 class="card-title mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;"><i class="bi bi-folder2-open me-2"></i>Dokumenty i Regulaminy</h2>
-        <p class="text-muted">Poniżej znajdziesz wszystkie niezbędne dokumenty, regulaminy oraz instrukcje dotyczące praktyk studenckich.</p>
-    </div>
     <div class="card-body">
-        
         <div class="alert alert-info" role="alert">
-            <i class="bi bi-info-circle me-2"></i> W tym miejscu wkrótce pojawią się kolejne dokumenty i formularze do pobrania. Jeśli masz dodatkowe pliki, możesz je tu załączać.
+            <i class="bi bi-info-circle me-2"></i> Poniżej znajdują się Twoje wygenerowane dokumenty z przebiegu praktyki. Kliknij w wybrany dokument, aby wyświetlić go w przeglądarce w formie pliku PDF (skąd możesz go również pobrać lub wydrukować).
         </div>
 
-        <div class="list-group">
-            <!-- Przykładowe dokumenty -->
-            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-1">Regulamin Praktyk Studenckich</h5>
-                    <small class="text-muted">Obowiązujący regulamin odbywania praktyk dla wszystkich kierunków.</small>
+        <div class="list-group shadow-sm">
+            {% if praktyka and praktyka.dokumenty %}
+                {% for doc in praktyka.dokumenty %}
+                    {% if doc.typ_zalacznika in ['ZAL4B', 'ZAL4A', 'ZAL7A', 'ZAL8A'] %}
+                    <a href="{{ url_for('student.generate_pdf', typ_dokumentu=doc.typ_zalacznika) }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light text-primary rounded p-3 me-3">
+                                <i class="bi bi-file-earmark-pdf-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-dark" style="font-weight: 500;">
+                                    {% if doc.typ_zalacznika == 'ZAL4B' %}Wniosek o zaliczenie (Zał. 4b)
+                                    {% elif doc.typ_zalacznika == 'ZAL4A' %}Decyzja Dyrektora (Zał. 4a)
+                                    {% elif doc.typ_zalacznika == 'ZAL7A' %}Sprawozdanie końcowe (Zał. 7a)
+                                    {% elif doc.typ_zalacznika == 'ZAL8A' %}Protokół zaliczenia (Zał. 8/8a)
+                                    {% endif %}
+                                </h5>
+                                <small class="text-muted">Kliknij, aby otworzyć dokument PDF na podstawie Twoich danych.</small>
+                            </div>
+                        </div>
+                        <span class="btn btn-outline-primary btn-sm px-3 rounded-pill"><i class="bi bi-eye me-1"></i> Podgląd PDF</span>
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="list-group-item text-center py-4 text-muted">
+                    Brak dokumentów przypisanych do Twojej ścieżki.
                 </div>
-                <span class="badge bg-primary rounded-pill"><i class="bi bi-download"></i> PDF</span>
-            </a>
-            
-            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-1">Wzór Porozumienia z Zakładem Pracy</h5>
-                    <small class="text-muted">Dokument niezbędny przed rozpoczęciem praktyki.</small>
-                </div>
-                <span class="badge bg-secondary rounded-pill"><i class="bi bi-file-earmark-word"></i> DOCX</span>
-            </a>
-            
-            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-1">Karta Oceny Praktykanta</h5>
-                    <small class="text-muted">Do wypełnienia przez zakładowego opiekuna praktyk na zakończenie praktyki.</small>
-                </div>
-                <span class="badge bg-primary rounded-pill"><i class="bi bi-download"></i> PDF</span>
-            </a>
+            {% endif %}
         </div>
         
     </div>

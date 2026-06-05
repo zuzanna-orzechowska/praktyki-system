@@ -261,29 +261,56 @@ def zal4b_wniosek():
         return redirect(url_for('index'))
     return render_template('dokumenty/zal4b_wniosek_student.html')
 
-@student_bp.route('/zal7a_pdf', methods=['GET'])
+@student_bp.route('/generate-pdf/<typ_dokumentu>', methods=['GET'])
 @login_required
-def zal7a_pdf():
+def generate_pdf(typ_dokumentu):
     if current_user.rola != 'student': return redirect(url_for('index'))
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    if not praktyka:
+        flash('Nie znaleziono praktyki.', 'danger')
+        return redirect(url_for('student.dashboard'))
+
+    # Determine which document type
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika=typ_dokumentu).first()
     if not dokument:
-        flash('Nie znaleziono dokumentu.', 'danger')
-        return redirect(url_for('student.zal7a_sprawozdanie'))
+        flash(f'Nie znaleziono dokumentu typu {typ_dokumentu}.', 'danger')
+        return redirect(url_for('student.dashboard'))
         
-    sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
-    
-    from utils.pdf_generator import generate_zal7a_pdf
     from flask import send_file
+    from utils.pdf_generator import generate_zal7a_pdf, generate_zal4b_pdf, generate_zal8a_pdf, generate_zal4a_pdf
     
-    pdf_buffer = generate_zal7a_pdf(student, praktyka, sprawozdanie)
+    pdf_buffer = None
+    file_prefix = "Dokument"
     
+    if typ_dokumentu == 'ZAL7A':
+        model_obj = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
+        pdf_buffer = generate_zal7a_pdf(student, praktyka, model_obj)
+        file_prefix = "Zalacznik_7a"
+    elif typ_dokumentu == 'ZAL4B':
+        from models import WniosekZaliczeniePraktyki
+        model_obj = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first()
+        pdf_buffer = generate_zal4b_pdf(student, praktyka, model_obj)
+        file_prefix = "Zalacznik_4b"
+    elif typ_dokumentu == 'ZAL8A':
+        from models import Protokol
+        model_obj = Protokol.query.filter_by(dokument_id=dokument.id).first()
+        pdf_buffer = generate_zal8a_pdf(student, praktyka, model_obj)
+        file_prefix = "Zalacznik_8a"
+    elif typ_dokumentu == 'ZAL4A':
+        from models import DecyzjaZal4a
+        model_obj = DecyzjaZal4a.query.filter_by(dokument_id=dokument.id).first()
+        pdf_buffer = generate_zal4a_pdf(student, praktyka, model_obj)
+        file_prefix = "Zalacznik_4a"
+    else:
+        flash('Generowanie PDF dla tego załącznika nie jest jeszcze obsługiwane.', 'warning')
+        return redirect(url_for('student.dashboard'))
+        
     return send_file(
         pdf_buffer,
         as_attachment=False,
-        download_name=f'Zalacznik_7a_{student.nr_albumu}.pdf',
+        download_name=f'{file_prefix}_{student.nr_albumu}.pdf',
         mimetype='application/pdf'
     )
 

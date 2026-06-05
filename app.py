@@ -92,6 +92,17 @@ def create_app():
                 
         return render_template('index.html', zopz_pending_porozumienia=zopz_pending_porozumienia)
 
+    @app.route('/dokumenty')
+    def dokumenty_ogolne():
+        praktyka = None
+        if current_user.is_authenticated and current_user.rola == 'student':
+            from models import Student, Praktyka
+            student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+            if student:
+                praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+                
+        return render_template('dokumenty.html', praktyka=praktyka)
+
     return app
 
 if __name__ == '__main__':
