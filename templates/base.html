@@ -306,7 +306,7 @@
                     {% endif %}
 
                     <div class="sidebar-section-title mt-3">Ogólne</div>
-                    {% if not praktyka or praktyka.status not in ['SCIEZKA_PRACA', 'ZAL4B_ZATWIERDZONE'] %}
+                    {% if not praktyka or not (praktyka.status in ['SCIEZKA_PRACA', 'ZAL4B_ZATWIERDZONE'] or (praktyka.status == 'ZALICZONA' and praktyka.dokumenty|selectattr('typ_zalacznika', 'equalto', 'ZAL4B')|list|length > 0)) %}
                     <li><a href="/student/zal5_ankieta" class="{% if 'zal5_ankieta' in request.path %}active{% endif %}">Ankieta (Zał. 5)</a></li>
                     {% endif %}
                     <li><a href="/dokumenty">Wszystkie dokumenty</a></li>

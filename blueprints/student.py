@@ -428,7 +428,16 @@ def zal8a_protokol():
         flash('Sprawozdanie (Zał. 7a) musi zostać najpierw zatwierdzone przez Dyrektora Instytutu.', 'danger')
         return redirect(url_for('student.dashboard'))
         
-    return render_template('dokumenty/zal8a_protokol_student.html', student=student, protokol=praktyka.protokol, praktyka=praktyka)
+    instytucja_1 = praktyka.zaklad.nazwa if praktyka.zaklad else ''
+    okres_1 = ''
+    from models import DecyzjaZal4a
+    zal4a_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
+    if zal4a_doc:
+        d4a = DecyzjaZal4a.query.filter_by(dokument_id=zal4a_doc.id).first()
+        if d4a and d4a.wymiar_godzin:
+            okres_1 = f"{d4a.wymiar_godzin} godz."
+            
+    return render_template('dokumenty/zal8a_protokol_student.html', student=student, protokol=praktyka.protokol, praktyka=praktyka, instytucja_1=instytucja_1, okres_1=okres_1)
 
 
 @student_bp.route('/zal9_oswiadczenie', methods=['GET'])

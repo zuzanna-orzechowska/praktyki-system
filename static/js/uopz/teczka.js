@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 document.getElementById('btn-zal8').href = `/uopz/zal8_protokol/${studentId}`;
             }
+
+            const btnZal8a = document.getElementById('btn-zal8a');
+            if (btnZal8a) {
+                btnZal8a.href = `/uopz/zal8a_protokol/${studentId}`;
+            }
             
             const btnZal6 = document.getElementById('btn-zal6');
             if (btnZal6) {

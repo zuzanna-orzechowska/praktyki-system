@@ -1,11 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- WYLICZANIE WSTECZNE OCENY E NA POTRZEBY WIDOKU -->
-{% set ocena_e = none %}
-{% if protokol and protokol.ocena_koncowa and protokol.ocena_s and protokol.ocena_u and protokol.ocena_z %}
-{% set ocena_e = ((protokol.ocena_koncowa - (0.1 * protokol.ocena_s) - (0.2 * protokol.ocena_u) - (0.3 * protokol.ocena_z)) / 0.4) | round(1) %}
-{% endif %}
+
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -37,7 +33,7 @@
             <div class="col-md-12">
                 <div class="d-flex align-items-center">
                     <strong class="me-2 text-nowrap">Student:</strong>
-                    <input type="text" class="form-control bg-light" value="{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}" readonly>
                 </div>
             </div>
         </div>
@@ -103,22 +99,26 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong>Skład komisji:</strong>
+                        {% if current_user.rola == 'uopz' %}
+                        <br><small class="text-danger">Skład komisji ustala Dziekanat / Dyrektor Instytutu.</small>
+                        {% endif %}
                     </div>
                     <div class="col-md-6 d-flex justify-content-end align-items-center">
                         <strong class="me-2 text-nowrap">Data zaliczenia:</strong>
-                        <input type="date" class="form-control w-auto" name="data_egzaminu" value="{{ protokol.data_egzaminu if protokol else '' }}">
+                        <input type="date" class="form-control w-auto" name="data_egzaminu" value="{{ protokol.data_egzaminu if protokol else '' }}" {% if current_user.rola == 'uopz' %}readonly{% endif %}>
                     </div>
                 </div>
                 
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-auto">1.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="przewodniczacy">
+                        <select class="form-select" name="przewodniczacy" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if (protokol and protokol.przewodniczacy == p.imie ~ ' ' ~ p.nazwisko) or (not protokol and current_user.imie ~ ' ' ~ current_user.nazwisko == p.imie ~ ' ' ~ p.nazwisko) %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.przewodniczacy %}<input type="hidden" name="przewodniczacy" value="{{ protokol.przewodniczacy }}">{% endif %}
                     </div>
                     <div class="col-auto">— Przewodniczący Komisji</div>
                 </div>
@@ -126,12 +126,13 @@
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-auto">2.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="komisja_2">
+                        <select class="form-select" name="komisja_2" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if protokol and protokol.komisja_2 == p.imie ~ ' ' ~ p.nazwisko %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.komisja_2 %}<input type="hidden" name="komisja_2" value="{{ protokol.komisja_2 }}">{% endif %}
                     </div>
                     <div class="col-auto">— Uczelniany opiekun praktyki zawodowej</div>
                 </div>
@@ -139,27 +140,29 @@
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-auto">3.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="komisja_3">
+                        <select class="form-select" name="komisja_3" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if protokol and protokol.komisja_3 == p.imie ~ ' ' ~ p.nazwisko %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.komisja_3 %}<input type="hidden" name="komisja_3" value="{{ protokol.komisja_3 }}">{% endif %}
                     </div>
-                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_3" placeholder="Rola w komisji..." value="{{ protokol.rola_3 if protokol else '' }}"></div>
+                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_3" placeholder="Rola w komisji..." value="{{ protokol.rola_3 if protokol else '' }}" {% if current_user.rola == 'uopz' %}readonly{% endif %}></div>
                 </div>
                 
                 <div class="row g-2 align-items-center">
                     <div class="col-auto">4.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="komisja_4">
+                        <select class="form-select" name="komisja_4" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if protokol and protokol.komisja_4 == p.imie ~ ' ' ~ p.nazwisko %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.komisja_4 %}<input type="hidden" name="komisja_4" value="{{ protokol.komisja_4 }}">{% endif %}
                     </div>
-                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_4" placeholder="Rola w komisji..." value="{{ protokol.rola_4 if protokol else '' }}"></div>
+                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_4" placeholder="Rola w komisji..." value="{{ protokol.rola_4 if protokol else '' }}" {% if current_user.rola == 'uopz' %}readonly{% endif %}></div>
                 </div>
             </div>
 
@@ -190,7 +193,7 @@
                     <tr class="table-light fw-bold">
                         <td colspan="2" class="text-end">Łączna ocena za mini zadania (średnia arytmetyczna) - E:</td>
                         <td class="bg-light text-center text-primary fs-5">
-                            <input type="text" class="form-control text-center fw-bold" name="ocena_e_manual" value="{{ ocena_e if ocena_e else '' }}" placeholder="Ocena E">
+                            <input type="text" class="form-control text-center fw-bold" name="ocena_e_manual" value="{{ protokol.ocena_e if protokol and protokol.ocena_e else '' }}" placeholder="Ocena E">
                         </td>
                     </tr>
                 </tbody>

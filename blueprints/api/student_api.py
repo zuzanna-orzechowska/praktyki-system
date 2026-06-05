@@ -25,10 +25,13 @@ def dashboard():
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
     zal7a_status = None
+    dokumenty_dict = {}
     if praktyka:
         zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
         if zal7a:
             zal7a_status = zal7a.status
+        for d in praktyka.dokumenty:
+            dokumenty_dict[d.typ_zalacznika] = True
     
     powiadomienia = []
     
@@ -37,7 +40,8 @@ def dashboard():
         'praktyka': praktyka.to_dict() if praktyka else None,
         'uzytkownik': current_user.to_dict(),
         'powiadomienia': powiadomienia,
-        'zal7a_status': zal7a_status
+        'zal7a_status': zal7a_status,
+        'dokumenty': dokumenty_dict
     })
 
 @student_api_bp.route('/dziennik', methods=['GET', 'POST'])
@@ -489,7 +493,6 @@ def zal4b_wniosek():
     wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first() if dokument else None
     
     if request.method == 'POST':
-        # Obsługa wysyłania przez FormData z JS
         if request.content_type and 'multipart/form-data' in request.content_type:
             data = request.form
         else:
@@ -517,7 +520,6 @@ def zal4b_wniosek():
                 try:
                     zalaczniki = json.loads(wniosek.zalaczniki_paths)
                 except Exception:
-                    # Migracja ze starego formatu (pojedynczy string z nazwą pliku)
                     if len(wniosek.zalaczniki_paths) > 5:
                         zalaczniki = [{"path": wniosek.zalaczniki_paths, "opis": "Załącznik (stary format)"}]
             

@@ -1,11 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- WYLICZANIE WSTECZNE OCENY E NA POTRZEBY WIDOKU -->
-{% set ocena_e = none %}
-{% if protokol and protokol.ocena_koncowa and protokol.ocena_s and protokol.ocena_u and protokol.ocena_z %}
-{% set ocena_e = ((protokol.ocena_koncowa - (0.1 * protokol.ocena_s) - (0.2 * protokol.ocena_u) - (0.3 * protokol.ocena_z)) / 0.4) | round(1) %}
-{% endif %}
+
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -37,7 +33,7 @@
             <div class="col-md-6">
                 <div class="d-flex align-items-center">
                     <strong class="me-2 text-nowrap">Student:</strong>
-                    <input type="text" class="form-control bg-light" value="{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0]|trim if student.uzytkownik.nazwisko else '' }}" readonly>
                 </div>
             </div>
             <div class="col-md-6">
@@ -61,8 +57,8 @@
                 <tbody>
                     <tr>
                         <td class="fw-bold">1</td>
-                        <td><input type="text" class="form-control" name="instytucja_1" value="{{ protokol.instytucja_1 if protokol else '' }}"></td>
-                        <td><input type="text" class="form-control" name="okres_1" value="{{ protokol.okres_1 if protokol else '' }}"></td>
+                        <td><input type="text" class="form-control" name="instytucja_1" value="{{ protokol.instytucja_1 if protokol and protokol.instytucja_1 else instytucja_1 }}"></td>
+                        <td><input type="text" class="form-control" name="okres_1" value="{{ protokol.okres_1 if protokol and protokol.okres_1 else okres_1 }}"></td>
                     </tr>
                     <tr>
                         <td class="fw-bold">2</td>
@@ -81,9 +77,26 @@
                             <strong class="me-2 text-nowrap">Ocena za sprawozdanie (S*) =</strong>
                             <input type="text" class="form-control text-center" name="ocena_s" value="{{ protokol.ocena_s if protokol else '' }}" style="width: 80px;">
                         </div>
-                        <div class="text-end">
-                            <input type="text" class="form-control d-inline-block" name="podpis_opiekuna_s" value="{{ protokol.podpis_opiekuna_s if protokol and protokol.podpis_opiekuna_s else '' }}" placeholder="Podpis..." style="width: 250px;">
-                            <br><small class="text-muted">(data i podpis uczelnianego opiekuna praktyki)</small>
+                        <div class="text-center" style="width: 250px;">
+                            {% if current_user.rola == 'uopz' %}
+                            <div class="form-check text-start d-inline-block mt-2 mb-2 w-100">
+                                <input class="form-check-input border-secondary" type="checkbox" name="generateSignatureUOPZ" id="generateSignatureUOPZ">
+                                <label class="form-check-label fw-bold text-dark small" for="generateSignatureUOPZ">Złóż podpis elektroniczny</label>
+                            </div>
+                            {% endif %}
+                            
+                            <div id="podpis-uopz-display" style="border-bottom: 1px dotted #000; min-height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 0.9rem;">
+                                {% if protokol and protokol.podpis_opiekuna_s %}
+                                    {% if '[Podpis elektroniczny' in protokol.podpis_opiekuna_s %}
+                                        <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ protokol.podpis_opiekuna_s.split('Data: ')[1].split(']')[0] if 'Data: ' in protokol.podpis_opiekuna_s else '' }}</span>
+                                        <span>{{ protokol.podpis_opiekuna_s.split('UOPZ: ')[1].split(',')[0] if 'UOPZ: ' in protokol.podpis_opiekuna_s else protokol.podpis_opiekuna_s }}</span>
+                                    {% else %}
+                                        {{ protokol.podpis_opiekuna_s }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">(data i podpis uczelnianego opiekuna praktyki)</small>
+                            <input type="hidden" name="podpis_opiekuna_s" value="{{ protokol.podpis_opiekuna_s if protokol and protokol.podpis_opiekuna_s else '' }}">
                         </div>
                     </div>
                 </div>
@@ -95,22 +108,26 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong>Skład komisji:</strong>
+                        {% if current_user.rola == 'uopz' %}
+                        <br><small class="text-danger">Skład komisji ustala Dziekanat / Dyrektor Instytutu.</small>
+                        {% endif %}
                     </div>
                     <div class="col-md-6 d-flex justify-content-end align-items-center">
                         <strong class="me-2 text-nowrap">Data zaliczenia:</strong>
-                        <input type="date" class="form-control w-auto" name="data_egzaminu" value="{{ protokol.data_egzaminu if protokol else '' }}">
+                        <input type="date" class="form-control w-auto" name="data_egzaminu" value="{{ protokol.data_egzaminu if protokol else '' }}" {% if current_user.rola == 'uopz' %}readonly{% endif %}>
                     </div>
                 </div>
                 
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-auto">1.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="przewodniczacy">
+                        <select class="form-select" name="przewodniczacy" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if (protokol and protokol.przewodniczacy == p.imie ~ ' ' ~ p.nazwisko) or (not protokol and current_user.imie ~ ' ' ~ current_user.nazwisko == p.imie ~ ' ' ~ p.nazwisko) %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.przewodniczacy %}<input type="hidden" name="przewodniczacy" value="{{ protokol.przewodniczacy }}">{% endif %}
                     </div>
                     <div class="col-auto">— Przewodniczący Komisji</div>
                 </div>
@@ -118,12 +135,13 @@
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-auto">2.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="komisja_2">
+                        <select class="form-select" name="komisja_2" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if protokol and protokol.komisja_2 == p.imie ~ ' ' ~ p.nazwisko %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.komisja_2 %}<input type="hidden" name="komisja_2" value="{{ protokol.komisja_2 }}">{% endif %}
                     </div>
                     <div class="col-auto">— Uczelniany opiekun praktyki zawodowej</div>
                 </div>
@@ -131,27 +149,29 @@
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-auto">3.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="komisja_3">
+                        <select class="form-select" name="komisja_3" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if protokol and protokol.komisja_3 == p.imie ~ ' ' ~ p.nazwisko %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.komisja_3 %}<input type="hidden" name="komisja_3" value="{{ protokol.komisja_3 }}">{% endif %}
                     </div>
-                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_3" placeholder="Rola w komisji..." value="{{ protokol.rola_3 if protokol else '' }}"></div>
+                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_3" placeholder="Rola w komisji..." value="{{ protokol.rola_3 if protokol else '' }}" {% if current_user.rola == 'uopz' %}readonly{% endif %}></div>
                 </div>
                 
                 <div class="row g-2 align-items-center">
                     <div class="col-auto">4.</div>
                     <div class="col-md-5">
-                        <select class="form-select" name="komisja_4">
+                        <select class="form-select" name="komisja_4" {% if current_user.rola == 'uopz' %}disabled{% endif %}>
                             <option value="">Wybierz...</option>
                             {% for p in pracownicy %}
                             <option value="{{ p.imie }} {{ p.nazwisko }}" {% if protokol and protokol.komisja_4 == p.imie ~ ' ' ~ p.nazwisko %}selected{% endif %}>{{ p.tytul_naukowy or '' }} {{ p.imie }} {{ p.nazwisko }}</option>
                             {% endfor %}
                         </select>
+                        {% if current_user.rola == 'uopz' and protokol and protokol.komisja_4 %}<input type="hidden" name="komisja_4" value="{{ protokol.komisja_4 }}">{% endif %}
                     </div>
-                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_4" placeholder="Rola w komisji..." value="{{ protokol.rola_4 if protokol else '' }}"></div>
+                    <div class="col-auto">— <input type="text" class="form-control d-inline-block w-auto" name="rola_4" placeholder="Rola w komisji..." value="{{ protokol.rola_4 if protokol else '' }}" {% if current_user.rola == 'uopz' %}readonly{% endif %}></div>
                 </div>
             </div>
 
@@ -182,7 +202,7 @@
                     <tr class="table-light fw-bold">
                         <td colspan="2" class="text-end">Łączna ocena za mini zadania (średnia arytmetyczna) - E:</td>
                         <td class="bg-light text-center text-primary fs-5">
-                            <input type="text" class="form-control text-center fw-bold" name="ocena_e_manual" value="{{ ocena_e if ocena_e else '' }}" placeholder="Ocena E">
+                            <input type="text" class="form-control text-center fw-bold" name="ocena_e_manual" value="{{ protokol.ocena_e if protokol and protokol.ocena_e else '' }}" placeholder="Ocena E">
                         </td>
                     </tr>
                 </tbody>
@@ -206,22 +226,41 @@
                 </div>
                 
                 <div class="row mt-5">
-                    <div class="col-md-12 text-end mb-4">
-                        <small class="text-muted d-block mb-1">Przewodniczący Komisji</small>
-                        <input type="text" class="form-control d-inline-block text-center" name="podpis_przewodniczacego" style="width: 250px;" value="{{ protokol.podpis_przewodniczacego if protokol and protokol.podpis_przewodniczacego else '' }}" placeholder="Imię i nazwisko (podpis)">
+                    <div class="col-md-12 d-flex flex-column align-items-end mb-4">
+                        <div class="text-center" style="width: 250px;">
+                            {% if current_user.rola in ['dziekanat', 'dyrektor'] %}
+                            <div class="form-check text-start d-inline-block mt-2 mb-2 w-100">
+                                <input class="form-check-input border-secondary" type="checkbox" name="generateSignatureDyrektor" id="generateSignatureDyrektor">
+                                <label class="form-check-label fw-bold text-dark small" for="generateSignatureDyrektor">Złóż podpis elektroniczny</label>
+                            </div>
+                            {% endif %}
+                            
+                            <div id="podpis-dyrektor-display" style="border-bottom: 1px dotted #000; min-height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 0.9rem;">
+                                {% if protokol and protokol.podpis_przewodniczacego %}
+                                    {% if '[Podpis elektroniczny' in protokol.podpis_przewodniczacego %}
+                                        <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ protokol.podpis_przewodniczacego.split('Data: ')[1].split(']')[0] if 'Data: ' in protokol.podpis_przewodniczacego else '' }}</span>
+                                        <span>{{ protokol.podpis_przewodniczacego.split('Przewodniczący: ')[1].split(',')[0] if 'Przewodniczący: ' in protokol.podpis_przewodniczacego else protokol.podpis_przewodniczacego }}</span>
+                                    {% else %}
+                                        {{ protokol.podpis_przewodniczacego }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <small class="text-muted d-block mb-1">Przewodniczący Komisji</small>
+                            <input type="hidden" name="podpis_przewodniczacego" value="{{ protokol.podpis_przewodniczacego if protokol and protokol.podpis_przewodniczacego else '' }}">
+                        </div>
                     </div>
                 </div>
                 
                 <div class="row mt-4">
                     <div class="col-12"><strong class="text-muted">Członkowie Komisji:</strong></div>
                     <div class="col-md-4 mt-2">
-                        <small>2)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                        <small>2)</small> <input type="text" class="form-control w-75 d-inline-block" value="{{ protokol.komisja_2 if protokol else '' }}" disabled>
                     </div>
                     <div class="col-md-4 mt-2">
-                        <small>3)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                        <small>3)</small> <input type="text" class="form-control w-75 d-inline-block" value="{{ protokol.komisja_3 if protokol else '' }}" disabled>
                     </div>
                     <div class="col-md-4 mt-2">
-                        <small>4)</small> <input type="text" class="form-control w-75 d-inline-block" disabled>
+                        <small>4)</small> <input type="text" class="form-control w-75 d-inline-block" value="{{ protokol.komisja_4 if protokol else '' }}" disabled>
                     </div>
                 </div>
             </div>
@@ -233,6 +272,8 @@
             <div class="text-end mt-5 d-print-none d-flex justify-content-end gap-2">
                 {% if current_user.rola in ['dziekanat', 'dyrektor', 'uopz'] %}
                 <button type="submit" name="akcja" value="zapisz" class="btn btn-outline-primary btn-lg shadow-sm"><i class="bi bi-save"></i> Zapisz szkic</button>
+                {% endif %}
+                {% if current_user.rola in ['dziekanat', 'dyrektor'] %}
                 <button type="submit" name="akcja" value="zakoncz" class="btn btn-success btn-lg shadow-sm" onclick="return confirm('Czy na pewno chcesz zatwierdzić ten protokół i ostatecznie ZAKOŃCZYĆ praktyki studenta? Tej operacji nie można łatwo cofnąć.');"><i class="bi bi-check-circle-fill"></i> Zatwierdź i Zakończ Praktyki</button>
                 {% endif %}
             </div>
@@ -274,6 +315,38 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('input', calculateE);
         }
     });
+
+    const sigUopzCheck = document.getElementById('generateSignatureUOPZ');
+    const sigUopzDisplay = document.getElementById('podpis-uopz-display');
+    const orgUopzContent = sigUopzDisplay ? sigUopzDisplay.innerHTML : '';
+    
+    if(sigUopzCheck && sigUopzDisplay) {
+        sigUopzCheck.addEventListener('change', function() {
+            if(this.checked) {
+                const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                const imieNazwisko = `{{ current_user.imie }} {{ current_user.nazwisko }}`;
+                sigUopzDisplay.innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span><span>${imieNazwisko}</span>`;
+            } else {
+                sigUopzDisplay.innerHTML = orgUopzContent;
+            }
+        });
+    }
+
+    const sigDyrCheck = document.getElementById('generateSignatureDyrektor');
+    const sigDyrDisplay = document.getElementById('podpis-dyrektor-display');
+    const orgDyrContent = sigDyrDisplay ? sigDyrDisplay.innerHTML : '';
+    
+    if(sigDyrCheck && sigDyrDisplay) {
+        sigDyrCheck.addEventListener('change', function() {
+            if(this.checked) {
+                const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                const imieNazwisko = `{{ current_user.imie }} {{ current_user.nazwisko }}`;
+                sigDyrDisplay.innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span><span>${imieNazwisko}</span>`;
+            } else {
+                sigDyrDisplay.innerHTML = orgDyrContent;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -638,10 +638,24 @@ def zal8a_protokol(student_id):
         protokol.ocena_e = safe_float(request.form.get('ocena_e_manual'))
         protokol.ocena_koncowa = safe_float(request.form.get('ocena_k'))
         protokol.ocena_k_slownie = request.form.get('ocena_k_slownie')
-        protokol.podpis_przewodniczacego = request.form.get('podpis_przewodniczacego')
+        
+        if request.form.get('generateSignatureDyrektor'):
+            protokol.podpis_przewodniczacego = f"[Podpis elektroniczny Przewodniczący: {current_user.tytul_naukowy or ''} {current_user.imie} {current_user.nazwisko}, Data: {datetime.today().strftime('%d.%m.%Y')}]"
+        elif request.form.get('podpis_przewodniczacego') is not None:
+            protokol.podpis_przewodniczacego = request.form.get('podpis_przewodniczacego')
         
         try:
             if akcja == 'zakoncz':
+                if not protokol.podpis_opiekuna_s:
+                    flash('Nie można zatwierdzić: Brak podpisu UOPZ na protokole.', 'danger')
+                    return redirect(url_for('dziekanat.zal8a_protokol', student_id=student.id))
+                if protokol.ocena_koncowa is None or protokol.ocena_e is None or protokol.ocena_s is None:
+                    flash('Nie można zatwierdzić: Wszystkie oceny (S, E, Końcowa) muszą być wystawione.', 'danger')
+                    return redirect(url_for('dziekanat.zal8a_protokol', student_id=student.id))
+                if not protokol.podpis_przewodniczacego:
+                    flash('Nie można zatwierdzić: Brak podpisu Przewodniczącego Komisji.', 'danger')
+                    return redirect(url_for('dziekanat.zal8a_protokol', student_id=student.id))
+
                 praktyka.status = 'ZALICZONA'
                 notif = Powiadomienie(
                     uzytkownik_id=student.uzytkownik_id,
@@ -659,4 +673,13 @@ def zal8a_protokol(student_id):
             
         return redirect(url_for('dziekanat.zal8a_protokol', student_id=student.id))
         
-    return render_template('dokumenty/zal8a_protokol.html', student=student, pracownicy=pracownicy, protokol=protokol)
+    instytucja_1 = praktyka.zaklad.nazwa if praktyka.zaklad else ''
+    okres_1 = ''
+    from models import Dokument, DecyzjaZal4a
+    zal4a_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
+    if zal4a_doc:
+        d4a = DecyzjaZal4a.query.filter_by(dokument_id=zal4a_doc.id).first()
+        if d4a and d4a.wymiar_godzin:
+            okres_1 = f"{d4a.wymiar_godzin} godz."
+
+    return render_template('dokumenty/zal8a_protokol.html', student=student, pracownicy=pracownicy, protokol=protokol, instytucja_1=instytucja_1, okres_1=okres_1)

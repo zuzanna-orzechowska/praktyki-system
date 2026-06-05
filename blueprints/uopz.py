@@ -196,7 +196,16 @@ def dziennik(student_id):
 @login_required
 def zal8_lista():
     if current_user.rola != 'uopz': return redirect(url_for('index'))
-    return render_template('uopz/zal8_lista.html')
+    from models import Student, Praktyka, Protokol
+    
+    studenci = Student.query.join(Praktyka).outerjoin(Protokol).filter(
+        db.or_(
+            Praktyka.uopz_id == current_user.id,
+            Protokol.komisja_2 == f"{current_user.imie} {current_user.nazwisko}"
+        )
+    ).all()
+    
+    return render_template('uopz/zal8_lista.html', studenci=studenci)
 
 @uopz_bp.route('/zal8_protokol/<int:student_id>', methods=['GET', 'POST'])
 @login_required
@@ -245,13 +254,6 @@ def zal8_protokol(student_id):
             except ValueError:
                 pass
                 
-        protokol.przewodniczacy = request.form.get('przewodniczacy')
-        protokol.komisja_2 = request.form.get('komisja_2')
-        protokol.komisja_3 = request.form.get('komisja_3')
-        protokol.rola_3 = request.form.get('rola_3')
-        protokol.komisja_4 = request.form.get('komisja_4')
-        protokol.rola_4 = request.form.get('rola_4')
-        
         protokol.pytanie_1 = request.form.get('pytanie_1')
         protokol.ocena_czastkowa_1 = safe_float(request.form.get('ocena_czastkowa_1'))
         protokol.pytanie_2 = request.form.get('pytanie_2')
@@ -291,11 +293,16 @@ def zal8a_protokol(student_id):
     pracownicy = Uzytkownik.query.filter(Uzytkownik.rola.in_(['pracownik', 'uopz', 'dziekanat', 'dyrektor'])).all()
     protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
 
+    if not protokol:
+        flash('Protokół nie został jeszcze utworzony i przypisany przez Dziekanat.', 'danger')
+        return redirect(url_for('uopz.teczka', student_id=student.id))
+        
+    if protokol.komisja_2 != f"{current_user.imie} {current_user.nazwisko}":
+        flash('Nie jesteś przypisany jako członek komisji do tego protokołu.', 'danger')
+        return redirect(url_for('uopz.teczka', student_id=student.id))
+
     if request.method == 'POST':
         akcja = request.form.get('akcja')
-        if not protokol:
-            protokol = Protokol(praktyka_id=praktyka.id)
-            db.session.add(protokol)
             
         def safe_float(val):
             if val is None: return None
@@ -310,8 +317,12 @@ def zal8a_protokol(student_id):
         protokol.okres_2 = request.form.get('okres_2')
         
         protokol.ocena_s = safe_float(request.form.get('ocena_s'))
-        protokol.podpis_opiekuna_s = request.form.get('podpis_opiekuna_s')
         
+        if request.form.get('generateSignatureUOPZ'):
+            protokol.podpis_opiekuna_s = f"[Podpis elektroniczny UOPZ: {current_user.tytul_naukowy or ''} {current_user.imie} {current_user.nazwisko}, Data: {datetime.today().strftime('%d.%m.%Y')}]"
+        elif request.form.get('podpis_opiekuna_s') is not None:
+            protokol.podpis_opiekuna_s = request.form.get('podpis_opiekuna_s')
+            
         data_egz = request.form.get('data_egzaminu')
         if data_egz:
             try:
@@ -319,13 +330,6 @@ def zal8a_protokol(student_id):
             except ValueError:
                 pass
                 
-        protokol.przewodniczacy = request.form.get('przewodniczacy')
-        protokol.komisja_2 = request.form.get('komisja_2')
-        protokol.komisja_3 = request.form.get('komisja_3')
-        protokol.rola_3 = request.form.get('rola_3')
-        protokol.komisja_4 = request.form.get('komisja_4')
-        protokol.rola_4 = request.form.get('rola_4')
-        
         protokol.pytanie_1 = request.form.get('pytanie_1')
         protokol.ocena_czastkowa_1 = safe_float(request.form.get('ocena_czastkowa_1'))
         protokol.pytanie_2 = request.form.get('pytanie_2')
@@ -339,22 +343,21 @@ def zal8a_protokol(student_id):
         protokol.podpis_przewodniczacego = request.form.get('podpis_przewodniczacego')
         
         try:
-            if akcja == 'zakoncz':
-                praktyka.status = 'ZALICZONA'
-                notif = Powiadomienie(
-                    uzytkownik_id=student.uzytkownik_id,
-                    tresc="Gratulacje! Twoja praktyka została ostatecznie ZALICZONA na podstawie protokołu komisji egzaminacyjnej.",
-                    link=url_for('student.dashboard')
-                )
-                db.session.add(notif)
-                flash('Praktyka została pomyślnie zaliczona i zakończona!', 'success')
-            else:
-                flash('Zapisano protokół (szkic) pomyślnie.', 'success')
             db.session.commit()
+            flash('Zapisano protokół (szkic) pomyślnie.', 'success')
         except Exception as e:
             db.session.rollback()
             flash(f'Błąd podczas zapisywania: {str(e)}', 'danger')
             
         return redirect(url_for('uopz.zal8a_protokol', student_id=student.id))
 
-    return render_template('dokumenty/zal8a_protokol.html', student=student, pracownicy=pracownicy, protokol=protokol)
+    instytucja_1 = praktyka.zaklad.nazwa if praktyka.zaklad else ''
+    okres_1 = ''
+    from models import Dokument, DecyzjaZal4a
+    zal4a_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
+    if zal4a_doc:
+        d4a = DecyzjaZal4a.query.filter_by(dokument_id=zal4a_doc.id).first()
+        if d4a and d4a.wymiar_godzin:
+            okres_1 = f"{d4a.wymiar_godzin} godz."
+
+    return render_template('dokumenty/zal8a_protokol.html', student=student, pracownicy=pracownicy, protokol=protokol, instytucja_1=instytucja_1, okres_1=okres_1)
