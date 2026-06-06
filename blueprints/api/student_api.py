@@ -25,14 +25,34 @@ def dashboard():
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
     zal7a_status = None
+    zal9_status = None
+    zal9_komentarz = None
     dokumenty_dict = {}
     if praktyka:
         zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
         if zal7a:
             zal7a_status = zal7a.status
+            
+        zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+        if zal9:
+            zal9_status = zal9.status
+            zal9_komentarz = zal9.komentarz
+            
         for d in praktyka.dokumenty:
             dokumenty_dict[d.typ_zalacznika] = True
     
+    etap_standardowy = 1
+    if praktyka and praktyka.status not in ['BRAK_ZGŁOSZENIA', 'OCZEKUJE_NA_ZAL9']:
+        from models import Porozumienie
+        porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+        
+        poroz_ok = porozumienie and porozumienie.status in ['Podpisane', 'ZaakceptowaneDyrektor']
+        
+        if poroz_ok:
+            etap_standardowy = 3
+        else:
+            etap_standardowy = 2
+            
     powiadomienia = []
     
     return jsonify({
@@ -41,7 +61,10 @@ def dashboard():
         'uzytkownik': current_user.to_dict(),
         'powiadomienia': powiadomienia,
         'zal7a_status': zal7a_status,
-        'dokumenty': dokumenty_dict
+        'zal9_status': zal9_status,
+        'zal9_komentarz': zal9_komentarz,
+        'dokumenty': dokumenty_dict,
+        'etap_standardowy': etap_standardowy
     })
 
 @student_api_bp.route('/dziennik', methods=['GET', 'POST'])
@@ -454,6 +477,18 @@ def zal9_oswiadczenie():
 
             dokument.status = 'Submitted'
             praktyka.status = 'OCZEKUJE_NA_ZAL9' 
+            
+            from models import Uzytkownik, Powiadomienie
+            safe_nazwisko = current_user.nazwisko.split('(')[0].strip()
+            dziekanat_users = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'dyrektor'])).all()
+            for du in dziekanat_users:
+                notif = Powiadomienie(
+                    uzytkownik_id=du.id,
+                    tresc=f"Student {current_user.imie} {safe_nazwisko} złożył oświadczenie o zatrudnieniu (Zał. 9).",
+                    link=f"/dziekanat/weryfikuj_zal9/{oswiadczenie.id}"
+                )
+                db.session.add(notif)
+                
             db.session.commit()
             return jsonify({'success': True, 'message': 'Oświadczenie zostało złożone.'})
         else:

@@ -6,11 +6,8 @@
 
 {% block content %}
 <div class="mb-4">
-    <a href="{{ url_for('dziekanat.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
-        <i class="bi bi-arrow-left"></i> Wróć do Panelu Głównego
-    </a>
     <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
-        <i class="bi bi-clipboard-check text-primary"></i> Weryfikacja Oświadczeń (Zał. 9)
+        Weryfikacja Oświadczeń (Zał. 9)
     </h2>
 </div>
 
@@ -45,12 +42,13 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">Student</th>
+                            <th>Nr albumu</th>
                             <th>Data złożenia</th>
                             <th class="text-center">Akcje</th>
                         </tr>
                     </thead>
                     <tbody id="do-weryfikacji-table">
-                        <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
+                        <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -67,13 +65,14 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">Student</th>
+                            <th>Nr albumu</th>
                             <th>Data zatwierdzenia</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Akcje</th>
                         </tr>
                     </thead>
                     <tbody id="zatwierdzone-table">
-                        <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
+                        <tr><td colspan="5" class="text-center">Ładowanie...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -89,13 +88,14 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">Student</th>
+                            <th>Nr albumu</th>
                             <th>Data odrzucenia</th>
                             <th>Komentarz Dziekanatu</th>
                             <th class="text-center">Akcje</th>
                         </tr>
                     </thead>
                     <tbody id="odrzucone-table">
-                        <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
+                        <tr><td colspan="5" class="text-center">Ładowanie...</td></tr>
                     </tbody>
                 </table>
             </div>

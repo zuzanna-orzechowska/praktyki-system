@@ -254,7 +254,7 @@
                     {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki
                     else none %}
 
-                    {% if not praktyka or praktyka.status == 'OCZEKUJE_NA_ZAL9' or praktyka.status == 'BRAK_ZGŁOSZENIA'
+                    {% if not praktyka or praktyka.status == 'BRAK_ZGŁOSZENIA'
                     %}
                     <!-- POCZĄTEK: Wybór ścieżki -->
                     <div class="sidebar-section-title mt-3 text-warning">Wybierz ścieżkę:</div>
@@ -283,31 +283,48 @@
                     {% else %}
                     <!-- ŚCIEŻKA 1: Standardowa Praktyka -->
                     <div class="sidebar-section-title mt-3 text-success">Ścieżka: Standardowa</div>
-                    <li><a href="/student/porozumienie"
-                            class="{% if 'porozumienie' in request.path %}active{% endif %}">Porozumienie i Program (Zał. 1, 2)</a>
+                    <li><a href="/student/zal9_oswiadczenie"
+                            class="{% if 'zal9' in request.path %}active{% endif %}">Oświadczenie (Zał. 9)</a>
                     </li>
-                    <li><a href="/student/zal2a_harmonogram"
-                            class="{% if 'zal2a_harmonogram' in request.path %}active{% endif %}">Harmonogram (Zał.
-                            2a)</a></li>
-                    <li><a href="/student/zal3_karta"
-                            class="{% if 'zal3_karta' in request.path %}active{% endif %}">Karta Praktyki (Zał. 3)</a>
-                    </li>
-                    <li><a href="/student/dziennik"
-                            class="{% if 'dziennik' in request.path %}active{% endif %}">Dziennik Praktyki (Zał. 6)</a>
-                    </li>
-                    <li><a href="/student/sprawozdanie"
-                            class="{% if 'sprawozdanie' in request.path %}active{% endif %}">Sprawozdanie (Zał. 7)</a>
-                    </li>
-                    <li><a href="/student/zal4_efekty"
-                            class="{% if 'zal4_efekty' in request.path %}active{% endif %}">Efekty Uczenia Się (Zał.
-                            4)</a></li>
-                    <li><a href="/student/zal8_protokol"
-                            class="{% if 'zal8_protokol' in request.path %}active{% endif %}">Protokół (Zał. 8)</a></li>
+                    
+                    {% set ns = namespace(etap_standardowy=1) %}
+                    {% if praktyka and praktyka.status not in ['BRAK_ZGŁOSZENIA', 'OCZEKUJE_NA_ZAL9'] %}
+                        {% set poroz_ok = praktyka.porozumienie and praktyka.porozumienie.status in ['Podpisane', 'ZaakceptowaneDyrektor'] %}
+                        {% if poroz_ok %}
+                            {% set ns.etap_standardowy = 3 %}
+                        {% else %}
+                            {% set ns.etap_standardowy = 2 %}
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% macro standard_link(url, name, endpoint_keyword, required_etap=1) %}
+                        {% set is_unlocked = ns.etap_standardowy >= required_etap %}
+                        {% set locked_text = "Wymaga zatwierdzenia Oświadczenia (Zał. 9)" if required_etap == 2 else "Wymaga zatwierdzenia Porozumienia przez Zakład Pracy" %}
+                        <li>
+                        {% if not is_unlocked %}
+                            <a href="#" style="opacity: 0.6; cursor: not-allowed; text-decoration: none; color: #6c757d;" title="{{ locked_text }}" onclick="event.preventDefault()">
+                                <i class="bi bi-lock-fill me-1" style="font-size: 0.8rem;"></i> {{ name }}
+                            </a>
+                        {% else %}
+                            <a href="{{ url }}" class="{% if endpoint_keyword in request.path %}active{% endif %}">
+                                {{ name }}
+                            </a>
+                        {% endif %}
+                        </li>
+                    {% endmacro %}
+
+                    {{ standard_link('/student/porozumienie', 'Porozumienie i Program (Zał. 1, 2)', 'porozumienie', 2) }}
+                    {{ standard_link('/student/zal2a_harmonogram', 'Harmonogram (Zał. 2a)', 'zal2a_harmonogram', 3) }}
+                    {{ standard_link('/student/zal3_karta', 'Karta Praktyki (Zał. 3)', 'zal3_karta', 3) }}
+                    {{ standard_link('/student/dziennik', 'Dziennik Praktyki (Zał. 6)', 'dziennik', 3) }}
+                    {{ standard_link('/student/sprawozdanie', 'Sprawozdanie (Zał. 7)', 'sprawozdanie', 3) }}
+                    {{ standard_link('/student/zal4_efekty', 'Efekty Uczenia Się (Zał. 4)', 'zal4_efekty', 3) }}
+                    {{ standard_link('/student/zal8_protokol', 'Protokół (Zał. 8)', 'zal8_protokol', 3) }}
                     {% endif %}
 
                     <div class="sidebar-section-title mt-3">Ogólne</div>
                     {% if not praktyka or not (praktyka.status in ['SCIEZKA_PRACA', 'ZAL4B_ZATWIERDZONE'] or (praktyka.status == 'ZALICZONA' and praktyka.dokumenty|selectattr('typ_zalacznika', 'equalto', 'ZAL4B')|list|length > 0)) %}
-                    <li><a href="/student/zal5_ankieta" class="{% if 'zal5_ankieta' in request.path %}active{% endif %}">Ankieta (Zał. 5)</a></li>
+                    {{ standard_link('/student/zal5_ankieta', 'Ankieta (Zał. 5)', 'zal5_ankieta', 3) }}
                     {% endif %}
                     <li><a href="/dokumenty">Wszystkie dokumenty</a></li>
                 </ul>

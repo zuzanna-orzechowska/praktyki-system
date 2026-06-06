@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="ps-4">
-                            <strong>${o.student_imie} ${o.student_nazwisko}</strong><br>
-                            <small class="text-muted">Album: ${o.nr_albumu}</small>
+                            <strong>${o.student_imie} ${o.student_nazwisko}</strong>
                         </td>
+                        <td>${o.nr_albumu}</td>
                         <td>${o.data_zlozenia || 'Brak danych'}</td>
                         <td class="text-center">
                             <a href="/dziekanat/weryfikuj_zal9/${o.id}" class="btn btn-sm btn-primary">
@@ -69,9 +69,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="ps-4">
-                            <strong>${o.student_imie} ${o.student_nazwisko}</strong><br>
-                            <small class="text-muted">Album: ${o.nr_albumu}</small>
+                            <strong>${o.student_imie} ${o.student_nazwisko}</strong>
                         </td>
+                        <td>${o.nr_albumu}</td>
                         <td>${o.data_zlozenia || 'Brak danych'}</td>
                         <td class="text-center">
                             <span class="badge bg-${mappedStatus.color}">${mappedStatus.text}</span>
@@ -103,9 +103,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="ps-4">
-                            <strong>${o.student_imie} ${o.student_nazwisko}</strong><br>
-                            <small class="text-muted">Album: ${o.nr_albumu}</small>
+                            <strong>${o.student_imie} ${o.student_nazwisko}</strong>
                         </td>
+                        <td>${o.nr_albumu}</td>
                         <td>${o.data_zlozenia || 'Brak danych'}</td>
                         <td><small class="text-danger">${o.komentarz || 'Brak komentarza'}</small></td>
                         <td class="text-center">

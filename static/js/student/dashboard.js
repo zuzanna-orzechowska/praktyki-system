@@ -36,10 +36,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
             }
 
+            if (data.zal9_status === 'Draft' && data.zal9_komentarz) {
+                alertsContainer.innerHTML += `
+                <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-3 fs-3 text-warning"></i>
+                    <div>
+                        <h5 class="mb-1 fw-bold text-warning">Oświadczenie (Zał. 9) zostało cofnięte do poprawy</h5>
+                        <p class="mb-0"><strong>Komentarz Dziekanatu:</strong> ${data.zal9_komentarz}</p>
+                    </div>
+                </div>
+                `;
+            } else if (data.zal9_status === 'Submitted') {
+                alertsContainer.innerHTML += `
+                <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-3 fs-3 text-info"></i>
+                    <div>
+                        <h5 class="mb-1 fw-bold text-info">Oświadczenie (Zał. 9) przesłane</h5>
+                        <p class="mb-0">Oświadczenie zostało przesłane i oczekuje na weryfikację przez Dziekanat.</p>
+                    </div>
+                </div>
+                `;
+            } else if (data.zal9_status === 'AwaitingAccount' || status === 'ZAL9_ZATWIERDZONE') {
+                alertsContainer.innerHTML += `
+                <div class="alert alert-success border-0 shadow-sm mb-4 d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-3 fs-3 text-success"></i>
+                    <div>
+                        <h5 class="mb-1 fw-bold text-success">Oświadczenie (Zał. 9) zatwierdzone</h5>
+                        <p class="mb-0">Oświadczenie zostało zatwierdzone. Trwa proces organizacji praktyki.</p>
+                    </div>
+                </div>
+                `;
+            }
+
             const tilesContainer = document.getElementById('dashboard-tiles');
             tilesContainer.innerHTML = '';
 
-            if (!praktyka || status === 'OCZEKUJE_NA_ZAL9' || status === 'BRAK_ZGŁOSZENIA') {
+            if (!praktyka || status === 'BRAK_ZGŁOSZENIA') {
                 tilesContainer.innerHTML = `
                     <div class="col-12 mb-2">
                         <h5 class="fw-bold text-center mt-3">Wybierz sposób realizacji praktyki:</h5>
@@ -124,70 +156,60 @@ document.addEventListener('DOMContentLoaded', function () {
                         `;
                     }
                 } else {
+                    const etap = data.etap_standardowy || 1;
+                    
+                    const linkOrDiv = (href, title, icon, p, requiredEtap, sizeClass="col-md-6 col-lg-6 mb-3") => {
+                        const isUnlocked = etap >= requiredEtap;
+                        
+                        let lockedText = "Wymaga zatwierdzenia Oświadczenia (Zał. 9)";
+                        if (requiredEtap === 3) {
+                            lockedText = "Wymaga zatwierdzenia Porozumienia przez Zakład Pracy";
+                        }
+                        
+                        const lockedStyle = `style="opacity: 0.6; cursor: not-allowed;" title="${lockedText}"`;
+                        
+                        if (isUnlocked) {
+                            return `
+                            <div class="${sizeClass}">
+                                <a href="${href}" class="usos-tile h-100">
+                                    <div class="usos-tile-icon"><i class="bi ${icon}"></i></div>
+                                    <div class="usos-tile-content">
+                                        <h5>${title}</h5>
+                                        <p>${p}</p>
+                                    </div>
+                                </a>
+                            </div>`;
+                        } else {
+                            return `
+                            <div class="${sizeClass}">
+                                <div class="usos-tile h-100" ${lockedStyle}>
+                                    <div class="usos-tile-icon"><i class="bi bi-lock-fill"></i></div>
+                                    <div class="usos-tile-content">
+                                        <h5>${title}</h5>
+                                        <p>${p}</p>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }
+                    };
+
                     tilesHtml += `
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/dziennik" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-md-6 col-lg-6 mb-3">
+                        <a href="/student/zal9_oswiadczenie" class="usos-tile h-100">
+                            <div class="usos-tile-icon"><i class="bi bi-building-check"></i></div>
                             <div class="usos-tile-content">
-                                <h5>Dziennik Praktyki (Zał. 6)</h5>
-                                <p>Uzupełniaj wpisy w dzienniku praktyki każdego dnia pracy.</p>
+                                <h5>Oświadczenie (Zał. 9)</h5>
+                                <p>Oświadczenie o przyjęciu na praktykę.</p>
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-12 col-lg-12 mb-3">
-                        <a href="/student/porozumienie" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-file-earmark-text"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Porozumienie i Program (Zał. 1, 2)</h5>
-                                <p>Podgląd Twojego porozumienia o organizację praktyki oraz programu praktyki.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/zal2a_harmonogram" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-calendar-check"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Harmonogram i Program (Zał. 2a)</h5>
-                                <p>Szczegółowy plan i program Twoich praktyk zawodowych.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/zal3_karta" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-card-checklist"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Karta Praktyki (Zał. 3)</h5>
-                                <p>Podgląd potwierdzenia odbycia praktyki i wystawionych ocen.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/zal4_efekty" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-list-check"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Efekty Uczenia (Zał. 4)</h5>
-                                <p>Podgląd zatwierdzonych przez zakład efektów uczenia się z Twojej praktyki.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/sprawozdanie" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-file-text"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Sprawozdanie (Zał. 7)</h5>
-                                <p>Sprawozdanie z przebiegu praktyki zawodowej.</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-6">
-                        <a href="/student/zal5_ankieta" class="usos-tile">
-                            <div class="usos-tile-icon"><i class="bi bi-ui-radios"></i></div>
-                            <div class="usos-tile-content">
-                                <h5>Ankieta (Zał. 5)</h5>
-                                <p>Anonimowa ankieta oceniająca przebieg praktyk zawodowych.</p>
-                            </div>
-                        </a>
-                    </div>
+                    ${linkOrDiv('/student/dziennik', 'Dziennik Praktyki (Zał. 6)', 'bi-journal-text', 'Uzupełniaj wpisy w dzienniku praktyki każdego dnia pracy.', 3)}
+                    ${linkOrDiv('/student/porozumienie', 'Porozumienie i Program (Zał. 1, 2)', 'bi-file-earmark-text', 'Podgląd Twojego porozumienia o organizację praktyki oraz programu praktyki.', 2, 'col-md-12 col-lg-12 mb-3')}
+                    ${linkOrDiv('/student/zal2a_harmonogram', 'Harmonogram i Program (Zał. 2a)', 'bi-calendar-check', 'Szczegółowy plan i program Twoich praktyk zawodowych.', 3)}
+                    ${linkOrDiv('/student/zal3_karta', 'Karta Praktyki (Zał. 3)', 'bi-card-checklist', 'Podgląd potwierdzenia odbycia praktyki i wystawionych ocen.', 3)}
+                    ${linkOrDiv('/student/zal4_efekty', 'Efekty Uczenia (Zał. 4)', 'bi-list-check', 'Podgląd zatwierdzonych przez zakład efektów uczenia się z Twojej praktyki.', 3)}
+                    ${linkOrDiv('/student/sprawozdanie', 'Sprawozdanie (Zał. 7)', 'bi-file-text', 'Sprawozdanie z przebiegu praktyki zawodowej.', 3)}
+                    ${linkOrDiv('/student/zal5_ankieta', 'Ankieta (Zał. 5)', 'bi-ui-radios', 'Anonimowa ankieta oceniająca przebieg praktyk zawodowych.', 3)}
                     `;
                 }
 

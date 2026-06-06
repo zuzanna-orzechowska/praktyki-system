@@ -213,6 +213,14 @@ def weryfikuj_zal9(id):
             dokument.status = 'AwaitingAccount'
             dokument.komentarz = None
             praktyka.status = 'ZAL9_ZATWIERDZONE'
+            
+            notif_s = Powiadomienie(
+                uzytkownik_id=student.uzytkownik.id,
+                tresc="Dziekanat ZATWIERDZIŁ Twoje Oświadczenie (Zał. 9). Trwa proces zakładania konta dla Zakładu Pracy.",
+                link="/student/dashboard"
+            )
+            db.session.add(notif_s)
+            
             db.session.commit()
             return jsonify({'success': True, 'message': f'Oświadczenie studenta {student.uzytkownik.nazwisko} zostało zatwierdzone. Dane przekazano do IT.'})
             
@@ -221,6 +229,14 @@ def weryfikuj_zal9(id):
             komentarz = data.get('komentarz_dziekanatu')
             dokument.komentarz = komentarz if komentarz else "Dokument został odrzucony do poprawy. Prosimy o wprowadzenie zmian i ponowne przesłanie."
             praktyka.status = 'OCZEKUJE_NA_ZAL9'
+            
+            notif_s = Powiadomienie(
+                uzytkownik_id=student.uzytkownik.id,
+                tresc="Dziekanat ZWRÓCIŁ DO POPRAWY Twoje Oświadczenie (Zał. 9). Sprawdź uwagi na dashboardzie.",
+                link="/student/zal9_oswiadczenie"
+            )
+            db.session.add(notif_s)
+            
             db.session.commit()
             return jsonify({'success': True, 'message': 'Oświadczenie odrzucone do poprawy przez studenta.'})
             
