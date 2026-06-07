@@ -9,21 +9,27 @@
         <p class="text-muted mb-0">Podgląd dokumentu potwierdzającego przebieg i ocenę z praktyki.</p>
     </div>
 
-    {% if dokument %}
-        {% if dokument.status == 'Zatwierdzone' %}
-        <span class="badge bg-success fs-6">Zatwierdzone przez Dziekanat</span>
-        {% elif dokument.status == 'Weryfikacja_Uczelni' %}
-        <span class="badge bg-primary fs-6">Oczekuje na zatwierdzenie (Dziekanat)</span>
-        {% elif dokument.status == 'Weryfikacja_ZOPZ' %}
-        <span class="badge bg-info text-dark fs-6">W trakcie (Zakład Pracy)</span>
-        {% elif dokument.status == 'Skierowanie_Wydane' %}
-        <span class="badge bg-secondary fs-6">Skierowanie Wydane</span>
+    <div class="d-flex align-items-center gap-3">
+        {% if dokument %}
+            {% if dokument.status == 'Zatwierdzone' %}
+            <span class="badge bg-success fs-6">Zatwierdzone przez Dziekanat</span>
+            {% elif dokument.status == 'Weryfikacja_Uczelni' %}
+            <span class="badge bg-primary fs-6">Oczekuje na zatwierdzenie (Dziekanat)</span>
+            {% elif dokument.status == 'Weryfikacja_ZOPZ' %}
+            <span class="badge bg-info text-dark fs-6">W trakcie (Zakład Pracy)</span>
+            {% elif dokument.status == 'Skierowanie_Wydane' %}
+            <span class="badge bg-secondary fs-6">Skierowanie Wydane</span>
+            {% else %}
+            <span class="badge bg-warning text-dark fs-6">Oczekuje na wydanie skierowania</span>
+            {% endif %}
         {% else %}
-        <span class="badge bg-warning text-dark fs-6">Oczekuje na wydanie skierowania</span>
+            <span class="badge bg-warning text-dark fs-6">Oczekuje na wydanie skierowania</span>
         {% endif %}
-    {% else %}
-        <span class="badge bg-warning text-dark fs-6">Oczekuje na wydanie skierowania</span>
-    {% endif %}
+        
+        <a href="{{ url_for('pdf_export.pobierz_zal3', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+    </div>
 </div>
 
 <!-- KARTA PRAKTYKI ZAWODOWEJ -->

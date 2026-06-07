@@ -12,15 +12,21 @@
             Sprawozdanie z Pracy Zawodowej (Zał. 7a)</h2>
     </div>
 
-    {% if dokument and dokument.status == 'Approved' %}
-    <span class="badge bg-success fs-6">Zatwierdzone</span>
-    {% elif dokument and dokument.status == 'Rejected' %}
-    <span class="badge bg-danger fs-6">Do poprawy</span>
-    {% elif current_user.rola == 'student' %}
-    <span class="badge bg-primary">Dokument Edytowalny</span>
-    {% else %}
-    <span class="badge bg-warning text-dark fs-6">Oczekuje na weryfikację</span>
-    {% endif %}
+    <div>
+        {% if dokument and dokument.status == 'Approved' %}
+        <span class="badge bg-success fs-6 me-3">Zatwierdzone</span>
+        {% elif dokument and dokument.status == 'Rejected' %}
+        <span class="badge bg-danger fs-6 me-3">Do poprawy</span>
+        {% elif current_user.rola == 'student' %}
+        <span class="badge bg-primary me-3">Dokument Edytowalny</span>
+        {% else %}
+        <span class="badge bg-warning text-dark fs-6 me-3">Oczekuje na weryfikację</span>
+        {% endif %}
+
+        <a href="{{ url_for('pdf_export.pobierz_dokument', typ_dokumentu='ZAL7A', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+    </div>
 </div>
 
 {% if dokument and dokument.uwagi_opiekuna %}

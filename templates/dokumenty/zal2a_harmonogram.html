@@ -13,15 +13,21 @@
     </div>
 
     <!-- Status -->
-    {% if dokument.status == 'Approved' %}
-    <span class="badge bg-success fs-6">Zatwierdzony</span>
-    {% elif dokument.status == 'Under_Review' %}
-    <span class="badge bg-info text-dark fs-6">Oczekuje na akceptację Studenta</span>
-    {% elif dokument.status == 'Rejected' %}
-    <span class="badge bg-danger fs-6">Odrzucony przez Studenta</span>
-    {% else %}
-    <span class="badge bg-secondary fs-6">Szkic (W przygotowaniu)</span>
-    {% endif %}
+    <div class="d-flex align-items-center gap-3">
+        {% if dokument.status == 'Approved' %}
+        <span class="badge bg-success fs-6">Zatwierdzony</span>
+        {% elif dokument.status == 'Under_Review' %}
+        <span class="badge bg-info text-dark fs-6">Oczekuje na akceptację Studenta</span>
+        {% elif dokument.status == 'Rejected' %}
+        <span class="badge bg-danger fs-6">Odrzucony przez Studenta</span>
+        {% else %}
+        <span class="badge bg-secondary fs-6">Szkic (W przygotowaniu)</span>
+        {% endif %}
+        
+        <a href="{{ url_for('pdf_export.pobierz_zal2a', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+    </div>
 </div>
 
 {% if dokument.uwagi_opiekuna %}

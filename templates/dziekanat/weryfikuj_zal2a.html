@@ -5,13 +5,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <a href="{{ url_for('dziekanat.zal2a_lista') }}" class="text-decoration-none mb-2 d-inline-block">
-        <i class="bi bi-arrow-left"></i> Wróć do listy Harmonogramów
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <a href="{{ url_for('dziekanat.zal2a_lista') }}" class="text-decoration-none mb-2 d-inline-block">
+            <i class="bi bi-arrow-left"></i> Wróć do listy Harmonogramów
+        </a>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+            Weryfikacja Programu i Harmonogramu (Zał. 2a)
+        </h2>
+    </div>
+    <a href="{{ url_for('pdf_export.pobierz_zal2a', student_id=praktyka.student_id) }}" class="btn btn-outline-danger shadow-sm">
+        <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
     </a>
-    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
-        Weryfikacja Programu i Harmonogramu (Zał. 2a)
-    </h2>
 </div>
 
 <div id="alerts-container"></div>

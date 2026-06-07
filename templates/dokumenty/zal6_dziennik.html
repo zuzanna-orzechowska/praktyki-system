@@ -9,7 +9,12 @@
     <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
         Dziennik Praktyki Zawodowej (Zał. 6)
     </h2>
-    <span class="badge bg-warning text-dark fs-6">Status: W trakcie (Szkic)</span>
+    <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-warning text-dark fs-6" id="dokument-status-badge-top">Status: W trakcie (Szkic)</span>
+        <a href="{{ url_for('pdf_export.pobierz_zal6', student_id=current_user.student_profil.id) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+    </div>
 </div>
 
 <div id="alerts-container"></div>

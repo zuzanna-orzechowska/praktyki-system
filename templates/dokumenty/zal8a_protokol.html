@@ -13,11 +13,17 @@
         </h2>
     </div>
 
-    {% if protokol and protokol.ocena_koncowa %}
-    <span class="badge bg-success fs-6">Praktyka Zaliczona</span>
-    {% else %}
-    <span class="badge bg-secondary fs-6">Oczekuje na Egzamin</span>
-    {% endif %}
+    <div>
+        {% if protokol and protokol.ocena_koncowa %}
+        <span class="badge bg-success fs-6 me-3">Praktyka Zaliczona</span>
+        {% else %}
+        <span class="badge bg-secondary fs-6 me-3">Oczekuje na Egzamin</span>
+        {% endif %}
+
+        <a href="{{ url_for('pdf_export.pobierz_dokument', typ_dokumentu='ZAL8A', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+    </div>
 </div>
 
 <div class="alert alert-secondary border-0 shadow-sm mb-4">

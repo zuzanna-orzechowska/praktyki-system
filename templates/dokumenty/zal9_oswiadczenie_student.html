@@ -6,8 +6,13 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
-        Oświadczenie Instytucji (Zał. 9)</h2>
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Oświadczenie Instytucji (Zał. 9)</h2>
+    </div>
+    <a href="{{ url_for('pdf_export.pobierz_dokument', typ_dokumentu='ZAL9', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm" id="btn-pobierz-pdf">
+        <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+    </a>
 </div>
 
 <div id="alerts-container"></div>

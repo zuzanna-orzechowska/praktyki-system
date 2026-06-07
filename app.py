@@ -10,6 +10,7 @@ from blueprints.api import api_bp
 from flask_login import login_required, current_user
 from models import Uzytkownik, Oswiadczenie, Dokument, ZakladPracy, Porozumienie
 from blueprints.api.notifications_api import notifications_api_bp
+from blueprints.pdf_export import pdf_export_bp
 import os
 from dotenv import load_dotenv
 
@@ -79,6 +80,7 @@ def create_app():
     app.register_blueprint(zopz_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(notifications_api_bp)
+    app.register_blueprint(pdf_export_bp)
     
     init_oauth(app)
     

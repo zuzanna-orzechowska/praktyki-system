@@ -175,7 +175,8 @@ def zal2a_lista():
 def weryfikuj_zal2a(praktyka_id):
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
-    return render_template('dziekanat/weryfikuj_zal2a.html')
+    praktyka = Praktyka.query.get_or_404(praktyka_id)
+    return render_template('dziekanat/weryfikuj_zal2a.html', praktyka=praktyka)
 
 @dziekanat_bp.route('/przypisz_uopz')
 @login_required

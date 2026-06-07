@@ -12,9 +12,14 @@
     <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
         Weryfikacja Dziennika Praktyki (Zał. 6)
     </h2>
-    <a href="{{ url_for('zopz.teczka', student_id=request.view_args['student_id']) }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Powrót do teczki
-    </a>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ url_for('pdf_export.pobierz_zal6', student_id=request.view_args['student_id']) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+        <a href="{{ url_for('zopz.teczka', student_id=request.view_args['student_id']) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Powrót do teczki
+        </a>
+    </div>
 </div>
 
 <div id="alerts-container"></div>
