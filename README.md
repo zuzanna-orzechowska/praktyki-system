@@ -1,48 +1,37 @@
 # 📋 System Obsługi Praktyk Zawodowych
 ### Akademia Nauk Stosowanych w Elblągu – Instytut Informatyki Stosowanej im. Krzysztofa Brzeskiego
 
-> Aplikacja webowa automatyzująca obieg dokumentów związanych z praktykami zawodowymi na kierunku Informatyka. Zastępuje 9 papierowych załączników cyfrowym systemem z kontrolą dostępu opartą na rolach.
+> Aplikacja webowa automatyzująca obieg dokumentów związanych z praktykami zawodowymi na kierunku Informatyka. Zastępuje 9 papierowych załączników cyfrowym systemem z kontrolą dostępu opartą na rolach, generowaniem dokumentów PDF oraz powiadomieniami e-mail.
 
 ---
 
 ## 📁 Struktura repozytorium
 
-```
+```text
 praktyki-system/
 │
-├── app/
-│   ├── __init__.py              # Fabryka aplikacji Flask
-│   ├── config.py                # Konfiguracja środowisk (dev/prod)
-│   │
-│   ├── blueprints/
-│   │   ├── auth/                # Logowanie, wylogowanie, reset hasła
-│   │   ├── student/             # Widoki i formularze studenta
-│   │   ├── uopz/                # Uczelniany opiekun praktyk
-│   │   ├── zopz/                # Zakładowy opiekun praktyk
-│   │   ├── dziekanat/           # Dziekanat / Dyrektor Instytutu
-│   │   ├── admin/               # Zarządzanie użytkownikami i rolami
-│   │   └── dokumenty/           # Generowanie i pobieranie PDF
-│   │
-│   ├── forms/                   # Formularze Flask-WTF / WTForms
-│   ├── templates/               # Szablony Jinja2
-│   └── static/                  # CSS, JS, Bootstrap
+├── app.py                       # Główny plik aplikacji Flask
+├── models.py                    # Modele bazy danych (SQLAlchemy)
+├── extensions.py                # Inicjalizacja rozszerzeń (db, login, mail)
+├── blueprints/                  # Moduły aplikacji (Blueprints)
+│   ├── auth/                    # Logowanie (w tym Google OAuth), rejestracja
+│   ├── student/                 # Widoki i panele studenta
+│   ├── uopz/                    # Uczelniany opiekun praktyk
+│   ├── zopz/                    # Zakładowy opiekun praktyk
+│   ├── dziekanat/               # Dziekanat / Dyrektor Instytutu
+│   ├── admin/                   # Zarządzanie użytkownikami i rolami
+│   ├── api/                     # API powiadomień i inne
+│   └── pdf_export/              # Generowanie i eksport dokumentów PDF
 │
-├── data/                        # Pliki JSON – faza I (tymczasowe)
-│   ├── users.json
-│   ├── praktyki.json
-│   ├── zal4_efekty/             # Zał. 4 – per student
-│   └── zal6_dziennik/           # Zał. 6 – per student
+├── templates/                   # Szablony Jinja2
+├── static/                      # CSS, JS, obrazy, pliki do pobrania
+├── uploads/                     # Przesłane pliki
 │
-├── dokumentacja/
-│   ├── README.md                # Ten plik
-│   ├── diagramy/
-│   │   ├── architektura.md      # Diagram 1 – architektura Flask (Mermaid)
-│   │   ├── workflow.md          # Diagram 2 – przepływ procesu (Mermaid)
-│   │   └── uprawnienia.md       # Diagram 3 – role i dostęp do dokumentów (Mermaid)
-│   └── specyfikacja.md          # Szczegółowa specyfikacja funkcjonalna
-│
-├── requirements.txt
-└── run.py
+├── dokumentacja/                # Dokumentacja techniczna i projektowa
+├── .env.example                 # Przykładowy plik konfiguracyjny (zmienne środowiskowe)
+├── docker-compose.yml           # Konfiguracja Dockera
+├── Dockerfile                   # Plik Docker do konteneryzacji
+└── requirements.txt             # Zależności Pythona
 ```
 
 ---
@@ -52,14 +41,14 @@ praktyki-system/
 | Warstwa | Technologia |
 |---|---|
 | Backend | Python 3.11+, Flask |
-| Autoryzacja | Flask-Login |
+| Autoryzacja | Flask-Login, Google OAuth (Authlib) |
 | Formularze | Flask-WTF, WTForms |
 | Szablony | Jinja2 |
 | Frontend | Bootstrap 5, czysty JavaScript |
-| Baza danych (faza I) | JSON (load_data / save_data) |
-| Baza danych (faza II) | PostgreSQL / SQLite – SQLAlchemy, Flask-Migrate *(planowane)* |
+| Baza danych | SQLite (dev) / PostgreSQL (prod) – SQLAlchemy |
 | Generowanie PDF | WeasyPrint / ReportLab |
 | Powiadomienia | Flask-Mail |
+| Konteneryzacja | Docker, Docker Compose |
 
 ---
 
@@ -97,7 +86,7 @@ System obsługuje pięć ról użytkowników. Dostęp do każdego dokumentu jest
 
 ## 🔄 Skrócony opis procesu
 
-```
+```text
 Student znajduje zakład pracy
         │
         ├─► [Ścieżka standardowa]
@@ -114,7 +103,25 @@ Student znajduje zakład pracy
 
 ---
 
-## 🚀 Uruchomienie projektu (środowisko deweloperskie)
+## 🚀 Uruchomienie projektu
+
+### Z użyciem Dockera (Zalecane)
+
+```bash
+# 1. Sklonuj repozytorium
+git clone https://github.com/twoj-login/praktyki-system.git
+cd praktyki-system
+
+# 2. Skonfiguruj zmienne środowiskowe
+cp .env.example .env
+# Edytuj plik .env wprowadzając odpowiednie dane (klucze OAuth, dane SMTP, itp.)
+
+# 3. Uruchom kontenery
+docker-compose up --build
+```
+Aplikacja będzie dostępna pod adresem: `http://localhost:5000`
+
+### Środowisko lokalne (bez Dockera)
 
 ```bash
 # 1. Sklonuj repozytorium
@@ -129,26 +136,30 @@ venv\Scripts\activate           # Windows
 # 3. Zainstaluj zależności
 pip install -r requirements.txt
 
-# 4. Uruchom aplikację
-flask run
-```
+# 4. Skonfiguruj środowisko
+cp .env.example .env
+# Wypełnij .env swoimi danymi (SECRET_KEY, MAIL_*, klucze Google OAuth)
 
-Aplikacja dostępna pod adresem: `http://127.0.0.1:5000`
+# 5. Uruchom aplikację
+python app.py
+```
+Aplikacja będzie dostępna pod adresem: `http://127.0.0.1:5000`
 
 ---
 
 ## 📌 Status projektu
 
-> 🚧 **W trakcie budowy** — faza I: szkielet aplikacji, obsługa formularzy, zapis do JSON.
+Projekt jest w zaawansowanej fazie rozwoju z wdrożonymi kluczowymi funkcjonalnościami:
 
-- [x] Diagramy architektoniczne i dokumentacja wstępna
-- [ ] Struktura projektu Flask i konfiguracja środowisk
-- [ ] System logowania i zarządzania rolami
-- [ ] Formularz Zał. 4 – Potwierdzenie efektów uczenia się
-- [ ] Formularz Zał. 6 – Dziennik praktyki (dynamiczna tabela)
-- [ ] Pozostałe załączniki
-- [ ] Generowanie PDF
-- [ ] Migracja z JSON do bazy danych – SQLAlchemy, Flask-Migrate (faza II)
+- [x] Struktura projektu Flask i konfiguracja środowisk
+- [x] Baza danych oparta o SQLAlchemy (SQLite/PostgreSQL)
+- [x] System logowania, autoryzacji (w tym Google OAuth) i zarządzania rolami
+- [x] Obsługa kluczowych ról: Student, UOPZ, ZOPZ, Dziekanat, Admin
+- [x] Obsługa poszczególnych formularzy i załączników (m.in. Zał. 4, Zał. 6, Zał. 9, Porozumienia)
+- [x] Dynamiczne śledzenie statusów praktyki
+- [x] Powiadomienia mailowe (Flask-Mail) i system notyfikacji API
+- [x] Generowanie dokumentów PDF (WeasyPrint)
+- [x] Konteneryzacja za pomocą Docker i Docker Compose
 
 ---
 
