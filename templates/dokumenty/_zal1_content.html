@@ -1,0 +1,189 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Porozumienie o organizację praktyki (Zał. 1)
+        </h2>
+        {% if porozumienie and porozumienie.status == 'Podpisane' %}
+        <span class="badge bg-success">Status: Porozumienie zawarte</span>
+        {% endif %}
+    </div>
+    <a href="{{ url_for('pdf_export.pobierz_dokument', typ_dokumentu='ZAL1', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm">
+        <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+    </a>
+</div>
+
+
+
+<div class="card shadow-sm mb-5 border-0">
+    <div class="card-body p-5"
+        style="border: 1px solid #dee2e6; max-width: 800px; margin: 0 auto; background-color: #fff;">
+        <div class="text-end mb-4">
+            <span style="font-size: 1.1rem;">Załącznik nr 1</span>
+        </div>
+        <h4 class="text-center mb-1" style="font-weight: bold; letter-spacing: 1px;">Porozumienie Nr {% if porozumienie and porozumienie.id %}{{ porozumienie.id }}/2026{% else %}PR-{{ praktyka.id }}/{{ current_year|default('2026') }}{% endif %}</h4>
+        <h4 class="text-center mb-5" style="font-weight: bold; font-style: italic;">w sprawie praktyk studenckich</h4>
+
+        <p style="text-align: justify; line-height: 1.8;">
+            zawarte w dniu 
+            <strong>
+                {% if porozumienie and porozumienie.data_podpisania %}
+                {{ porozumienie.data_podpisania }}
+                {% elif current_date %}
+                {{ current_date }}
+                {% else %}
+                ...........................
+                {% endif %}
+            </strong>
+            pomiędzy <strong>Akademią Nauk Stosowanych w Elblągu</strong>, ul. Wojska Polskiego 1, 82-300 Elbląg zwaną dalej „Uczelnią” reprezentowaną przez <strong>Dyrektora Instytutu Informatyki Stosowanej</strong> z jednej strony, a 
+            <strong>
+                {{ praktyka.zaklad.nazwa }}{% if praktyka.zaklad.ulica %}, {{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.kod_pocztowy }} {{ praktyka.zaklad.miasto }}{% else %}, {{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}{% endif %}
+            </strong>, 
+            zwanym dalej „Zakładem pracy”, reprezentowanym przez 
+            <strong>
+                {% if oswiadczenie %}{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }} - {{ oswiadczenie.osoba_upowazniona_stanowisko }}{% else %}........................................................{% endif %}
+            </strong> 
+            — z drugiej strony.
+        </p>
+
+        <p class="mt-4">1. Uczelnia kieruje studentów Uczelni na praktyki zawodowe na wskazany okres:</p>
+        <table class="table table-bordered align-middle text-center mb-4">
+            <thead>
+                <tr>
+                    <th>Lp.</th>
+                    <th>Imię i nazwisko</th>
+                    <th>Termin odbywania<br>praktyki zawodowej</th>
+                    <th>Wymiar<br>praktyki zawodowej</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1.</td>
+                    <td>
+                        {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0].strip() }}
+                    </td>
+                    <td>
+                        {{ praktyka.data_start }} – {{ praktyka.data_end }}
+                    </td>
+                    <td>
+                        {{ praktyka.liczba_godzin }} godz.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="text-align: justify; line-height: 1.6;">
+            <p>2. Obowiązki Zakładu pracy:<br>
+            Zakład pracy zobowiązuje się do sprawowania nadzoru nad studentami odbywającymi praktykę oraz zapewnienia warunków niezbędnych do jej przeprowadzenia zgodnie z porozumieniem zawartym z Uczelnią, a w szczególności do:
+            <ol style="list-style-type: none; padding-left: 20px;">
+                <li>1) zapewnienia odpowiednich stanowisk pracy, urządzeń, pomieszczeń, zgodnie z programem praktyki,</li>
+                <li>2) zapoznania studentów z zakładowym regulaminem pracy, z przepisami o bezpieczeństwie i higienie pracy oraz o ochronie tajemnicy państwowej i służbowej,</li>
+                <li>3) sprawowania nadzoru nad właściwym wykonaniem przez studentów programu praktyki,</li>
+                <li>4) umożliwienia studentom korzystania z zaplecza socjalnego jakie posiada zakład pracy.</li>
+            </ol>
+            </p>
+
+            <p>3. Obowiązki Uczelni:<br>
+            Uczelnia zobowiązana jest do:
+            <ol style="list-style-type: none; padding-left: 20px;">
+                <li>1) opracowania w porozumieniu z Zakładem pracy i ze studentami szczegółowych programów praktyk,</li>
+                <li>2) sprawowania nadzoru dydaktyczno – wychowawczego oraz organizacyjnego nad przebiegiem praktyk.</li>
+            </ol>
+            </p>
+
+            <p>4. Obowiązki studenta:
+            <ol style="list-style-type: none; padding-left: 20px;">
+                <li>1) stosowanie się do ustaleń Zakładu pracy w zakresie porządku i dyscypliny pracy,</li>
+                <li>2) przestrzeganie zasad BHP i ochrony przeciwpożarowej,</li>
+                <li>3) przestrzeganie zasad odbywania praktyk określonych przez Uczelnię,</li>
+                <li>4) student odbywający praktykę zawodową jest zobowiązany ubezpieczyć się indywidualnie od następstw nieszczęśliwych wypadków na czas trwania praktyki.</li>
+            </ol>
+            </p>
+
+            <p>5. Upoważnionym do rozstrzygania, wspólnie z kierownikiem Zakładu pracy, spraw związanych z przebiegiem praktyki jest opiekun ds. praktyk powołany przez Rektora Akademii Nauk Stosowanych w Elblągu.</p>
+
+            <p>6. Porozumienie zostaje zawarte na czas trwania praktyki.</p>
+
+            <p>7. Wszelkie zmiany porozumienia wymagają formy pisemnej pod rygorem nieważności.</p>
+
+            <p>8. Porozumienie niniejsze sporządzone zostało w dwóch jednobrzmiących egzemplarzach po jednym dla każdej ze stron.</p>
+        </div>
+
+        <div class="row mt-5 pt-5 text-center">
+            <div class="col-6">
+                <div id="podpis-dyrektora" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ porozumienie.data_podpisania }}</span>
+                    <span>{{ porozumienie.podpisal_dziekanat }}</span>
+                    {% endif %}
+                </div>
+                <small>data i podpis Dyrektora Instytutu</small>
+                
+                {% if current_user.rola == 'dyrektor' and (not porozumienie or porozumienie.status == 'Draft') %}
+                <div class="mt-3 form-check d-flex justify-content-center">
+                    <input class="form-check-input me-2" type="checkbox" name="generateSignatureDyrektor" id="generateSignatureDyrektor" value="1">
+                    <label class="form-check-label fw-bold text-dark" for="generateSignatureDyrektor">
+                        Złóż podpis cyfrowy pod Porozumieniem
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <div id="podpis-zopz" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;"></span>
+                    <span>{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</span>
+                    {% endif %}
+                </div>
+                <small>podpis osoby uprawnionej do reprezentacji<br>w imieniu Zakładu pracy</small>
+                
+                {% if current_user.rola == 'zopz' and porozumienie and porozumienie.status == 'OczekujeZOPZ' %}
+                <div class="mt-3 form-check d-flex justify-content-center">
+                    <input class="form-check-input me-2" type="checkbox" id="generateSignatureZOPZ" value="1">
+                    <label class="form-check-label fw-bold text-dark" for="generateSignatureZOPZ">
+                        Złóż podpis cyfrowy
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dyrektorCheckbox = document.getElementById('generateSignatureDyrektor');
+        if (dyrektorCheckbox) {
+            dyrektorCheckbox.addEventListener('change', function() {
+                if(this.checked) {
+                    const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                    const imieNazwisko = `{{ current_user.tytul_naukowy or '' }} {{ current_user.imie }} {{ current_user.nazwisko }}`;
+                    document.getElementById('podpis-dyrektora').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                    const zal2 = document.getElementById('podpis-dyrektora-zal2');
+                    if (zal2) zal2.innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                } else {
+                    document.getElementById('podpis-dyrektora').innerHTML = ``;
+                    const zal2 = document.getElementById('podpis-dyrektora-zal2');
+                    if (zal2) zal2.innerHTML = ``;
+                }
+            });
+        }
+        
+        const zopzCheckbox = document.getElementById('generateSignatureZOPZ');
+        if (zopzCheckbox) {
+            zopzCheckbox.addEventListener('change', function() {
+                if(this.checked) {
+                    const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                    const imieNazwisko = `{{ current_user.tytul_naukowy or '' }} {{ current_user.imie }} {{ current_user.nazwisko }}`;
+                    document.getElementById('podpis-zopz').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                    const zal2Zopz = document.getElementById('podpis-zopz-zal2');
+                    if (zal2Zopz) zal2Zopz.innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                } else {
+                    document.getElementById('podpis-zopz').innerHTML = ``;
+                    const zal2Zopz = document.getElementById('podpis-zopz-zal2');
+                    if (zal2Zopz) zal2Zopz.innerHTML = ``;
+                }
+            });
+        }
+    });
+</script>
+

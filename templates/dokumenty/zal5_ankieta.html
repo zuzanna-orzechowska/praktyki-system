@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Kwestionariusz Ankiety (Zał. 5)
+        </h2>
+        <p class="text-muted mb-0">Anonimowa ankieta oceniająca przebieg praktyk zawodowych.</p>
+    </div>
+    <span class="badge bg-secondary fs-6">Formularz anonimowy</span>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body bg-white p-5">
+        <div class="text-center mb-5">
+            <h4 class="fw-bold">Kwestionariusz ankiety oceniający przebieg praktyk zawodowych</h4>
+            <h5 class="fw-bold">realizowanych w ramach programów studiów</h5>
+            <h5 class="fw-bold">w Instytucie Informatyki Stosowanej im. K. Brzeskiego w Elblągu</h5>
+        </div>
+
+        <p class="mb-4 text-justify" style="text-align: justify;">
+            W trosce o stałe podnoszenie jakości przebiegu praktyk zawodowych zwracamy się do Pani/Pana z prośbą o wypełnienie anonimowej ankiety dotyczącej praktyk zawodowych, w której należy określić w jakim stopniu zgadza się Pan/Pani z poniższymi stwierdzeniami.
+        </p>
+        <p class="fst-italic mb-4">
+            Prosimy zaznaczyć przy każdym pytaniu wybrane pole odpowiedzi.
+        </p>
+
+        <form method="POST" id="ankietaForm">
+            <div class="table-responsive mb-5">
+                <table class="table table-bordered align-middle text-center table-hover">
+                    <thead class="table-light align-middle">
+                        <tr>
+                            <th style="width: 5%;">Lp.</th>
+                            <th style="width: 45%; text-align: left;">Pytanie</th>
+                            <th style="width: 10%;">zdecydowanie tak</th>
+                            <th style="width: 10%;">raczej tak</th>
+                            <th style="width: 10%;">trudno powiedzieć</th>
+                            <th style="width: 10%;">raczej nie</th>
+                            <th style="width: 10%;">zdecydowanie nie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set pytania = [
+                            "Poznałam/poznałem zasady funkcjonowania instytucji, w której odbywałam/odbywałem praktyki zawodowe.",
+                            "Poznałam/poznałem strukturę oraz regulamin organizacyjny instytucji, w której odbywałam/odbywałem praktyki zawodowe.",
+                            "Praktyki zawodowe umożliwiły mi pełną realizację ramowego programu praktyk zawodowych przewidzianego w ramach mojego kierunku studiów.",
+                            "Podczas praktyk zawodowych zwracano uwagę na przestrzeganie zasad etyki i tajemnicy zawodowej.",
+                            "Podczas praktyk miałam/miałem możliwość praktycznego zastosowania wiedzy teoretycznej zdobytej na zajęciach.",
+                            "Praktyki zawodowe przyczyniły się do pogłębienia mojej wiedzy i umiejętności zdobytych w trakcie studiów.",
+                            "Mogłem liczyć na wsparcie merytoryczne Opiekuna zakładowego praktyk.",
+                            "Mogłem liczyć na wsparcie merytoryczne Opiekuna uczelnianego praktyk.",
+                            "Opiekun zakładowy odpowiedzialny za praktyki zawodowe w miejscu ich odbywania potrafił prawidłowo zorganizować ich przebieg.",
+                            "Podczas praktyk zawodowych miałam/miałem możliwość pozyskiwania materiałów niezbędnych do przygotowania mojej pracy dyplomowej.",
+                            "Praktyki zawodowe rozwinęły moje umiejętności skutecznego komunikowania się w sytuacjach zawodowych i pracy w zespole.",
+                            "Praktyki zawodowe nauczyły mnie samodzielności i odpowiedzialności podczas wykonywania pracy.",
+                            "Liczba godzin realizowana w ramach praktyk zawodowych jest wystarczająca.",
+                            "Czy po zakończeniu praktyki zawodowej chciałaby/chciałby Pani/Pan współpracować z instytucją, w której Pani/Pan zrealizowała/zrealizował praktykę?"
+                        ] %}
+                        
+                        {% for pytanie in pytania %}
+                        <tr>
+                            <td class="fw-bold">{{ loop.index }}.</td>
+                            <td class="text-start">{{ pytanie }}</td>
+                            <td><input class="form-check-input fs-5" type="radio" name="pytanie_{{ loop.index }}" value="5" required></td>
+                            <td><input class="form-check-input fs-5" type="radio" name="pytanie_{{ loop.index }}" value="4"></td>
+                            <td><input class="form-check-input fs-5" type="radio" name="pytanie_{{ loop.index }}" value="3"></td>
+                            <td><input class="form-check-input fs-5" type="radio" name="pytanie_{{ loop.index }}" value="2"></td>
+                            <td><input class="form-check-input fs-5" type="radio" name="pytanie_{{ loop.index }}" value="1"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mb-5">
+                <label for="uwagi" class="form-label fw-bold">Dodatkowe uwagi dotyczące przebiegu praktyki zawodowej:</label>
+                <textarea class="form-control" id="uwagi" name="uwagi" rows="4" placeholder="Wpisz swoje uwagi... (opcjonalne)"></textarea>
+            </div>
+
+            <div class="row justify-content-center mb-5 mt-4">
+                <div class="col-md-8">
+                    <table class="table table-bordered shadow-sm">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th colspan="2" class="text-center fw-bold text-uppercase">Metryczka</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold align-middle w-50">Rok akademicki</td>
+                                <td><input type="text" class="form-control border-0 bg-transparent" name="rok_akademicki" placeholder="np. 2026/2027" pattern="^20\d{2}/20\d{2}$" title="Format: YYYY/YYYY (np. 2026/2027)" required></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold align-middle">Kierunek studiów</td>
+                                <td><input type="text" class="form-control border-0 bg-transparent" name="kierunek" value="Informatyka" readonly></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold align-middle">Forma studiów</td>
+                                <td>
+                                    <select class="form-select border-0 bg-transparent" name="forma_studiow" required>
+                                        <option value="" disabled selected>stacjonarne / niestacjonarne*</option>
+                                        <option value="stacjonarne">stacjonarne</option>
+                                        <option value="niestacjonarne">niestacjonarne</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold align-middle">Semestr studiów</td>
+                                <td><input type="number" class="form-control border-0 bg-transparent" name="semestr" placeholder="np. 6" min="1" max="8" required></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold align-middle">Liczba godzin zrealizowanej praktyki zawodowej</td>
+                                <td><input type="number" class="form-control border-0 bg-transparent" name="liczba_godzin" value="960" readonly required></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-end mb-4 fst-italic fw-bold fs-5">
+                Dziękujemy za udział w badaniu
+            </div>
+
+            {% if not mozna_wyslac %}
+            <div class="alert alert-warning text-center mt-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Uwaga!</strong> Ankietę można wypełnić i wysłać dopiero po złożeniu i ostatecznym zatwierdzeniu Sprawozdania (Zał. 7).
+            </div>
+            <div class="d-flex justify-content-center border-top pt-4">
+                <button type="button" class="btn btn-secondary btn-lg shadow-sm px-5" disabled>
+                    <i class="bi bi-send-check me-2"></i> Zakończ i wyślij anonimowo do Dziekanatu
+                </button>
+            </div>
+            {% else %}
+            <div class="d-flex justify-content-center border-top pt-4">
+                <button type="submit" class="btn btn-success btn-lg shadow-sm px-5">
+                    <i class="bi bi-send-check me-2"></i> Zakończ i wyślij anonimowo do Dziekanatu
+                </button>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}

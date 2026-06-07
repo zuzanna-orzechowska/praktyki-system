@@ -1,0 +1,78 @@
+<div class="card shadow-sm mb-5 border-0">
+    <div class="card-body p-5" style="border: 1px solid #dee2e6; max-width: 800px; margin: 0 auto; background-color: #fff;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+                    Program Praktyki (Zał. 2)</h2>
+                <span class="badge bg-secondary">Dokument Informacyjny</span>
+            </div>
+            <a href="{{ url_for('pdf_export.pobierz_dokument', typ_dokumentu='ZAL2', student_id=student.id) }}" class="btn btn-outline-danger shadow-sm">
+                <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+            </a>
+        </div>
+
+        <div class="text-end mb-4">
+            <span style="font-size: 1.1rem;">Załącznik nr 2.</span>
+        </div>
+        <h4 class="text-center fw-bold mb-4">PROGRAM PRAKTYKI</h4>
+
+        <div style="text-align: justify; line-height: 1.6;">
+            <p><strong>A. Etap pierwszy – rozpoczęcie praktyki</strong></p>
+            <ol>
+                <li>Czynności organizacyjne, szkolenie BHP i ppoż.</li>
+                <li>Zapoznanie się z zakresem działania zakładu pracy (rodzaj usług, produkcja, struktura organizacyjna itp.) ze szczególnym uwzględnieniem stanowisk informatycznych.</li>
+                <li>Zapoznanie z projektami realizowanymi przez firmę, środkami produkcji, aplikacjami użytkowymi, stosowanymi technologiami informatycznymi z podkreśleniem wytwórczych narzędzi softwareowych i sieci komputerowych.</li>
+            </ol>
+
+            <p class="mt-4"><strong>B. Etap drugi</strong></p>
+            <ol>
+                <li>Praca na ostatecznym stanowisku pracy, wykonywanie prac i projektów informatycznych tak aby osiągnąć poniższe, wymagane programem studiów, efekty uczenia się:
+                    <ol style="list-style-type: lower-alpha; padding-left: 20px;">
+                        <li>ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych;</li>
+                        <li>zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce;</li>
+                        <li>zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy;</li>
+                        <li>zna podstawowe zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka;</li>
+                        <li>pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami publikowanymi w języku polskim jak i angielskim;</li>
+                        <li>rozwiązuje praktyczne problemy informatyczne osadzone w środowisku zajmującym się zawodowo działalnością inżynierską w branży IT, stosując normy i standardy stosowane w informatyce, a także zasady ergonomii i bezpieczeństwa oraz biorąc pod uwagę aspekty środowiskowe i etyczne;</li>
+                        <li>opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia;</li>
+                        <li>pracuje w zespole zajmującym się zawodowo branżą IT;</li>
+                        <li>przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów;</li>
+                        <li>kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji planowanego zadania, jak i przekazać im w sposób zrozumiały informacje i opinie z zakresu informatyki;</li>
+                        <li>dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków szczególnie te ekonomiczne i społeczne.</li>
+                    </ol>
+                </li>
+                <li>Opcjonalnie formułowanie przez zakład pracy tematu pracy dyplomowej i precyzowanie zakresu pracy dyplomowej; rozpoczęcie realizacji pracy dyplomowej pod nadzorem opiekuna pracy ze strony uczelni oraz konsultanta ze strony zakładu pracy.</li>
+                <li>Planowany czas realizacji praktyki: 6 miesięcy tj. 120 dni (960 godz.).</li>
+            </ol>
+
+            <p class="mt-4"><strong>C. Etap trzeci - zakończenie praktyki</strong></p>
+            <ol>
+                <li>W trakcie praktyki student prowadzi „Dzienniczek praktyki”. Wpisy w dzienniczku powinny być potwierdzone przez zakładowego opiekuna praktyki.</li>
+                <li>Na „Karcie praktyki zawodowej” kierownik zakładu pracy potwierdza odbycie praktyki a opiekun zakładowy wystawia ocenę parametryczną i w formie opisowej.</li>
+                <li>Opiekun ze strony zakładu pracy na odpowiednim druku „Potwierdzenie efektów uczenia się” potwierdza osiągnięcie przez praktykanta wymienionych powyżej efektów uczenia się.</li>
+            </ol>
+        </div>
+
+        <div class="row mt-5 pt-5 text-center">
+            <div class="col-6">
+                <div id="podpis-zopz-zal2" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;"></span>
+                    <span>{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</span>
+                    {% endif %}
+                </div>
+                <small>podpis osoby reprezentującej zakład pracy</small>
+            </div>
+            <div class="col-6">
+                <div id="podpis-dyrektora-zal2" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ porozumienie.data_podpisania }}</span>
+                    <span>{{ porozumienie.podpisal_dziekanat }}</span>
+                    {% endif %}
+                </div>
+                <small>data i podpis Dyrektora Instytutu</small>
+            </div>
+        </div>
+    </div>
+</div>
+

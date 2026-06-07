@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/zopz/teczka.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('zopz.dashboard') }}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Wróć do listy studentów
+    </a>
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;" id="student-name">
+        Teczka Studenta: Ładowanie...
+    </h2>
+</div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Nr albumu / Kierunek</p>
+                <p class="fw-bold" id="student-info">...</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Miejsce praktyki</p>
+                <p class="fw-bold" id="miejsce-praktyki">...</p>
+            </div>
+            <div class="col-md-4">
+                <p class="mb-1 text-muted small">Status</p>
+                <span class="badge bg-secondary" id="praktyka-status">...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3">Dokumentacja Praktyki</h4>
+<div class="row g-3">
+    <!-- Zał. 1 -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-file-earmark-text text-primary"></i> Porozumienie (Zał. 1)</h6>
+                    <span class="badge bg-danger" id="badge-zal1" style="display:none;">Wymaga akcji</span>
+                </div>
+                <p class="text-muted small mb-3">Zatwierdzenie porozumienia o organizację praktyki.</p>
+                <a id="btn-zal1" href="#" class="btn btn-sm btn-outline-primary">Podgląd porozumienia</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 2a -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-calendar-check text-secondary"></i> Program i harmonogram (Zał. 2a)</h6>
+                <p class="text-muted small mb-3">Uzgadnianie programu praktyki ze studentem i UOPZ.</p>
+                <a id="btn-zal2a" href="#" class="btn btn-sm btn-outline-secondary">Opracuj Harmonogram</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 3 -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold"><i class="bi bi-file-earmark-person text-success"></i> Karta Praktyki (Zał. 3)</h6>
+                <p class="text-muted small mb-3">Potwierdzenie przebiegu i wystawienie oceny z praktyki.</p>
+                <a id="btn-zal3" href="#" class="btn btn-sm btn-outline-success">Wypełnij i Oceń</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Zał. 6 (Dziennik) -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-journal-text text-info"></i> Dziennik Praktyki (Zał. 6)</h6>
+                    <span class="badge bg-warning text-dark" id="badge-zal6" style="display:none;">Do oceny</span>
+                </div>
+                <p class="text-muted small mb-3">Weryfikacja i akceptacja wpisów studenta z przebiegu praktyki.</p>
+                <a id="btn-zal6" href="#" class="btn btn-sm btn-outline-info">Sprawdź Dziennik</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 7 (Sprawozdanie) -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-card-text text-warning"></i> Sprawozdanie (Zał. 7)</h6>
+                    <span class="badge bg-warning text-dark" id="badge-zal7" style="display:none;">Do weryfikacji</span>
+                </div>
+                <p class="text-muted small mb-3">Weryfikacja i podpisanie sprawozdania z przebiegu praktyki.</p>
+                <a id="btn-zal7" href="#" class="btn btn-sm btn-outline-warning text-dark">Weryfikuj Sprawozdanie</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zał. 4 (Efekty Uczenia) -->
+    <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold"><i class="bi bi-list-check text-primary"></i> Efekty Uczenia (Zał. 4)</h6>
+                    <span class="badge bg-primary" id="badge-zal4" style="display:none;">Wymaga akcji</span>
+                </div>
+                <p class="text-muted small mb-3">Potwierdzenie uzyskanych efektów uczenia się przez studenta.</p>
+                <a id="btn-zal4" href="#" class="btn btn-sm btn-outline-primary">Oceń Efekty</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

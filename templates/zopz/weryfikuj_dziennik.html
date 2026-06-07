@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script>
+    const STUDENT_ID = parseInt("{{ request.view_args['student_id'] }}", 10);
+</script>
+<script src="{{ url_for('static', filename='js/zopz/weryfikuj_dziennik.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Weryfikacja Dziennika Praktyki (Zał. 6)
+    </h2>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ url_for('pdf_export.pobierz_zal6', student_id=request.view_args['student_id']) }}" class="btn btn-outline-danger shadow-sm">
+            <i class="bi bi-file-earmark-pdf"></i> Pobierz PDF
+        </a>
+        <a href="{{ url_for('zopz.teczka', student_id=request.view_args['student_id']) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Powrót do teczki
+        </a>
+    </div>
+</div>
+
+<div id="alerts-container"></div>
+
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body p-5" style="border: 1px solid #dee2e6; max-width: 1100px; margin: 0 auto; background-color: #fff;">
+        
+        <div class="mb-4 text-start">
+            <div class="d-flex justify-content-end mb-3">
+                <div class="text-end fw-bold text-muted">
+                    Załącznik nr 6
+                </div>
+            </div>
+
+            <div class="row align-items-center mb-4 pb-3 border-bottom">
+                <div class="col-md-12 text-start">
+                    <span class="text-muted small fw-bold text-uppercase">Status dokumentu:</span>
+                    <h5 class="mb-0 mt-1"><span class="badge bg-secondary" id="dokument-status-badge">Ładowanie...</span></h5>
+                </div>
+            </div>
+
+            <h5 class="text-center fw-bold mb-5 mt-3">DZIENNIK PRAKTYKI ZAWODOWEJ</h5>
+            
+            <div class="row mb-2">
+                <div class="col-md-3 text-muted">Student:</div>
+                <div class="col-md-9 fw-bold" id="student-imie-nazwisko">...</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 text-muted">Nr albumu:</div>
+                <div class="col-md-9 fw-bold" id="student-nr-albumu">...</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-3 text-muted">Kierunek:</div>
+                <div class="col-md-9 fw-bold">informatyka</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 text-muted">W zakresie (specjalność):</div>
+                <div class="col-md-9 fw-bold" id="student-specjalnosc">...</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 text-muted">Studia:</div>
+                <div class="col-md-9 fw-bold" id="student-studia">inżynierskie, stacjonarne</div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-3 text-muted">Rok akademicki:</div>
+                <div class="col-md-9 fw-bold">
+                    <span id="rok-akademicki-text">...</span>
+                </div>
+            </div>
+            
+            <div class="row mb-2 mt-4 pt-3 border-top">
+                <div class="col-md-3 text-muted">Miejsce odbywania praktyki:</div>
+                <div class="col-md-9 fw-bold" id="praktyka-zaklad">Ładowanie...</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 text-muted">Data rozpoczęcia praktyki:</div>
+                <div class="col-md-3 fw-bold" id="praktyka-start">...</div>
+                <div class="col-md-3 text-muted">Data zakończenia praktyki:</div>
+                <div class="col-md-3 fw-bold" id="praktyka-end">...</div>
+            </div>
+            <div class="mb-5 mt-5 pt-5 border-top border-dark">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <strong>WYKAZ ZAŁĄCZNIKÓW:</strong>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" style="font-family: Arial, sans-serif; font-size: 13px;" id="zalacznikiTable">
+                        <thead class="bg-light text-center">
+                            <tr>
+                                <th style="width: 5%">Lp.</th>
+                                <th style="width: 65%">Opis załącznika</th>
+                                <th style="width: 30%">Plik</th>
+                            </tr>
+                        </thead>
+                        <tbody id="zalacznikiBody">
+                            <tr><td colspan="3" class="text-center py-2 text-muted fst-italic">Brak załączników</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 mb-4 border-top pt-4">
+            <button class="btn btn-outline-secondary fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEfekty" aria-controls="offcanvasEfekty">
+                <i class="bi bi-list-check me-2"></i> Pokaż ściągawkę: Efekty uczenia się
+            </button>
+        </div>
+        
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEfekty" aria-labelledby="offcanvasEfektyLabel">
+            <div class="offcanvas-header bg-light border-bottom">
+                <h5 class="offcanvas-title fw-bold" id="offcanvasEfektyLabel"><i class="bi bi-list-check me-2"></i>Lista efektów</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Zamknij"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <ul id="efekty-list" class="list-group list-group-flush mb-0" style="font-size: 0.9rem;">
+                    <li class="list-group-item text-center">Ładowanie...</li>
+                </ul>
+            </div>
+        </div>
+
+        <h6 class="text-center fw-bold mt-5 mb-4">TABELA WPISÓW Z PRZEBIEGU PRAKTYKI</h6>
+
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered border-dark align-middle" id="dziennikTable">
+                <thead class="text-center align-middle" style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="width: 5%">Dzień</th>
+                        <th style="width: 15%">Data</th>
+                        <th style="width: 45%">Opis wykonanych prac</th>
+                        <th style="width: 15%">Nr. efektów<br>uczenia się</th>
+                        <th style="width: 20%">Decyzja ZOPZ</th>
+                    </tr>
+                    <tr class="fst-italic" style="font-size: 0.85rem;">
+                        <td>1</td>
+                        <td>2</td>
+                        <td>3</td>
+                        <td>4</td>
+                        <td>5</td>
+                    </tr>
+                </thead>
+                <tbody id="dziennikBody">
+                    <tr><td colspan="5" class="text-center py-4">Ładowanie wpisów z API...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4 mb-2 gap-2" id="bottom-actions-container">
+            <button class="btn btn-success btn-lg shadow-sm d-none fw-bold" id="btn-zatwierdz-wszystko" onclick="zatwierdzDziennik()">
+                <i class="bi bi-check-all me-1"></i> Zatwierdź ocenę dziennika
+            </button>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Modal Odrzucenia -->
+<div class="modal fade" id="odrzucModal" tabindex="-1" aria-labelledby="odrzucModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="odrzucModalLabel">Odrzucenie wpisu (dzień <span id="modal-dzien-nr"></span>)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-wpis-id">
+        <div class="mb-3">
+          <label for="modal-komentarz" class="form-label">Powód odrzucenia / Uwagi do poprawy dla studenta:</label>
+          <textarea class="form-control" id="modal-komentarz" rows="4" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+        <button type="button" class="btn btn-danger" onclick="zapiszOdrzucenie()">Zapisz odrzucenie</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

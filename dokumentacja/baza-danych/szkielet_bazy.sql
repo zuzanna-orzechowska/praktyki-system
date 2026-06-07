@@ -5,15 +5,16 @@
 PRAGMA foreign_keys = ON;  -- wymagane w SQLite
 
 -- ------------------------------------------------------------
--- 1. TABELA UŻYTKOWNIKA (Zmodyfikowana pod OAuth)
+-- 1. TABELA UŻYTKOWNIKA
 -- ------------------------------------------------------------
 CREATE TABLE uzytkownik (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,
     email           TEXT        NOT NULL UNIQUE,
-    haslo_hash      TEXT,                                -- Już nie jest NOT NULL
+    haslo_hash      TEXT,
+    tytul_naukowy   TEXT,
     imie            TEXT        NOT NULL,
     nazwisko        TEXT        NOT NULL,
-    rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik')),
+    rola            TEXT        NOT NULL CHECK (rola IN ('student', 'uopz', 'zopz', 'dziekanat', 'admin', 'oczekujacy_pracownik','dyrektor')),
     aktywny         INTEGER     NOT NULL DEFAULT 1,      -- 1 = aktywny, 0 = zablokowany/oczekujący
     wymaga_zmiany_hasla BOOLEAN DEFAULT 0,
     auth_provider   TEXT        DEFAULT 'microsoft',     -- Z jakiego systemu pochodzi
@@ -23,7 +24,7 @@ CREATE TABLE uzytkownik (
 );
 
 -- ------------------------------------------------------------
--- 2. PROFIL STUDENTA (Pozostaje bez zmian, ale tworzymy go ponownie)
+-- 2. PROFIL STUDENTA 
 -- ------------------------------------------------------------
 CREATE TABLE student (
     id              INTEGER     PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +34,7 @@ CREATE TABLE student (
     specjalnosc     TEXT,
     tryb_studiow    TEXT        NOT NULL CHECK (tryb_studiow IN ('stacjonarne', 'niestacjonarne')),
     rok_studiow     INTEGER     NOT NULL,
+    rok_akademicki  TEXT,
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownik(id) ON DELETE CASCADE
@@ -68,6 +70,7 @@ CREATE TABLE praktyka (
     data_start      DATE,
     data_end        DATE,
     liczba_godzin   INTEGER DEFAULT 960,
+    ankieta_wypelniona BOOLEAN DEFAULT 0,
     FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
     FOREIGN KEY (zaklad_id) REFERENCES zaklad_pracy(id) ON DELETE SET NULL,
     FOREIGN KEY (uopz_id) REFERENCES uzytkownik(id) ON DELETE SET NULL
@@ -114,12 +117,26 @@ CREATE TABLE wpis_dziennika (
     data_wpisu          DATE        NOT NULL,
     opis_prac           TEXT        NOT NULL,
     nr_efektu           TEXT,                   -- np. "EK_01, EK_03"
-    potwierdzony_zopz   INTEGER     NOT NULL DEFAULT 0,  -- 0 = nie, 1 = tak
+    potwierdzony_zopz   INTEGER     NOT NULL DEFAULT 0,  -- 0 = nie, 1 = tak, -1 = odrzucony
     potwierdzono_at     DATETIME,
+    komentarz_zopz      TEXT,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE,
 
     UNIQUE (dokument_id, numer_dnia)
+);
+
+-- ------------------------------------------------------------
+-- 6a. ZAŁĄCZNIKI DOWODOWE DO DZIENNIKA PRAKTYK (Zał. 6)
+-- ------------------------------------------------------------
+CREATE TABLE zalacznik_dziennika (
+    id                  INTEGER     PRIMARY KEY AUTOINCREMENT,
+    dokument_id         INTEGER     NOT NULL,
+    opis                TEXT        NOT NULL,
+    plik_path           TEXT        NOT NULL,
+    created_at          DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );
 
 -- ------------------------------------------------------------
@@ -151,6 +168,25 @@ CREATE TABLE protokol (
     ocena_koncowa   REAL,
     data_egzaminu   DATE,
     przewodniczacy  TEXT,
+    instytucja_1    TEXT,
+    okres_1         TEXT,
+    instytucja_2    TEXT,
+    okres_2         TEXT,
+    komisja_2       TEXT,
+    komisja_3       TEXT,
+    rola_3          TEXT,
+    komisja_4       TEXT,
+    rola_4          TEXT,
+    pytanie_1       TEXT,
+    ocena_czastkowa_1 REAL,
+    pytanie_2       TEXT,
+    ocena_czastkowa_2 REAL,
+    pytanie_3       TEXT,
+    ocena_czastkowa_3 REAL,
+    ocena_e         REAL,
+    ocena_k_slownie TEXT,
+    podpis_opiekuna_s TEXT,
+    podpis_przewodniczacego TEXT,
     plik_pdf_path   TEXT,
     created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -229,6 +265,20 @@ CREATE TABLE wniosek_zaliczenie_praktyki (
     okres_zatrudnienia_do   DATE NOT NULL,
     stanowisko              TEXT NOT NULL,
     zalaczniki_paths        TEXT,
+    uzupelnienia_paths      TEXT,
+
+    FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 13a. DECYZJA (Zał. 4a)
+-- ------------------------------------------------------------
+CREATE TABLE decyzja_zal4a (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    dokument_id             INTEGER NOT NULL UNIQUE,
+    rodzaj_zaliczenia       TEXT,
+    wymiar_godzin           INTEGER,
+    ogolny_wynik            TEXT,
 
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE
 );
@@ -263,6 +313,22 @@ CREATE TABLE oswiadczenie (
 -- 15. PROGRAM PRAKTYKI (Zał. 2a)
 -- ------------------------------------------------------------
 CREATE TABLE program_praktyki (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    praktyka_id INTEGER NOT NULL,
+    tresc TEXT NOT NULL,
+    data_utworzenia DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (praktyka_id) REFERENCES praktyka(id) ON DELETE CASCADE
+);
+
+CREATE TABLE log_systemowy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uzytkownik_id INTEGER,
+    akcja VARCHAR(500) NOT NULL,
+    data_utworzenia DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownik(id) ON DELETE SET NULL
+);
+
+CREATE TABLE program_praktyki_data (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     dokument_id     INTEGER NOT NULL,
     kod_efektu      TEXT NOT NULL,
@@ -270,6 +336,21 @@ CREATE TABLE program_praktyki (
     
     FOREIGN KEY (dokument_id) REFERENCES dokument(id) ON DELETE CASCADE,
     UNIQUE(dokument_id, kod_efektu)
+);
+
+-- ------------------------------------------------------------
+-- 16. ANKIETA (Zał. 5)
+-- ------------------------------------------------------------
+CREATE TABLE ankieta (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    odpowiedzi          TEXT NOT NULL,
+    uwagi               TEXT,
+    rok_akademicki      TEXT NOT NULL,
+    kierunek            TEXT NOT NULL,
+    forma_studiow       TEXT NOT NULL,
+    semestr             INTEGER NOT NULL,
+    liczba_godzin       INTEGER NOT NULL,
+    data_utworzenia     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================================

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Przegląd Ankiet Studenckich (Zał. 5)
+        </h2>
+        <p class="text-muted mb-0">Anonimowe opinie o przebiegu praktyk.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="card-title fw-bold mb-4">Zgłoszone Ankiety</h5>
+        
+        {% if ankiety %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Ankiety</th>
+                        <th>Data Wpłynięcia</th>
+                        <th>Rok Akademicki</th>
+                        <th>Forma</th>
+                        <th>Semestr</th>
+                        <th>Średnia Ocen (1-5)</th>
+                        <th>Uwagi od Studenta</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in ankiety %}
+                    <tr>
+                        <td class="fw-bold text-muted">#{{ a.id }}</td>
+                        <td>{{ a.data }}</td>
+                        <td>{{ a.rok }}</td>
+                        <td><span class="badge bg-secondary">{{ a.forma }}</span></td>
+                        <td>{{ a.semestr }}</td>
+                        <td>
+                            <span class="badge {% if a.srednia >= 4.0 %}bg-success{% elif a.srednia >= 3.0 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                                {{ a.srednia }}
+                            </span>
+                        </td>
+                        <td class="text-start" style="max-width: 300px; white-space: normal;">
+                            {% if a.uwagi %}
+                                <span class="fst-italic text-muted">"{{ a.uwagi }}"</span>
+                            {% else %}
+                                <span class="text-muted small">- brak uwag -</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('dziekanat.ankieta_szczegoly', id=a.id) }}" class="btn btn-sm btn-outline-primary">Szczegóły</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info border-0 shadow-sm">
+            <i class="bi bi-info-circle me-2"></i> Brak zgłoszonych ankiet w systemie.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

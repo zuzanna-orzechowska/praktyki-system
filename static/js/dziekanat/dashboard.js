@@ -1,0 +1,74 @@
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/dziekanat/dashboard')
+        .then(response => {
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = '/auth/login';
+                throw new Error('Unauthorized');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.error(data.error);
+                return;
+            }
+            
+            const badge = document.getElementById('zal9-badge');
+            if (data.zal9_count > 0) {
+                badge.textContent = data.zal9_count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            const porBadge = document.getElementById('porozumienia-badge');
+            if (porBadge) {
+                if (data.porozumienia_count > 0) {
+                    porBadge.textContent = data.porozumienia_count;
+                    porBadge.style.display = 'inline-block';
+                } else {
+                    porBadge.style.display = 'none';
+                }
+            }
+            
+            const zal2aBadge = document.getElementById('zal2a-badge');
+            if (zal2aBadge) {
+                if (data.zal2a_count > 0) {
+                    zal2aBadge.textContent = data.zal2a_count;
+                    zal2aBadge.style.display = 'inline-block';
+                } else {
+                    zal2aBadge.style.display = 'none';
+                }
+            }
+            const zal4bBadge = document.getElementById('zal4b-badge');
+            if (zal4bBadge) {
+                if (data.zal4b_count > 0) {
+                    zal4bBadge.textContent = data.zal4b_count;
+                    zal4bBadge.style.display = 'inline-block';
+                } else {
+                    zal4bBadge.style.display = 'none';
+                }
+            }
+            
+            const zal4aBadge = document.getElementById('zal4a-badge');
+            if (zal4aBadge) {
+                if (data.zal4a_count > 0) {
+                    zal4aBadge.textContent = data.zal4a_count;
+                    zal4aBadge.style.display = 'inline-block';
+                } else {
+                    zal4aBadge.style.display = 'none';
+                }
+            }
+            
+            const zal7Badge = document.getElementById('zal7-badge');
+            if (zal7Badge) {
+                if (data.zal7_count > 0) {
+                    zal7Badge.textContent = data.zal7_count;
+                    zal7Badge.style.display = 'inline-block';
+                } else {
+                    zal7Badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(err => console.error(err));
+});

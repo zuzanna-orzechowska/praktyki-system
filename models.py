@@ -1,14 +1,26 @@
 from extensions import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
-class Uzytkownik(db.Model, UserMixin):
+
+class DictSerializable:
+    def to_dict(self):
+        result = {}
+        for c in self.__table__.columns:
+            val = getattr(self, c.name)
+            if isinstance(val, (date, datetime)):
+                val = val.isoformat()
+            result[c.name] = val
+        return result
+
+class Uzytkownik(db.Model, UserMixin, DictSerializable):
     __tablename__ = 'uzytkownik'
     
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     haslo_hash = db.Column(db.String(255), nullable=True) 
+    tytul_naukowy = db.Column(db.String(50), nullable=True)
     imie = db.Column(db.String(50), nullable=False)
     nazwisko = db.Column(db.String(50), nullable=False)
     rola = db.Column(db.String(50), nullable=False)
@@ -17,6 +29,7 @@ class Uzytkownik(db.Model, UserMixin):
     
     auth_provider = db.Column(db.String(50), default="microsoft")
     external_id = db.Column(db.String(255), unique=True)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
     def is_active(self):
@@ -33,7 +46,7 @@ class Uzytkownik(db.Model, UserMixin):
             return False
         return check_password_hash(self.haslo_hash, password)
 
-class Student(db.Model):
+class Student(db.Model, DictSerializable):
     __tablename__ = 'student'
     id = db.Column(db.Integer, primary_key=True)
     uzytkownik_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
@@ -42,20 +55,25 @@ class Student(db.Model):
     specjalnosc = db.Column(db.String(100))
     tryb_studiow = db.Column(db.String(50))
     rok_studiow = db.Column(db.Integer)
+    rok_akademicki = db.Column(db.String(20))
     uzytkownik = db.relationship('Uzytkownik', backref=db.backref('student_profil', uselist=False))
 
-class ZakladPracy(db.Model):
+class ZakladPracy(db.Model, DictSerializable):
     __tablename__ = 'zaklad_pracy'
     id = db.Column(db.Integer, primary_key=True)
     nazwa = db.Column(db.String(255), nullable=False)
     nip = db.Column(db.String(20), unique=True)
-    adres = db.Column(db.String(255))
+    # adres = db.Column(db.String(255)) # Deprecated
+    ulica = db.Column(db.String(150))
+    nr_budynku = db.Column(db.String(20))
+    nr_lokalu = db.Column(db.String(20))
+    kod_pocztowy = db.Column(db.String(20))
     miasto = db.Column(db.String(100))
     email = db.Column(db.String(120))
     telefon = db.Column(db.String(50))
     zopz_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'))
 
-class Praktyka(db.Model):
+class Praktyka(db.Model, DictSerializable):
     __tablename__ = 'praktyka'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
@@ -66,16 +84,20 @@ class Praktyka(db.Model):
     data_end = db.Column(db.Date)
     
     liczba_godzin = db.Column(db.Integer, default=960)
+    ankieta_wypelniona = db.Column(db.Boolean, default=False)
     
     student = db.relationship('Student', backref='praktyki')
     zaklad = db.relationship('ZakladPracy')
 
-class Dokument(db.Model):
+class Dokument(db.Model, DictSerializable):
     __tablename__ = 'dokument'
     id = db.Column(db.Integer, primary_key=True)
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), nullable=False)
     typ_zalacznika = db.Column(db.String(20), nullable=False) # np. 'ZAL6'
     status = db.Column(db.String(50), default='Draft')
+    plik_path = db.Column(db.String(255), nullable=True)
+    uwagi_opiekuna = db.Column(db.Text, nullable=True)
+    uwagi_dyrektora = db.Column(db.Text, nullable=True)
     utworzony_przez = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
     komentarz = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -83,7 +105,7 @@ class Dokument(db.Model):
     
     praktyka = db.relationship('Praktyka', backref=db.backref('dokumenty', lazy=True))
 
-class WpisDziennika(db.Model):
+class WpisDziennika(db.Model, DictSerializable):
     __tablename__ = 'wpis_dziennika'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -92,10 +114,11 @@ class WpisDziennika(db.Model):
     opis_prac = db.Column(db.Text, nullable=False)
     nr_efektu = db.Column(db.String(100))
     potwierdzony_zopz = db.Column(db.Integer, default=0)
+    komentarz_zopz = db.Column(db.Text, nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('wpisy', cascade="all, delete-orphan"))
 
-class Porozumienie(db.Model):
+class Porozumienie(db.Model, DictSerializable):
     __tablename__ = 'porozumienie'
     id = db.Column(db.Integer, primary_key=True)
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), unique=True, nullable=False)
@@ -104,10 +127,11 @@ class Porozumienie(db.Model):
     podpisal_dziekanat = db.Column(db.String(255))
     status = db.Column(db.String(50), default='Draft')
     plik_path = db.Column(db.String(255))
+    komentarz_zopz = db.Column(db.Text, nullable=True)
     praktyka = db.relationship('Praktyka', backref=db.backref('porozumienie', uselist=False))
     zaklad = db.relationship('ZakladPracy')
 
-class HarmonogramPraktyki(db.Model):
+class HarmonogramPraktyki(db.Model, DictSerializable):
     __tablename__ = 'harmonogram_praktyki'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -116,7 +140,7 @@ class HarmonogramPraktyki(db.Model):
     planowana_liczba_dni = db.Column(db.Integer, nullable=False)
     dokument = db.relationship('Dokument', backref=db.backref('pozycje_harmonogramu', cascade="all, delete-orphan"))
 
-class Protokol(db.Model):
+class Protokol(db.Model, DictSerializable):
     __tablename__ = 'protokol'
     id = db.Column(db.Integer, primary_key=True)
     praktyka_id = db.Column(db.Integer, db.ForeignKey('praktyka.id'), unique=True, nullable=False)
@@ -126,22 +150,59 @@ class Protokol(db.Model):
     ocena_koncowa = db.Column(db.Float)
     data_egzaminu = db.Column(db.Date)
     przewodniczacy = db.Column(db.String(255))
+    
+    instytucja_1 = db.Column(db.String(255))
+    okres_1 = db.Column(db.String(100))
+    instytucja_2 = db.Column(db.String(255))
+    okres_2 = db.Column(db.String(100))
+    
+    komisja_2 = db.Column(db.String(255))
+    komisja_3 = db.Column(db.String(255))
+    rola_3 = db.Column(db.String(255))
+    komisja_4 = db.Column(db.String(255))
+    rola_4 = db.Column(db.String(255))
+    
+    pytanie_1 = db.Column(db.Text)
+    ocena_czastkowa_1 = db.Column(db.Float)
+    pytanie_2 = db.Column(db.Text)
+    ocena_czastkowa_2 = db.Column(db.Float)
+    pytanie_3 = db.Column(db.Text)
+    ocena_czastkowa_3 = db.Column(db.Float)
+    
+    ocena_e = db.Column(db.Float)
+    ocena_k_slownie = db.Column(db.String(255))
+    podpis_opiekuna_s = db.Column(db.String(255))
+    podpis_przewodniczacego = db.Column(db.String(255))
+    
     plik_pdf_path = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     praktyka = db.relationship('Praktyka', backref=db.backref('protokol', uselist=False))
 
-class Sprawozdanie(db.Model):
+class Sprawozdanie(db.Model, DictSerializable):
     __tablename__ = 'sprawozdanie'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
     charakterystyka = db.Column(db.Text, nullable=False)
     opis_prac = db.Column(db.Text, nullable=False)
     wiedza_umiejetnosci = db.Column(db.Text, nullable=False)
+    uwagi_zopz = db.Column(db.Text, nullable=True)
+    podpis_zopz = db.Column(db.String(255), nullable=True)
+    podpis_uopz = db.Column(db.String(255), nullable=True)
+    podpis_studenta = db.Column(db.String(255), nullable=True)
+    podpis_dyrektora = db.Column(db.String(255), nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('sprawozdanie', uselist=False, cascade="all, delete-orphan"))
 
-class EfektUczenia(db.Model):
+class ZalacznikDziennika(db.Model, DictSerializable):
+    __tablename__ = 'zalacznik_dziennika'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id', ondelete='CASCADE'), nullable=False)
+    opis = db.Column(db.Text, nullable=False)
+    plik_path = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class EfektUczenia(db.Model, DictSerializable):
     __tablename__ = 'efekt_uczenia'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -153,7 +214,7 @@ class EfektUczenia(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('efekty', cascade="all, delete-orphan"))
 
-class WniosekZaliczeniePraktyki(db.Model):
+class WniosekZaliczeniePraktyki(db.Model, DictSerializable):
     __tablename__ = 'wniosek_zaliczenie_praktyki'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
@@ -166,10 +227,27 @@ class WniosekZaliczeniePraktyki(db.Model):
     
     #lista ścieżek do załączonych plików
     zalaczniki_paths = db.Column(db.Text) 
+    uzupelnienia_paths = db.Column(db.Text) # JSON dla załączników uzupełniających
+
+    # Podpis studenta
+    podpis_studenta = db.Column(db.String(255), nullable=True)
+    data_podpisu = db.Column(db.Date, nullable=True)
     
     dokument = db.relationship('Dokument', backref=db.backref('wniosek_zaliczenie', uselist=False, cascade="all, delete-orphan"))
 
-class Oswiadczenie(db.Model):
+class DecyzjaZal4a(db.Model, DictSerializable):
+    __tablename__ = 'decyzja_zal4a'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    rodzaj_zaliczenia = db.Column(db.String(100)) # 'pracy zawodowej', 'stażu', 'działalności gospodarczej'
+    wymiar_godzin = db.Column(db.Integer)
+    ogolny_wynik = db.Column(db.String(50)) # 'uzyskał/a', 'nie uzyskał/a', 'uzyskał/a częściowo'
+    podpis_dyrektora = db.Column(db.String(255), nullable=True)
+    data_podpisania = db.Column(db.Date, nullable=True)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('decyzja_zal4a', uselist=False, cascade="all, delete-orphan"))
+
+class Oswiadczenie(db.Model, DictSerializable):
     __tablename__ = 'oswiadczenie'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -194,7 +272,7 @@ class Oswiadczenie(db.Model):
     
     dokument = db.relationship('Dokument', backref=db.backref('oswiadczenie', uselist=False, cascade="all, delete-orphan"))
 
-class ProgramPraktyki(db.Model):
+class ProgramPraktyki(db.Model, DictSerializable):
     __tablename__ = 'program_praktyki'
     id = db.Column(db.Integer, primary_key=True)
     dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False)
@@ -202,3 +280,101 @@ class ProgramPraktyki(db.Model):
     dzial_prace = db.Column(db.Text)
     
     dokument = db.relationship('Dokument', backref=db.backref('programy', cascade="all, delete-orphan"))
+
+class Zal2aPodpisy(db.Model, DictSerializable):
+    __tablename__ = 'zal2a_podpisy'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    podpis_uopz = db.Column(db.String(255))
+    data_uopz = db.Column(db.Date)
+    podpis_zopz = db.Column(db.String(255))
+    data_zopz = db.Column(db.Date)
+    podpis_student = db.Column(db.String(255))
+    data_student = db.Column(db.Date)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('zal2a_podpisy', uselist=False, cascade="all, delete-orphan"))
+
+class Powiadomienie(db.Model, DictSerializable):
+    __tablename__ = 'powiadomienie'
+    id = db.Column(db.Integer, primary_key=True)
+    uzytkownik_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=False)
+    tresc = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(255), nullable=True)
+    przeczytane = db.Column(db.Boolean, default=False)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    uzytkownik = db.relationship('Uzytkownik', backref=db.backref('powiadomienia', cascade="all, delete-orphan"))
+
+class KartaPraktyki(db.Model, DictSerializable):
+    __tablename__ = 'karta_praktyki'
+    id = db.Column(db.Integer, primary_key=True)
+    dokument_id = db.Column(db.Integer, db.ForeignKey('dokument.id'), nullable=False, unique=True)
+    
+    # Skierowanie
+    podpis_dyrektora = db.Column(db.String(255))
+    skierowanie_data = db.Column(db.Date)
+    
+    # Zgłoszenie i BHP (ZOPZ)
+    data_zgloszenia = db.Column(db.Date)
+    podpis_zgloszenie = db.Column(db.String(255))
+    data_bhp = db.Column(db.Date)
+    podpis_bhp = db.Column(db.String(255))
+    
+    # Zaświadczenie (ZOPZ)
+    zaswiadczenie_uwagi = db.Column(db.Text)
+    zaswiadczenie_data = db.Column(db.Date)
+    podpis_zaswiadczenie = db.Column(db.String(255))
+    
+    # Oceny (ZOPZ)
+    ocena_zopz_param = db.Column(db.Float)
+    ocena_zopz_opis = db.Column(db.Text)
+    ocena_zopz_data = db.Column(db.Date)
+    podpis_zopz = db.Column(db.String(255))
+    
+    # Oceny (UOPZ)
+    ocena_uopz_param = db.Column(db.Float)
+    ocena_uopz_opis = db.Column(db.Text)
+    ocena_uopz_data = db.Column(db.Date)
+    podpis_uopz = db.Column(db.String(255))
+    ocena_sprawozdania = db.Column(db.Float)
+    
+    # Dziekanat
+    akceptacja_dziekanat = db.Column(db.Boolean, default=False)
+    akceptacja_dziekanat_data = db.Column(db.Date)
+    
+    dokument = db.relationship('Dokument', backref=db.backref('karta_praktyki', uselist=False, cascade="all, delete-orphan"))
+
+class Ankieta(db.Model, DictSerializable):
+    __tablename__ = 'ankieta'
+    id = db.Column(db.Integer, primary_key=True)
+    odpowiedzi = db.Column(db.String(255), nullable=False) # Przechowywanie odpowiedzi JSON (lista 1-5 dla 14 pytań)
+    uwagi = db.Column(db.Text, nullable=True)
+    rok_akademicki = db.Column(db.String(20), nullable=False)
+    kierunek = db.Column(db.String(100), nullable=False)
+    forma_studiow = db.Column(db.String(50), nullable=False)
+    semestr = db.Column(db.Integer, nullable=False)
+    liczba_godzin = db.Column(db.Integer, nullable=False)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
+
+class LogSystemowy(db.Model, DictSerializable):
+    __tablename__ = 'log_systemowy'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    uzytkownik_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=True)
+    akcja = db.Column(db.String(500), nullable=False)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    uzytkownik = db.relationship('Uzytkownik', backref='logi_systemowe')
+
+def dodaj_log(uzytkownik_id, akcja):
+    try:
+        # Usuń logi starsze niż 30 dni
+        trzydziesci_dni_temu = datetime.utcnow() - timedelta(days=30)
+        LogSystemowy.query.filter(LogSystemowy.data_utworzenia < trzydziesci_dni_temu).delete()
+
+        nowy_log = LogSystemowy(uzytkownik_id=uzytkownik_id, akcja=akcja)
+        db.session.add(nowy_log)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Błąd zapisu loga: {str(e)}")

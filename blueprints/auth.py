@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from functools import wraps
 import os
 from extensions import login_manager, db, oauth
-from models import Uzytkownik, Student
+from models import Uzytkownik, Student, dodaj_log
 from werkzeug.security import check_password_hash
 
 auth_bp = Blueprint('auth', __name__)
@@ -73,11 +73,23 @@ def login():
             if user.check_password(password):
                 if user.aktywny == 1:
                     login_user(user)
+                    
+                    from models import dodaj_log
+                    dodaj_log(user.id, "Zalogowano do systemu (hasło)")
+                    
                     flash('Zalogowano pomyślnie.', 'success')
                     if user.wymaga_zmiany_hasla:
                         return redirect(url_for('auth.zmien_haslo'))
                     if user.rola == 'admin':
                         return redirect(url_for('admin.dashboard'))
+                    elif user.rola == 'zopz':
+                        return redirect(url_for('zopz.dashboard'))
+                    elif user.rola in ['dziekanat', 'dyrektor']:
+                        return redirect(url_for('dziekanat.dashboard'))
+                    elif user.rola == 'student':
+                        return redirect(url_for('student.dashboard'))
+                    elif user.rola == 'uopz':
+                        return redirect(url_for('uopz.dashboard'))
                     return redirect(url_for('index'))
                 else:
                     flash('Twoje konto jest nieaktywne.', 'warning')
@@ -111,13 +123,16 @@ def auth_callback(provider):
     email = user_info.get('email')
     external_id = user_info.get('sub') or user_info.get('oid')
     
-    # Wyciąganie imienia i nazwiska w zależności od dostawcy
     imie = user_info.get('given_name', '')
     nazwisko = user_info.get('family_name', '')
     if not imie or not nazwisko:
         name_parts = user_info.get('name', 'Nieznane Nieznane').split(' ', 1)
         imie = name_parts[0]
         nazwisko = name_parts[1] if len(name_parts) > 1 else ''
+        
+    import re
+    imie = re.sub(r'\s*\(\d+\)\s*', '', imie).strip()
+    nazwisko = re.sub(r'\s*\(\d+\)\s*', '', nazwisko).strip()
 
     user = Uzytkownik.query.filter_by(email=email).first()
     
@@ -126,16 +141,10 @@ def auth_callback(provider):
         domain = email.split('@')[1] if '@' in email else ''
         nr_albumu = email.split('@')[0] if domain == 'student.ans-elblag.pl' else None
         
-        if email == 'Kaprulcia@outlook.com': #DO TESTOW KONTO ADMINA POZNIEJ TO ZMIENIC
-            rola = 'admin'
-            aktywny = 1
-        elif email == 'orzechosiaa.searchw@gmail.com': #EMAIL DO WYKASOWANIA W PRZYSZLOSCI TYLK ODO CELOW TESTOWYCH
-            rola = 'dziekanat'
-            aktywny = 1
-        elif domain == 'student.ans-elblag.pl': #TUTAJ MA BYĆ IF
+        if domain == 'student.ans-elblag.pl':
             rola = 'student'
             aktywny = 1
-        elif domain == 'ans-elblag.pl': #TUTAJ PÓŹNIEJ ZAIMPLEMENTOWAĆ  ŻE TA ROLA JEST NAJPIERW OOCZEUKJACA I ADMIN MUSI ZATWIERDZIC
+        elif domain == 'ans-elblag.pl':
             rola = 'oczekujacy_pracownik' 
             aktywny = 0 
         else:
@@ -175,14 +184,16 @@ def auth_callback(provider):
         return redirect(url_for('auth.login'))
 
     login_user(user)
-    flash(f'Zalogowano pomyślnie przez {provider.capitalize()}!', 'success')
+    dodaj_log(user.id, f"Zalogowano do systemu ({provider})")
     
-    if user.rola == 'dziekanat':
+    if user.rola in ['dziekanat', 'dyrektor']:
         return redirect(url_for('dziekanat.dashboard'))
     elif user.rola == 'student':
         return redirect(url_for('student.dashboard'))
     elif user.rola == 'uopz':
         return redirect(url_for('uopz.dashboard'))
+    elif user.rola == 'zopz':
+        return redirect(url_for('zopz.dashboard'))
     elif user.rola == 'admin':
         return redirect(url_for('admin.dashboard'))
         
@@ -191,6 +202,7 @@ def auth_callback(provider):
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    dodaj_log(current_user.id, "Wylogowano z systemu")
     logout_user()
     return redirect(url_for('auth.login'))
 
@@ -222,7 +234,7 @@ def zmien_haslo():
             return redirect(url_for('admin.dashboard'))
         elif current_user.rola == 'zopz':
             return redirect(url_for('zopz.dashboard'))
-        elif current_user.rola == 'dziekanat':
+        elif current_user.rola in ['dziekanat', 'dyrektor']:
             return redirect(url_for('dziekanat.dashboard'))
         elif current_user.rola == 'student':
             return redirect(url_for('student.dashboard'))

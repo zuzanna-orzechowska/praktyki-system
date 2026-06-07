@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/student/zal4b.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+        Wniosek o zaliczenie praktyki na podst. pracy (Zał. 4b)</h2>
+</div>
+
+<div id="alerts-container"></div>
+
+<form id="zal4b-form" enctype="multipart/form-data">
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body p-5" style="border: 1px solid #dee2e6; max-width: 900px; margin: 0 auto; background-color: #fff; line-height: 1.6;">
+            
+            <fieldset id="form-fieldset">
+                <div class="text-end mb-4">
+                    Elbląg, dnia <span id="data-wypelnienia" class="fw-bold"></span>
+                </div>
+
+                <div class="mb-5">
+                    <p class="mb-2">Kierunek studiów: <strong><span id="student-kierunek1"></span></strong></p>
+                    <p class="mb-2">Student / ka: <strong><span id="student-info"></span></strong></p>
+                    <p class="mb-2">Nr albumu: <strong><span id="student-album"></span></strong></p>
+                    <p class="mb-2">Kierunek studiów: <strong><span id="student-kierunek2"></span></strong></p>
+                    <div class="mb-2 d-flex align-items-center">
+                        <span class="me-2">Specjalność:</span>
+                        <input class="form-control form-control-sm w-50" list="specjalnosciOptions" id="specjalnosc" name="specjalnosc" placeholder="Wpisz lub wybierz z listy...">
+                        <datalist id="specjalnosciOptions">
+                            <option value="PBDiOU / Programowanie baz danych i oprogramowanie użytkowe">
+                            <option value="ASiSK / Administracja systemów i sieci komputerowych">
+                            <option value="M3D / Modelowanie 3D w zastosowaniach medycznych, prototypowaniu i mediach interaktywnych">
+                        </datalist>
+                    </div>
+                </div>
+
+                <div class="text-center mb-5 fw-bold">
+                    <p class="mb-0">Dyrektor Instytutu Informatyki Stosowanej</p>
+                    <p class="mb-0">im. Krzysztofa Brzeskiego</p>
+                    <p class="mb-0 fw-normal mt-2">Za pośrednictwem Komisji do spraw praktyki zawodowej</p>
+                    <p class="mb-0 fw-normal">dla kierunku studiów informatyka</p>
+                </div>
+
+                <h5 class="text-center fw-bold mb-4" style="line-height: 1.4;">
+                    WNIOSEK O UBIEGANIE SIĘ ZALICZENIA EFEKTÓW UCZENIA SIĘ<br>
+                    PRZEWIDZIANYCH DLA PRAKTYKI ZAWODOWEJ NA PODSTAWIE PRACY<br>
+                    ZAWODOWEJ/STAŻU/ DZIAŁALNOŚCI GOSPODARCZEJ*
+                </h5>
+
+                <p class="text-center fw-bold text-decoration-underline mb-4">Wniosek</p>
+
+                <p style="text-align: justify;" class="mb-4">
+                    Na podstawie § 4, ustęp 1 i 2 Regulaminu praktyk zawodowych w Instytucie Informatyki Stosowanej 
+                    im. Krzysztofa Brzeskiego ANS w Elblągu proszę o uznanie efektów uczenia się przewidzianych dla praktyki 
+                    zawodowej na podstawie pracy zawodowej/stażu/działalności gospodarczej*.
+                </p>
+
+                <div class="mb-4">
+                    <label for="uzasadnienie" class="form-label fw-bold">Uzasadnienie (min. 400 znaków):</label>
+                    <textarea class="form-control" id="uzasadnienie" name="uzasadnienie" rows="4" minlength="400" placeholder="Minimum 400 znaków..." required></textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted" id="uzasadnienie_counter">Znaków: 0 / min. 400</small>
+                        <div class="invalid-feedback m-0 text-end">Uzasadnienie musi mieć co najmniej 400 znaków.</div>
+                    </div>
+                </div>
+
+                <div class="mb-4 p-3 bg-light border rounded">
+                    <label class="form-label fw-bold">Dodatkowe szczegóły dotyczące zatrudnienia / działalności (wymagane do systemu):</label>
+                    <div class="row mb-3 mt-2">
+                        <div class="col-md-6">
+                            <label for="data_od" class="form-label small">Od dnia:</label>
+                            <input type="date" class="form-control form-control-sm" id="data_od" name="data_od" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="data_do" class="form-label small">Do dnia:</label>
+                            <input type="date" class="form-control form-control-sm" id="data_do" name="data_do" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="stanowisko" class="form-label small">Zajmowane stanowisko:</label>
+                        <input type="text" class="form-control form-control-sm" id="stanowisko" name="stanowisko" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zakres_obowiazkow" class="form-label small fw-bold">Krótki zakres obowiązków na stanowisku (min. 200 znaków):</label>
+                        <textarea class="form-control form-control-sm" id="zakres_obowiazkow" name="zakres_obowiazkow" rows="3" minlength="200" placeholder="Minimum 200 znaków..." required></textarea>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted" id="zakres_obowiazkow_counter">Znaków: 0 / min. 200</small>
+                            <div class="invalid-feedback m-0 text-end">Zakres obowiązków musi mieć co najmniej 200 znaków.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="text-align: justify;" class="mt-5 mb-3">
+                    Dla potwierdzenia uzyskania zakładanych dla praktyki zawodowej efektów uczenia się załączam n/w 
+                    dokumenty potwierdzające zakres realizowanych czynności zawodowych oraz czas ich realizacji w tym w szczególności:
+                </p>
+                <ol class="mb-4" style="line-height: 1.8;">
+                    <li>Umowę o pracę, zaświadczenie o odbyciu stażu lub wolontariatu</li>
+                    <li>Opis zajmowanego stanowiska pracy/kartę stanowiskową</li>
+                    <li>Zakres obowiązków realizowany w ramach stażu/wolontariatu</li>
+                    <li>Zaświadczenie z CEIDG lub KRS</li>
+                    <li>Inne dokumenty potwierdzające uzyskanie efektów uczenia się przewidzianych dla praktyki zawodowej</li>
+                </ol>
+
+                <hr class="my-4">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Załączniki dokumentujące zatrudnienie:</label>
+                    <p class="small text-muted mb-2">Wymagane m.in. umowa o pracę/zaświadczenie o odbyciu stażu, karta stanowiskowa, lub zaświadczenie z CEIDG/KRS.</p>
+                    
+                    <div id="skan-container" class="mt-2 mb-3">
+                        <div class="text-muted small">Brak załączników.</div>
+                    </div>
+                    
+                    <div id="upload-new-container" class="p-3 bg-white border rounded shadow-sm">
+                        <h6 class="small fw-bold mb-2">Dodaj nowy załącznik</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-5">
+                                <input class="form-control form-control-sm" type="file" id="nowy_plik" accept=".pdf,.jpg,.png,.zip,.docx">
+                            </div>
+                            <div class="col-md-5">
+                                <input class="form-control form-control-sm" type="text" id="nowy_plik_opis" placeholder="Krótki opis (np. Karta stanowiskowa)">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-sm btn-primary w-100" onclick="dodajZalacznik()"><i class="bi bi-upload"></i> Wgraj</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-5 pt-4">
+                    <div id="podpis-student" style="border-bottom: 1px dotted #000; height: 30px; width: 250px; display: inline-block; margin-bottom: 5px; font-family: cursive; color: #004a99; text-align: center; line-height: 30px;"></div><br>
+                    <small class="me-4 text-muted">Data i podpis studenta/ki</small>
+                    
+                    <div class="mt-3 form-check text-start d-inline-block" style="width: 250px;" id="podpis-action-container">
+                        <input class="form-check-input" type="checkbox" id="zloz_podpis">
+                        <label class="form-check-label fw-bold small text-start" for="zloz_podpis">
+                            Złóż podpis cyfrowy pod dokumentem
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+    <div id="uzupelnienia-section" class="card shadow-sm border-0 mb-4 d-none" style="border-left: 4px solid #f0ad4e !important;">
+        <div class="card-header bg-warning text-dark py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Wymagane Uzupełnienia</h5>
+        </div>
+        <div class="card-body p-4 bg-white">
+            <p class="mb-3">Dyrektor Instytutu zaznaczył braki w dokumentacji lub konieczność dodatkowych wyjaśnień. Prosimy o załączenie dodatkowych dokumentów uzupełniających poniżej:</p>
+            
+            <div id="uzupelnienia-container" class="mt-2 mb-3">
+                <div class="text-muted small">Brak uzupełnień.</div>
+            </div>
+            
+            <div id="upload-uzup-container" class="p-3 bg-light border rounded shadow-sm">
+                <h6 class="small fw-bold mb-2">Dodaj dokument uzupełniający</h6>
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <input class="form-control form-control-sm" type="file" id="nowy_uzupelnienie_plik" accept=".pdf,.jpg,.png,.zip,.docx">
+                    </div>
+                    <div class="col-md-5">
+                        <input class="form-control form-control-sm" type="text" id="nowy_uzupelnienie_opis" placeholder="Krótki opis uzupełnienia">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-sm btn-warning w-100 fw-bold" onclick="dodajUzupelnienie()"><i class="bi bi-upload"></i> Wgraj</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mt-4">
+                <button type="button" class="btn btn-success" id="btn-wyslij-uzupelnienia" onclick="if(confirm('Czy na pewno chcesz wysłać uzupełnienia do Dziekanatu?')) submitForm('wyslij_uzupelnienia');">
+                    <i class="bi bi-envelope-check"></i> Wyślij Uzupełnienia do Akceptacji
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-5" id="action-buttons">
+        <button type="button" class="btn btn-outline-primary" onclick="submitForm('zapisz')">
+            <i class="bi bi-save"></i> Zapisz jako szkic
+        </button>
+        <button type="button" class="btn btn-success" id="btn-wyslij" onclick="if(confirm('Złożenie wniosku przekazuje go do oceny. Czy na pewno kontynuować?')) submitForm('wyslij');">
+            <i class="bi bi-send"></i> Złóż wniosek formalnie
+        </button>
+    </div>
+</form>
+{% endblock %}

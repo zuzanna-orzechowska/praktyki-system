@@ -1,27 +1,92 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h2 class="mb-4" style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
-    <i class="bi bi-building text-primary"></i> Panel Opiekuna Zakładowego
-</h2>
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/zopz/dashboard.js') }}"></script>
+{% endblock %}
 
-{% if zaklad %}
-<div class="card shadow-sm border-0 mb-4 bg-light border-start border-primary border-4">
-    <div class="card-body">
-        <h5 class="mb-1 text-primary">{{ zaklad.nazwa }}</h5>
-        <p class="mb-0 text-muted"><i class="bi bi-geo-alt-fill"></i> {{ zaklad.adres }}</p>
+{% block content %}
+<h2 class="mb-4 text-secondary text-uppercase fs-4">PANEL OPIEKUNA ZAKŁADOWEGO</h2>
+
+<div id="zaklad-container" style="display: none;">
+    <div class="card shadow-sm border-0 mb-4 bg-light border-start border-primary border-4">
+        <div class="card-body d-flex justify-content-between align-items-start">
+            <div>
+                <h5 class="mb-1 text-primary" id="zaklad-nazwa"></h5>
+                <p class="mb-1 text-muted"><i class="bi bi-geo-alt-fill"></i> <span id="zaklad-adres-pola"></span></p>
+                <p class="mb-0 text-muted"><i class="bi bi-hash"></i> NIP: <span id="zaklad-nip-pole" class="fw-bold text-danger">Brak</span></p>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editZakladModal">
+                <i class="bi bi-pencil"></i> Edytuj dane
+            </button>
+        </div>
     </div>
 </div>
-{% else %}
-<div class="alert alert-warning shadow-sm">
-    <i class="bi bi-exclamation-triangle-fill"></i> Nie masz jeszcze przypisanej firmy w systemie. Skontaktuj się z
-    Dziekanatem.
+
+<div id="zaklad-warning" style="display: none;">
+    <div class="alert alert-warning shadow-sm">
+        <i class="bi bi-exclamation-triangle-fill"></i> Nie masz jeszcze przypisanej firmy w systemie lub brakuje danych. Skontaktuj się z Dziekanatem lub uzupełnij je klikając "Edytuj dane" (jeśli firma jest przypisana).
+    </div>
 </div>
-{% endif %}
+
+<div id="alerts-container"></div>
+
+<!-- Modal Edycji Danych Zakładu -->
+<div class="modal fade" id="editZakladModal" tabindex="-1" aria-labelledby="editZakladModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editZakladModalLabel">Uzupełnij dane zakładu pracy</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editZakladForm">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">NIP <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form-nip" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Telefon kontaktowy</label>
+                    <input type="text" class="form-control" id="form-telefon">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label class="form-label">Ulica <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form-ulica" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Nr bud. <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form-nr_budynku" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Nr lokalu</label>
+                    <input type="text" class="form-control" id="form-nr_lokalu">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Kod pocztowy <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form-kod_pocztowy" required>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Miasto <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form-miasto" required>
+                </div>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+        <button type="button" class="btn btn-primary" id="saveZakladBtn">Zapisz dane</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white fw-bold py-3">
-        <i class="bi bi-people-fill text-primary me-2"></i> Przypisani Praktykanci
+        <i class="bi bi-people-fill me-2 text-primary"></i> Moi Praktykanci
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -29,47 +94,15 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">Student</th>
+                        <th>Nr albumu</th>
                         <th>Kierunek</th>
                         <th>Termin praktyki</th>
-                        <th>Status</th>
-                        <th class="text-center">Akcje</th>
+                        <th>Status Praktyki</th>
+                        <th class="text-end pe-4">Akcje</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for praktyka in praktyki %}
-                    <tr>
-                        <td class="ps-4">
-                            <strong>{{ praktyka.student.uzytkownik.imie }} {{ praktyka.student.uzytkownik.nazwisko
-                                }}</strong><br>
-                            <small class="text-muted">Album: {{ praktyka.student.nr_albumu }}</small>
-                        </td>
-                        <td>{{ praktyka.student.kierunek }}</td>
-                        <td>
-                            {% if praktyka.data_start and praktyka.data_end %}
-                            {{ praktyka.data_start.strftime('%d.%m.%Y') }} - {{ praktyka.data_end.strftime('%d.%m.%Y')
-                            }}
-                            {% else %}
-                            <span class="text-muted">Brak danych</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary">{{ praktyka.status }}</span>
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-primary disabled"
-                                title="Dokumenty pojawią się wkrótce">
-                                <i class="bi bi-file-earmark-text"></i> Dokumenty i Regulamin
-                            </button>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            <i class="bi bi-person-x fs-1 d-block mb-2"></i>
-                            Brak przypisanych studentów do Twojej firmy.
-                        </td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="praktyki-table">
+                    <tr><td colspan="6" class="text-center py-4">Ładowanie...</td></tr>
                 </tbody>
             </table>
         </div>

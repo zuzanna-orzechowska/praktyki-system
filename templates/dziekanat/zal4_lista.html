@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/zal4_lista.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Potwierdzenie Efektów Uczenia (Zał. 4)
+    </h2>
+    <p class="text-muted">Lista studentów i podgląd ich ocen efektów uczenia się (widok tylko do odczytu).</p>
+</div>
+
+<ul class="nav nav-tabs" id="zal4Tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="w-toku-tab" data-bs-toggle="tab" data-bs-target="#w-toku"
+            type="button" role="tab" aria-controls="w-toku" aria-selected="true">
+            W trakcie procedowania (ZOPZ / UOPZ)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="zatwierdzone-tab" data-bs-toggle="tab" data-bs-target="#zatwierdzone"
+            type="button" role="tab" aria-controls="zatwierdzone" aria-selected="false">
+            Zatwierdzone przez UOPZ
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="zal4TabsContent">
+    <div class="tab-pane fade show active p-3 bg-white border border-top-0" id="w-toku" role="tabpanel"
+        aria-labelledby="w-toku-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Album</th>
+                        <th>Data ostatniej zmiany</th>
+                        <th>Status</th>
+                        <th class="text-end">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody id="w-toku-table">
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Ładowanie danych...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-pane fade p-3 bg-white border border-top-0" id="zatwierdzone" role="tabpanel"
+        aria-labelledby="zatwierdzone-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Album</th>
+                        <th>Data zatwierdzenia</th>
+                        <th>Status</th>
+                        <th class="text-end">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody id="zatwierdzone-table">
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Ładowanie danych...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

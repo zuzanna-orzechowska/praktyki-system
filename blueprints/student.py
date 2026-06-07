@@ -1,11 +1,28 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from extensions import db
-from models import Student, Praktyka, Dokument, WpisDziennika, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, WniosekZaliczeniePraktyki, Oswiadczenie
+from models import Student, Praktyka, Dokument, Porozumienie, HarmonogramPraktyki, Uzytkownik, Protokol, Sprawozdanie, EfektUczenia, Ankieta, Oswiadczenie, KartaPraktyki, Powiadomienie
 from datetime import datetime
 from werkzeug.utils import secure_filename
+import re
+import json
 import os
 
+lista_wymaganych_efektow = [
+    "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych",
+    "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce",
+    "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy",
+    "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka",
+    "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami publikowanymi w języku polskim jak i angielskim",
+    "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje, wiedzę i umiejętności, co najmniej z dwóch zakresów: zadania dotyczące sprzętu i oprogramowania: np.: programowania, administrowanie siecią komputerową, konserwacja sprzętu i oprogramowania, bieżące usuwanie usterek, administrowanie zasobami informatycznymi, zakładu pracy / instytucji, (e)-usługami.",
+    "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia",
+    "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy / instytucji, opisać go, przedstawić koncepcję rozwiązania i ją zrealizować.",
+    "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności informatycznej zakładu pracy/instytucji stosując normy i standardy stosowane w informatyce oraz biorąc pod uwagę aspekty środowiskowe i etyczne.",
+    "Pracuje w zespole zajmującym się zawodowo branżą IT,",
+    "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów",
+    "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji planowanego zadania, jak i przekazać im w sposób zrozumiały informacje i opinie z zakresu informatyki",
+    "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków w szczególności ekonomiczne i społeczne"
+]
 student_bp = Blueprint('student', __name__, url_prefix='/student')
 
 UPLOAD_FOLDER = 'static/uploads/zal4b'
@@ -23,126 +40,14 @@ def dashboard():
         return redirect(url_for('index'))
     return render_template('student/dashboard.html')
 
-@student_bp.route('/dziennik', methods=['GET', 'POST'])
+@student_bp.route('/dziennik', methods=['GET'])
 @login_required
 def dziennik():
     if current_user.rola != 'student':
         flash('Odmowa dostępu.', 'danger')
         return redirect(url_for('index'))
 
-    # profil student i jego główna praktyka
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    if not student:
-        flash('Twój profil studenta nie jest jeszcze kompletny.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-    if not praktyka:
-        flash('Nie masz jeszcze przypisanej praktyki w systemie.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    # dokument "ZAL6"
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL6').first()
-    if not dokument:
-        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL6', utworzony_przez=current_user.id)
-        db.session.add(dokument)
-        db.session.commit()
-
-    # ZAPIS (POST)
-    if request.method == 'POST':
-        daty = request.form.getlist('data[]')
-        opisy = request.form.getlist('opis[]')
-        efekty = request.form.getlist('efekty[]')
-        wpis_ids = request.form.getlist('wpis_id[]')
-
-        dzisiaj = datetime.now().date()
-        bledy = []
-
-        wpisy_z_bazy = {str(w.id): w for w in WpisDziennika.query.filter_by(dokument_id=dokument.id).all()}
-        otrzymane_id = []
-
-        #zapis i aktualizacja wpisu
-        for i in range(len(daty)):
-            wid = wpis_ids[i] if i < len(wpis_ids) else ""
-            if wid:
-                otrzymane_id.append(wid)
-
-            if not daty[i] or not opisy[i]:
-                continue
-                
-            try:
-                data_obj = datetime.strptime(daty[i], '%Y-%m-%d').date()
-            except ValueError:
-                continue
-            
-            if len(opisy[i].strip()) < 200:
-                bledy.append(f"Wpis z dnia {daty[i]} jest za krótki (minimum 200 znaków) i nie został zapisany/zaktualizowany.")
-                continue
-            
-            if data_obj > dzisiaj:
-                bledy.append(f"Data wpisu z dnia {daty[i]} nie może być z przyszłości.")
-                continue
-            
-            if praktyka.data_start and data_obj < praktyka.data_start:
-                bledy.append(f"Data wpisu z dnia {daty[i]} jest sprzed rozpoczęcia praktyki.")
-                continue
-
-            if wid and wid in wpisy_z_bazy:
-                istniejacy = wpisy_z_bazy[wid]
-                if istniejacy.potwierdzony_zopz:
-                    continue # ignorowanie zmiany w zatwierdzonych
-                istniejacy.data_wpisu = data_obj
-                istniejacy.opis_prac = opisy[i]
-                istniejacy.nr_efektu = efekty[i] if i < len(efekty) else ''
-                istniejacy.numer_dnia = i + 1
-            else:
-                nowy_wpis = WpisDziennika(
-                    dokument_id=dokument.id,
-                    numer_dnia=i + 1,
-                    data_wpisu=data_obj,
-                    opis_prac=opisy[i],
-                    nr_efektu=efekty[i] if i < len(efekty) else ''
-                )
-                db.session.add(nowy_wpis)
-                
-        # usuniecie wpisow o ile nie sa zatwierdzone
-        for wid, w in wpisy_z_bazy.items():
-            if wid not in otrzymane_id and not w.potwierdzony_zopz:
-                db.session.delete(w)
-        
-        db.session.commit()
-        if bledy:
-            for b in bledy:
-                flash(b, 'danger')
-            flash('Pozostałe wpisy zostały zapisane pomyślnie.', 'success')
-        else:
-            flash('Dziennik praktyk został zapisany pomyślnie!', 'success')
-        return redirect(url_for('student.dziennik'))
-
-    # 4. OBSŁUGA WYŚWIETLANIA (GET)
-    wpisy = WpisDziennika.query.filter_by(dokument_id=dokument.id).order_by(WpisDziennika.numer_dnia).all()
-
-    praktyka_info = {
-        'zaklad_nazwa': praktyka.zaklad.nazwa if praktyka.zaklad else 'Brak przypisanej firmy',
-        'data_start': praktyka.data_start.strftime('%Y-%m-%d') if praktyka.data_start else '',
-        'data_end': praktyka.data_end.strftime('%Y-%m-%d') if praktyka.data_end else ''
-    }
-
-    today_date = datetime.now().date().strftime('%Y-%m-%d')
-    max_date = today_date
-    if praktyka.data_end:
-        praktyka_end_str = praktyka.data_end.strftime('%Y-%m-%d')
-        max_date = min(today_date, praktyka_end_str)
-
-    efekty_lista = [
-        {"kod": "EK_01", "opis": "Rozumienie zasad działania systemów i aplikacji"},
-        {"kod": "EK_02", "opis": "Umiejętność programowania i testowania"},
-        {"kod": "EK_03", "opis": "Znajomość relacyjnych baz danych"},
-        {"kod": "EK_04", "opis": "Praca w zespole i komunikacja"},
-        {"kod": "EK_05", "opis": "Projektowanie interfejsów użytkownika"}
-    ]
-
-    return render_template('dokumenty/zal6_dziennik.html', praktyka=praktyka_info, wpisy=wpisy, today_date=today_date, max_date=max_date, efekty_lista=efekty_lista)
+    return render_template('dokumenty/zal6_dziennik.html')
 
 
 @student_bp.route('/porozumienie')
@@ -164,68 +69,28 @@ def porozumienie():
 
     #jesli nie ma porozumienia to pusty szkic z danymi z praktyki
     porozumienie_doc = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+    
+    oswiadczenie = None
+    dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
+    if dokument_zal9:
+        oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
 
     return render_template(
         'dokumenty/zal1_porozumienie.html',
         student=student,
         praktyka=praktyka,
-        porozumienie=porozumienie_doc
+        porozumienie=porozumienie_doc,
+        oswiadczenie=oswiadczenie,
+        current_date=datetime.today().date()
     )
 
-@student_bp.route('/zal2_program')
-@login_required
-def zal2_program():
-    if current_user.rola != 'student':
-        return redirect(url_for('index'))
 
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
 
-    return render_template('dokumenty/zal2_program.html', student=student, praktyka=praktyka)
-
-@student_bp.route('/zal2a_harmonogram', methods=['GET', 'POST'])
+@student_bp.route('/zal2a_harmonogram', methods=['GET'])
 @login_required
 def zal2a_harmonogram():
-    if current_user.rola != 'student':
-        return redirect(url_for('index'))
-
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
-    if not praktyka:
-        flash('Brak przypisanej praktyki.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A').first()
-    if not dokument:
-        # Jeśli UOPZ jeszcze nic nie stworzył, tworzymy pusty wgląd
-        dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL2A', utworzony_przez=current_user.id)
-        db.session.add(dokument)
-        db.session.commit()
-
-    if request.method == 'POST':
-        akcja = request.form.get('akcja')
-        komentarz = request.form.get('komentarz')
-
-        if akcja == 'akceptuj':
-            dokument.status = 'Approved'
-            dokument.uwagi_opiekuna = ""
-            if praktyka.status in ['OCZEKUJE_NA_ZAL9', 'ZAL9_PRZYJETY', 'POROZUMIENIE_PODPISANE']:
-                praktyka.status = 'PROGRAM_UZGODNIONY'
-            flash('Zatwierdziłeś harmonogram praktyki!', 'success')
-
-        elif akcja == 'odrzuc':
-            dokument.status = 'Rejected'
-            dokument.uwagi_opiekuna = f"UWAGA STUDENTA: {komentarz}" if komentarz else "Student odrzucił harmonogram bez komentarza."
-            flash('Odrzuciłeś harmonogram. UOPZ został o tym poinformowany.', 'warning')
-            
-        db.session.commit()
-        return redirect(url_for('student.zal2a_harmonogram'))
-
-    pozycje = HarmonogramPraktyki.query.filter_by(dokument_id=dokument.id).order_by(HarmonogramPraktyki.lp).all()
-    suma_dni = sum(p.planowana_liczba_dni for p in pozycje)
-
-    return render_template('dokumenty/zal2a_harmonogram.html', student=student, praktyka=praktyka, pozycje=pozycje, suma_dni=suma_dni, dokument=dokument)
+    if current_user.rola != 'student': return redirect(url_for('index'))
+    return render_template('dokumenty/zal2a_harmonogram_student.html')
 
 @student_bp.route('/zal3_karta')
 @login_required
@@ -242,7 +107,9 @@ def zal3_karta():
 
     uopz = Uzytkownik.query.get(praktyka.uopz_id) if praktyka.uopz_id else None
     porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
-    protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
+    
+    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL3').first()
+    karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first() if dokument else None
     
     zopz = Uzytkownik.query.get(praktyka.zaklad.zopz_id) if praktyka.zaklad and praktyka.zaklad.zopz_id else None
 
@@ -253,7 +120,8 @@ def zal3_karta():
         uopz=uopz, 
         zopz=zopz,
         porozumienie=porozumienie, 
-        protokol=protokol
+        karta=karta,
+        dokument=dokument
     )
 
 @student_bp.route('/sprawozdanie', methods=['GET', 'POST'])
@@ -278,30 +146,62 @@ def sprawozdanie():
     sprawozdanie_doc = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
 
     if request.method == 'POST':
+        akcja = request.form.get('akcja', 'wyslij')
         charakterystyka = request.form.get('charakterystyka', '').strip()
         opis = request.form.get('opis', '').strip()
         wiedza = request.form.get('wiedza', '').strip()
 
-        if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
-            flash('Błąd zapisu! Niektóre sekcje są zbyt krótkie. Wymagamy dłuższego, merytorycznego opisu.', 'danger')
-        else:
-            if not sprawozdanie_doc:
-                sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
-                db.session.add(sprawozdanie_doc)
+        if akcja == 'wyslij':
+            if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
+                flash('Błąd wysyłania! Niektóre sekcje są zbyt krótkie. Uzupełnij sprawozdanie przed wysłaniem.', 'danger')
+                return redirect(url_for('student.sprawozdanie'))
 
-            sprawozdanie_doc.charakterystyka = charakterystyka
-            sprawozdanie_doc.opis_prac = opis
-            sprawozdanie_doc.wiedza_umiejetnosci = wiedza
-            
+        if not sprawozdanie_doc:
+            sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
+            db.session.add(sprawozdanie_doc)
+
+        sprawozdanie_doc.charakterystyka = charakterystyka
+        sprawozdanie_doc.opis_prac = opis
+        sprawozdanie_doc.wiedza_umiejetnosci = wiedza
+        
+        if akcja == 'wyslij':
+            dokument.status = 'OczekujeZOPZ'
             db.session.commit()
-            flash('Sprawozdanie zapisano pomyślnie!', 'success')
-            return redirect(url_for('student.sprawozdanie'))
+            
+            if praktyka.zaklad and praktyka.zaklad.zopz_id:
+                powiadomienie_zopz = Powiadomienie(
+                    uzytkownik_id=praktyka.zaklad.zopz_id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał Sprawozdanie (Zał. 7) do weryfikacji.",
+                    link=url_for('zopz.teczka', student_id=student.id)
+                )
+                db.session.add(powiadomienie_zopz)
+                
+            if praktyka.uopz_id:
+                powiadomienie_uopz = Powiadomienie(
+                    uzytkownik_id=praktyka.uopz_id,
+                    tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał Sprawozdanie (Zał. 7) do ZOPZ.",
+                    link=url_for('uopz.teczka', student_id=student.id)
+                )
+                db.session.add(powiadomienie_uopz)
+                
+            db.session.commit()
+            from models import dodaj_log
+            dodaj_log(current_user.id, "Przesłano Sprawozdanie (Zał. 7) do weryfikacji ZOPZ")
+            
+            flash('Sprawozdanie zapisano i przesłano do weryfikacji ZOPZ!', 'success')
+        else:
+            dokument.status = 'Draft'
+            db.session.commit()
+            flash('Szkic sprawozdania został zapisany.', 'info')
+            
+        return redirect(url_for('student.sprawozdanie'))
 
     return render_template(
         'dokumenty/zal7_sprawozdanie.html', 
         student=student, 
         praktyka=praktyka, 
-        sprawozdanie=sprawozdanie_doc
+        sprawozdanie=sprawozdanie_doc,
+        dokument=dokument
     )
 
 @student_bp.route('/zal4_efekty')
@@ -317,27 +217,25 @@ def zal4_efekty():
         flash('Brak przypisanej praktyki.', 'warning')
         return redirect(url_for('student.dashboard'))
 
+    Powiadomienie.query.filter_by(uzytkownik_id=current_user.id, link=request.path, przeczytane=False).update({'przeczytane': True})
+    db.session.commit()
+
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4').first()
     efekty = []
     
     if dokument:
         efekty = EfektUczenia.query.filter_by(dokument_id=dokument.id).order_by(EfektUczenia.kod_efektu).all()
 
-    lista_wymaganych_efektow = [
-        "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych",
-        "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce",
-        "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy",
-        "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka",
-        "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania...",
-        "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje...",
-        "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia",
-        "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy / instytucji, opisać go, przedstawić koncepcję rozwiązania i ją zrealizować.",
-        "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności informatycznej...",
-        "Pracuje w zespole zajmującym się zawodowo branżą IT",
-        "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów",
-        "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje...",
-        "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków..."
-    ]
+    opinia_text = dokument.uwagi_opiekuna if dokument and dokument.uwagi_opiekuna else ''
+    podpis_uopz = None
+    data_podpisu_uopz = None
+    
+    if opinia_text:
+        match = re.search(r'\[Podpis elektroniczny UOPZ:\s*(.*?),\s*Data:\s*(.*?)\]', opinia_text)
+        if match:
+            podpis_uopz = match.group(1).strip()
+            data_podpisu_uopz = match.group(2).strip()
+            opinia_text = opinia_text[:match.start()].strip()
 
     return render_template(
         'dokumenty/zal4_efekty.html', 
@@ -345,250 +243,243 @@ def zal4_efekty():
         praktyka=praktyka, 
         dokument=dokument,
         efekty=efekty,
-        lista_statyczna=lista_wymaganych_efektow
+        lista_statyczna=lista_wymaganych_efektow,
+        opinia_text=opinia_text,
+        podpis_uopz=podpis_uopz,
+        data_podpisu_uopz=data_podpisu_uopz
     )
 
 @student_bp.route('/zal4a_decyzja')
 @login_required
 def zal4a_decyzja():
-    if current_user.rola != 'student':
-        return redirect(url_for('index'))
+    if current_user.rola != 'student': return redirect(url_for('index'))
+    return render_template('dokumenty/zal4a_decyzja_student.html', lista_statyczna=lista_wymaganych_efektow)
 
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
-    if not praktyka:
-        flash('Brak przypisanej praktyki.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
-
-    return render_template('dokumenty/zal4a_decyzja.html', student=student, praktyka=praktyka, dokument=dokument)
-
-@student_bp.route('/zal4b_wniosek', methods=['GET', 'POST'])
+@student_bp.route('/zal4b_wniosek', methods=['GET'])
 @login_required
 def zal4b_wniosek():
     if current_user.rola != 'student':
         return redirect(url_for('index'))
-        
-    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
-    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-    
-    # stworzenie parktyki jeśli nie istnieje
-    if not praktyka:
-        praktyka = Praktyka(student_id=student.id, status='BRAK_ZGŁOSZENIA')
-        db.session.add(praktyka)
-        db.session.commit()
-        
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B').first()
-    wniosek = WniosekZaliczeniePraktyki.query.filter_by(dokument_id=dokument.id).first() if dokument else None
-    
-    if request.method == 'POST':
-        if not dokument:
-            dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL4B', utworzony_przez=current_user.id)
-            db.session.add(dokument)
-            db.session.commit()
-            
-        if not wniosek:
-            wniosek = WniosekZaliczeniePraktyki(dokument_id=dokument.id)
-            db.session.add(wniosek)
-            
-        if 'specjalnosc' in request.form:
-            student.specjalnosc = request.form.get('specjalnosc')
+    return render_template('dokumenty/zal4b_wniosek_student.html')
 
-        wniosek.okres_zatrudnienia_od = datetime.strptime(request.form.get('data_od'), '%Y-%m-%d').date()
-        wniosek.okres_zatrudnienia_do = datetime.strptime(request.form.get('data_do'), '%Y-%m-%d').date()
-        wniosek.stanowisko = request.form.get('stanowisko')
-        wniosek.zakres_obowiazkow = request.form.get('zakres_obowiazkow')
-        wniosek.uzasadnienie = request.form.get('uzasadnienie')
-        
-        akcja = request.form.get('akcja')
-        if akcja == 'wyslij':
-            dokument.status = 'Submitted'
-            praktyka.status = 'SCIEZKA_PRACA'
-            flash('Wniosek został złożony. Uruchomiono ścieżkę zaliczenia na podstawie pracy zawodowej.', 'success')
-        else:
-            flash('Szkic wniosku został zapisany.', 'info')
-            
-        db.session.commit()
-        return redirect(url_for('student.zal4b_wniosek'))
-        
-    return render_template('dokumenty/zal4b_wniosek.html', student=student, dokument=dokument, wniosek=wniosek, praktyka=praktyka)
+
 
 @student_bp.route('/zal7a_sprawozdanie', methods=['GET', 'POST'])
 @login_required
 def zal7a_sprawozdanie():
-    if current_user.rola != 'student':
-        return redirect(url_for('index'))
-
+    if current_user.rola != 'student': return redirect(url_for('index'))
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
-    if not praktyka:
-        flash('Brak przypisanej praktyki.', 'warning')
-        return redirect(url_for('student.dashboard'))
-
+    
     dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
     if not dokument:
         dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A', utworzony_przez=current_user.id)
         db.session.add(dokument)
         db.session.commit()
-
-    sprawozdanie_doc = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
-
+        
+    sprawozdanie = Sprawozdanie.query.filter_by(dokument_id=dokument.id).first()
+    
     if request.method == 'POST':
+        akcja = request.form.get('akcja')
         charakterystyka = request.form.get('charakterystyka', '').strip()
         opis = request.form.get('opis', '').strip()
         wiedza = request.form.get('wiedza', '').strip()
-
-        if len(charakterystyka) < 150 or len(opis) < 300 or len(wiedza) < 300:
-            flash('Błąd zapisu! Niektóre sekcje są zbyt krótkie.', 'danger')
-        else:
-            if not sprawozdanie_doc:
-                sprawozdanie_doc = Sprawozdanie(dokument_id=dokument.id)
-                db.session.add(sprawozdanie_doc)
-
-            sprawozdanie_doc.charakterystyka = charakterystyka
-            sprawozdanie_doc.opis_prac = opis
-            sprawozdanie_doc.wiedza_umiejetnosci = wiedza
+        rok_akademicki = request.form.get('rok_akademicki', '').strip()
+        miejsce_pracy = request.form.get('miejsce_pracy', '').strip()
+        
+        if not sprawozdanie:
+            sprawozdanie = Sprawozdanie(dokument_id=dokument.id)
+            db.session.add(sprawozdanie)
             
-            db.session.commit()
-            flash('Sprawozdanie z pracy zawodowej zapisano pomyślnie!', 'success')
-            return redirect(url_for('student.zal7a_sprawozdanie'))
+        sprawozdanie.charakterystyka = charakterystyka
+        sprawozdanie.opis_prac = opis
+        sprawozdanie.wiedza_umiejetnosci = wiedza
+        
+        generate_signature = request.form.get('generateSignature')
+        if generate_signature:
+            import datetime
+            imie_nazwisko = f"{current_user.imie} {current_user.nazwisko.split('(')[0].strip()}"
+            dzisiaj = datetime.date.today().strftime('%d.%m.%Y')
+            sprawozdanie.podpis_studenta = f"{dzisiaj}   {imie_nazwisko}"
+        else:
+            sprawozdanie.podpis_studenta = None
+        
+        if rok_akademicki:
+            student.rok_akademicki = rok_akademicki
+            
+        if miejsce_pracy:
+            if not praktyka.zaklad:
+                from models import ZakladPracy
+                nowy_zaklad = ZakladPracy(nazwa=miejsce_pracy)
+                db.session.add(nowy_zaklad)
+                db.session.flush()
+                praktyka.zaklad_id = nowy_zaklad.id
+            else:
+                praktyka.zaklad.nazwa = miejsce_pracy
+        
+        if akcja == 'wyslij':
+            if len(charakterystyka) < 50 or len(opis) < 50 or len(wiedza) < 50:
+                flash('Błąd wysyłania! Niektóre sekcje są zbyt krótkie.', 'danger')
+            else:
+                import os
+                from werkzeug.utils import secure_filename
+                
+                plik = request.files.get('skan_pdf')
+                if plik and plik.filename != '':
+                    filename = secure_filename(f"zal7a_skan_{student.nr_albumu}_{plik.filename}")
+                    from flask import current_app
+                    save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    plik.save(save_path)
+                    dokument.plik_path = f"uploads/{filename}"
+                
+                if not dokument.plik_path:
+                    flash('Musisz wgrać zeskanowany dokument z podpisem, aby wysłać go do weryfikacji!', 'danger')
+                    return redirect(url_for('student.zal7a_sprawozdanie'))
 
-    return render_template(
-        'dokumenty/zal7a_sprawozdanie.html', 
-        student=student, 
-        praktyka=praktyka, 
-        sprawozdanie=sprawozdanie_doc
-    )
+                dokument.status = 'Weryfikacja Dyrektor'
+                db.session.commit()
+                
+                from models import Uzytkownik, Powiadomienie, dodaj_log
+                dyrektor = Uzytkownik.query.filter_by(rola='dyrektor').first()
+                if dyrektor:
+                    notif = Powiadomienie(
+                        uzytkownik_id=dyrektor.id,
+                        tresc=f"Student {current_user.imie} {current_user.nazwisko} przesłał skan Sprawozdania (Zał. 7a) do oceny.",
+                        link=url_for('dziekanat.zal7_lista')
+                    )
+                    db.session.add(notif)
+                    db.session.commit()
+                    
+                dodaj_log(current_user.id, "Przesłano skan Sprawozdania (Zał. 7a) do oceny Dyrektora")
+                flash('Sprawozdanie przesłane do Dyrektora!', 'success')
+                return redirect(url_for('student.dashboard'))
+        else:
+            import os
+            from werkzeug.utils import secure_filename
+            plik = request.files.get('skan_pdf')
+            if plik and plik.filename != '':
+                filename = secure_filename(f"zal7a_skan_{student.nr_albumu}_{plik.filename}")
+                from flask import current_app
+                save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                plik.save(save_path)
+                dokument.plik_path = f"uploads/{filename}"
+
+            dokument.status = 'Draft'
+            db.session.commit()
+            flash('Szkic sprawozdania został zapisany.', 'info')
+            
+    return render_template('dokumenty/zal7a_sprawozdanie_student.html', student=student, praktyka=praktyka, dokument=dokument, sprawozdanie=sprawozdanie)
 
 @student_bp.route('/zal8_protokol')
 @login_required
 def zal8_protokol():
-    if current_user.rola != 'student':
-        return redirect(url_for('index'))
-
+    if current_user.rola != 'student': return redirect(url_for('index'))
+    
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-
     if not praktyka:
         flash('Brak przypisanej praktyki.', 'warning')
         return redirect(url_for('student.dashboard'))
+        
+    zal7 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first()
+    zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    
+    if (not zal7 or zal7.status != 'Approved') and (not zal7a or zal7a.status != 'Approved'):
+        flash('Sprawozdanie musi zostać najpierw zatwierdzone przez Dyrektora Instytutu.', 'danger')
+        return redirect(url_for('student.dashboard'))
+        
+    return render_template('dokumenty/zal8_protokol_student.html')
 
-    protokol = Protokol.query.filter_by(praktyka_id=praktyka.id).first()
+@student_bp.route('/zal8a_protokol')
+@login_required
+def zal8a_protokol():
+    if current_user.rola != 'student': return redirect(url_for('index'))
+    
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+    if not praktyka:
+        flash('Brak przypisanej praktyki.', 'warning')
+        return redirect(url_for('student.dashboard'))
+        
+    zal7a = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7A').first()
+    
+    if not zal7a or zal7a.status != 'Approved':
+        flash('Sprawozdanie (Zał. 7a) musi zostać najpierw zatwierdzone przez Dyrektora Instytutu.', 'danger')
+        return redirect(url_for('student.dashboard'))
+        
+    instytucja_1 = praktyka.zaklad.nazwa if praktyka.zaklad else ''
+    okres_1 = ''
+    from models import DecyzjaZal4a
+    zal4a_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL4A').first()
+    if zal4a_doc:
+        d4a = DecyzjaZal4a.query.filter_by(dokument_id=zal4a_doc.id).first()
+        if d4a and d4a.wymiar_godzin:
+            okres_1 = f"{d4a.wymiar_godzin} godz."
+            
+    return render_template('dokumenty/zal8a_protokol_student.html', student=student, protokol=praktyka.protokol, praktyka=praktyka, instytucja_1=instytucja_1, okres_1=okres_1)
 
-    return render_template('dokumenty/zal8_protokol.html', student=student, praktyka=praktyka, protokol=protokol)
 
-
-@student_bp.route('/zal9_oswiadczenie', methods=['GET', 'POST'])
+@student_bp.route('/zal9_oswiadczenie', methods=['GET'])
 @login_required
 def zal9_oswiadczenie():
     if current_user.rola != 'student':
         return redirect(url_for('index'))
+    student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+    return render_template('dokumenty/zal9_oswiadczenie_student.html', student=student)
+
+@student_bp.route('/zal5_ankieta', methods=['GET', 'POST'])
+@login_required
+def zal5_ankieta():
+    if current_user.rola != 'student':
+        return redirect(url_for('index'))
         
     student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
     
-    #jeśli praktyka nie istnieje to tworzymy
     if not praktyka:
-        praktyka = Praktyka(student_id=student.id, status='BRAK_ZGŁOSZENIA')
-        db.session.add(praktyka)
-        db.session.commit()
+        flash('Nie posiadasz przypisanej praktyki w systemie.', 'warning')
+        return redirect(url_for('student.dashboard'))
         
-    dokument = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
-    oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument.id).first() if dokument else None
-    
+    if praktyka.ankieta_wypelniona:
+        flash('Wysłałeś już anonimową ankietę dla tej praktyki. Dziękujemy!', 'info')
+        return redirect(url_for('student.dashboard'))
+
+    sprawozdanie_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first()
+    mozna_wyslac = (sprawozdanie_doc is not None and sprawozdanie_doc.status == 'Zatwierdzone')
+
     if request.method == 'POST':
-        if not dokument:
-            dokument = Dokument(praktyka_id=praktyka.id, typ_zalacznika='ZAL9', utworzony_przez=current_user.id)
-            db.session.add(dokument)
-            db.session.commit()
+        if not mozna_wyslac:
+            flash('Błąd: Możesz wypełnić ankietę dopiero po złożeniu i zatwierdzeniu sprawozdania z praktyki (Zał. 7).', 'danger')
+            return redirect(url_for('student.zal5_ankieta'))
             
-        if not oswiadczenie:
-            oswiadczenie = Oswiadczenie(dokument_id=dokument.id)
-            db.session.add(oswiadczenie)
+        odpowiedzi = []
+        for i in range(1, 15):
+            val = request.form.get(f'pytanie_{i}', '0')
+            odpowiedzi.append(int(val))
             
-        oswiadczenie.miejscowosc = request.form.get('miejscowosc')
-        data_str = request.form.get('data_oswiadczenia')
-        if data_str:
-            try:
-                oswiadczenie.data_oswiadczenia = datetime.strptime(data_str, '%Y-%m-%d').date()
-            except ValueError:
-                pass
-        oswiadczenie.nazwa_instytucji = request.form.get('nazwa_instytucji')
-        oswiadczenie.opiekun_imie = request.form.get('opiekun_imie')
-        oswiadczenie.opiekun_nazwisko = request.form.get('opiekun_nazwisko')
-        oswiadczenie.opiekun_stanowisko = request.form.get('opiekun_stanowisko')
-        oswiadczenie.opiekun_telefon = request.form.get('opiekun_telefon')
-        oswiadczenie.opiekun_email = request.form.get('opiekun_email')
-        oswiadczenie.osoba_upowazniona_imie = request.form.get('osoba_upowazniona_imie')
-        oswiadczenie.osoba_upowazniona_nazwisko = request.form.get('osoba_upowazniona_nazwisko')
-        oswiadczenie.osoba_upowazniona_stanowisko = request.form.get('osoba_upowazniona_stanowisko')
+        nowa_ankieta = Ankieta(
+            odpowiedzi=json.dumps(odpowiedzi),
+            uwagi=request.form.get('uwagi', ''),
+            rok_akademicki=request.form.get('rok_akademicki', ''),
+            kierunek=request.form.get('kierunek', ''),
+            forma_studiow=request.form.get('forma_studiow', ''),
+            semestr=int(request.form.get('semestr', 0)),
+            liczba_godzin=int(request.form.get('liczba_godzin', 0))
+        )
+        db.session.add(nowa_ankieta)
         
-        # Nowe pola: terminy praktyki i rok studiów
-        data_start_str = request.form.get('data_start')
-        data_end_str = request.form.get('data_end')
-        if data_start_str:
-            try:
-                praktyka.data_start = datetime.strptime(data_start_str, '%Y-%m-%d').date()
-                oswiadczenie.termin_od = praktyka.data_start
-            except ValueError:
-                pass
-        if data_end_str:
-            try:
-                praktyka.data_end = datetime.strptime(data_end_str, '%Y-%m-%d').date()
-                oswiadczenie.termin_do = praktyka.data_end
-            except ValueError:
-                pass
-        
-        rok = request.form.get('rok_studiow')
-        if rok and rok.isdigit():
-            student.rok_studiow = int(rok)
-            oswiadczenie.rok_studiow = int(rok)
+        pracownicy_dziekanatu = Uzytkownik.query.filter_by(rola='dziekanat').all()
+        for pracownik in pracownicy_dziekanatu:
+            powiadomienie = Powiadomienie(
+                uzytkownik_id=pracownik.id,
+                tresc="Wpłynęła nowa, anonimowa ankieta od studenta (Zał. 5).",
+                link=url_for('dziekanat.ankiety_lista')
+            )
+            db.session.add(powiadomienie)
             
-        kierunek = request.form.get('kierunek')
-        if kierunek:
-            student.kierunek = kierunek
-            oswiadczenie.kierunek = kierunek
-
-        plik = request.files.get('skan_dokumentu')
-        if plik and plik.filename != '':
-            #czyszczenie nazwy pliku
-            oryginalna_nazwa = secure_filename(plik.filename)
-            #tworzenie unikalnej nazwy
-            unikalna_nazwa = f"{student.nr_albumu}_ZAL9_{oryginalna_nazwa}"
-            #zbudowanie pełnej ścieżki
-            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unikalna_nazwa)
-            #fizyczny zapis pliku na dysku
-            plik.save(filepath)
-            #zapisanie ścieżki w bazie danych
-            oswiadczenie.skan_path = f"uploads/{unikalna_nazwa}"
-
-        akcja = request.form.get('akcja')
-        if akcja == 'usun_plik':
-            if oswiadczenie.skan_path:
-                try:
-                    nazwa_pliku = oswiadczenie.skan_path.replace('uploads/', '')
-                    os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], nazwa_pliku))
-                except Exception:
-                    pass
-                oswiadczenie.skan_path = ""
-            flash('Zapisany plik został usunięty ze szkicu.', 'info')
-        elif akcja == 'wyslij':
-            if not (praktyka.data_start and praktyka.data_end):
-                flash('Błąd: Podaj datę rozpoczęcia i zakończenia praktyki przed wysłaniem formularza.', 'danger')
-                db.session.commit()
-                return redirect(url_for('student.zal9_oswiadczenie'))
-
-            dokument.status = 'Submitted'
-            praktyka.status = 'OCZEKUJE_NA_ZAL9' 
-            flash('Oświadczenie zostało złożone. Oczekuje na zatwierdzenie przez Dziekanat.', 'success')
-        else:
-            flash('Szkic oświadczenia został zapisany.', 'info')
-            
+        praktyka.ankieta_wypelniona = True
         db.session.commit()
-        return redirect(url_for('student.zal9_oswiadczenie'))
         
-    dzisiaj = datetime.today().strftime('%Y-%m-%d')
-    return render_template('dokumenty/zal9_oswiadczenie.html', student=student, dokument=dokument, oswiadczenie=oswiadczenie, praktyka=praktyka, dzisiaj=dzisiaj)
+        flash('Ankieta została wysłana anonimowo do Dziekanatu. Dziękujemy!', 'success')
+        return redirect(url_for('student.dashboard'))
+    return render_template('dokumenty/zal5_ankieta.html', mozna_wyslac=mozna_wyslac)

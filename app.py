@@ -6,7 +6,11 @@ from blueprints.uopz import uopz_bp
 from blueprints.dziekanat import dziekanat_bp
 from blueprints.admin import admin_bp
 from blueprints.zopz import zopz_bp
-from flask_login import login_required
+from blueprints.api import api_bp
+from flask_login import login_required, current_user
+from models import Uzytkownik, Oswiadczenie, Dokument, ZakladPracy, Porozumienie
+from blueprints.api.notifications_api import notifications_api_bp
+from blueprints.pdf_export import pdf_export_bp
 import os
 from dotenv import load_dotenv
 
@@ -16,10 +20,15 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SERVER_NAME'] = 'localhost:5001' #TO ZMIENIĆ W PRZYSZŁOŚCI!!!!!!!!!!
+    # app.config['SERVER_NAME'] = 'localhost:5000'
     
     basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
+    
+    db_url = os.getenv('DATABASE_URL')
+    if db_url:
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
     
     upload_folder = os.path.join(basedir, 'static', 'uploads')
     app.config['UPLOAD_FOLDER'] = upload_folder
@@ -59,7 +68,6 @@ def create_app():
             return status_map.get(status, (status.replace('_', ' ').capitalize(), 'secondary'))
             
         def pending_accounts_count():
-            from models import Uzytkownik, Oswiadczenie, Dokument
             try:
                 oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').count()
                 zgloszenia_zopz = Oswiadczenie.query.join(Dokument).filter(Dokument.status == 'AwaitingAccount').count()
@@ -75,15 +83,35 @@ def create_app():
     app.register_blueprint(dziekanat_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(zopz_bp)
+    app.register_blueprint(api_bp)
+    app.register_blueprint(notifications_api_bp)
+    app.register_blueprint(pdf_export_bp)
     
     init_oauth(app)
     
     @app.route('/')
     def index():
-        return render_template('index.html')
+        zopz_pending_porozumienia = 0
+        if current_user.is_authenticated and current_user.rola == 'zopz':
+            zaklad = ZakladPracy.query.filter_by(zopz_id=current_user.id).first()
+            if zaklad:
+                zopz_pending_porozumienia = Porozumienie.query.filter_by(zaklad_id=zaklad.id, status='OczekujeZOPZ').count()
+                
+        return render_template('index.html', zopz_pending_porozumienia=zopz_pending_porozumienia)
+
+    @app.route('/dokumenty')
+    def dokumenty_ogolne():
+        praktyka = None
+        if current_user.is_authenticated and current_user.rola == 'student':
+            from models import Student, Praktyka
+            student = Student.query.filter_by(uzytkownik_id=current_user.id).first()
+            if student:
+                praktyka = Praktyka.query.filter_by(student_id=student.id).first()
+                
+        return render_template('dokumenty.html', praktyka=praktyka)
 
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, port=5001)
+    app.run(host='0.0.0.0', debug=True, port=5000)

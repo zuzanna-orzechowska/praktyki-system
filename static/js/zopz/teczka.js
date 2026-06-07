@@ -1,0 +1,95 @@
+document.addEventListener('DOMContentLoaded', function () {
+    const pathParts = window.location.pathname.split('/');
+    const studentId = pathParts[pathParts.length - 1];
+
+    fetch(`/api/zopz/teczka/${studentId}`)
+        .then(response => {
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = '/auth/login';
+                throw new Error('Unauthorized');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                window.location.href = '/zopz/dashboard';
+                return;
+            }
+
+            document.getElementById('student-name').textContent = `Teczka Studenta: ${data.uzytkownik.imie} ${data.uzytkownik.nazwisko} (${data.student.nr_albumu})`;
+            document.getElementById('student-info').textContent = `${data.student.nr_albumu} / ${data.student.kierunek}`;
+            document.getElementById('miejsce-praktyki').textContent = data.zaklad_nazwa || 'Brak przypisanego zakładu';
+            
+            const statusMap = {
+                'BRAK_ZGŁOSZENIA': { text: 'Brak zgłoszenia', color: 'secondary' },
+                'OCZEKUJE_NA_ZAL9': { text: 'Oczekuje na zał. 9', color: 'warning text-dark' },
+                'ZAL9_ZATWIERDZONE': { text: 'Zał. 9 zatwierdzony', color: 'success' },
+                'SCIEZKA_PRACA': { text: 'Zaliczenie z pracy', color: 'info text-dark' },
+                'PROGRAM_UZGODNIONY': { text: 'Program uzgodniony', color: 'primary' },
+                'SKIEROWANIE_WYDANE': { text: 'Skierowanie wydane', color: 'success' },
+                'PRAKTYKA_W_TOKU': { text: 'Praktyka w toku', color: 'warning text-dark' },
+                'DOKUMENTY_ZLOZONE': { text: 'Dokumenty złożone', color: 'info text-dark' },
+                'EGZAMIN': { text: 'Egzamin', color: 'info text-dark' },
+                'ZALICZONA': { text: 'Praktyka zaliczona', color: 'success' }
+            };
+            const mappedStatus = statusMap[data.praktyka.status] || { text: data.praktyka.status, color: 'secondary' };
+            const statusBadge = document.getElementById('praktyka-status');
+            statusBadge.textContent = mappedStatus.text;
+            statusBadge.className = `badge bg-${mappedStatus.color}`;
+
+            if (data.porozumienie && data.porozumienie.id) {
+                document.getElementById('btn-zal1').href = `/zopz/porozumienie/${data.porozumienie.id}`;
+                if (data.porozumienie.status === 'OczekujeZOPZ') {
+                    document.getElementById('badge-zal1').style.display = 'inline-block';
+                }
+            } else {
+                document.getElementById('btn-zal1').classList.add('disabled');
+                document.getElementById('btn-zal1').textContent = 'Brak porozumienia';
+            }
+
+            document.getElementById('btn-zal2a').href = `/zopz/zal2a_harmonogram/${studentId}`;
+
+            const btnZal3 = document.getElementById('btn-zal3');
+            if (btnZal3) {
+                btnZal3.href = `/zopz/zal3_karta/${studentId}`;
+            }
+
+            const btnZal6 = document.getElementById('btn-zal6');
+            if (btnZal6) {
+                if (data.dokumenty && data.dokumenty['ZAL6']) {
+                    btnZal6.href = `/zopz/dziennik/${studentId}`;
+                    if (data.dokumenty['ZAL6'].status === 'Weryfikacja ZOPZ') {
+                        document.getElementById('badge-zal6').style.display = 'inline-block';
+                    }
+                } else {
+                    btnZal6.classList.add('disabled');
+                    btnZal6.textContent = 'Brak Dziennika';
+                }
+            }
+
+            const btnZal7 = document.getElementById('btn-zal7');
+            if (btnZal7) {
+                if (data.dokumenty && data.dokumenty['ZAL7']) {
+                    btnZal7.href = `/zopz/zal7_sprawozdanie/${studentId}`;
+                    if (data.dokumenty['ZAL7'].status === 'OczekujeZOPZ' || data.dokumenty['ZAL7'].status === 'Weryfikacja') {
+                        document.getElementById('badge-zal7').style.display = 'inline-block';
+                    }
+                } else {
+                    btnZal7.classList.add('disabled');
+                    btnZal7.textContent = 'Brak Sprawozdania';
+                }
+            }
+
+            const btnZal4 = document.getElementById('btn-zal4');
+            if (btnZal4) {
+                btnZal4.href = `/zopz/zal4_efekty/${studentId}`;
+                if (data.dokumenty && data.dokumenty['ZAL4']) {
+                    if (data.dokumenty['ZAL4'].status === 'OczekujeZOPZ' || data.dokumenty['ZAL4'].status === 'Weryfikacja') {
+                        document.getElementById('badge-zal4').style.display = 'inline-block';
+                    }
+                }
+            }
+        })
+        .catch(err => console.error(err));
+});

@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/uopz/dashboard.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
         Panel Opiekuna Uczelnianego</h2>
-    <span class="badge bg-primary fs-6">Zalogowano jako: {{ current_user.imie }} {{ current_user.nazwisko }}</span>
 </div>
 
 <div class="card shadow-sm border-0">
@@ -17,34 +20,14 @@
                 <tr>
                     <th class="ps-4">Student</th>
                     <th>Nr albumu</th>
-                    <th>Zakład Pracy</th>
+                    <th>Kierunek</th>
+                    <th>Termin praktyki</th>
                     <th>Status Praktyki</th>
                     <th class="text-end pe-4">Akcje</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for p in praktyki %}
-                <tr>
-                    <td class="ps-4 fw-bold">{{ p.student.uzytkownik.imie }} {{ p.student.uzytkownik.nazwisko }}</td>
-                    <td>{{ p.student.nr_albumu }}</td>
-                    <td>{{ p.zaklad.nazwa if p.zaklad else 'Brak' }}</td>
-                    <td>
-                        {% set status_text, status_color = format_status(p.status) %}
-                        <span class="badge bg-{{ status_color }}">{{ status_text }}</span>
-                    </td>
-                    <td class="text-end pe-4">
-                        <a href="{{ url_for('uopz.teczka', student_id=p.student.id) }}"
-                            class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-folder2-open"></i> Otwórz teczkę
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">Nie masz jeszcze przypisanych żadnych studentów.
-                    </td>
-                </tr>
-                {% endfor %}
+            <tbody id="praktyki-table">
+                <tr><td colspan="6" class="text-center py-4">Ładowanie...</td></tr>
             </tbody>
         </table>
     </div>

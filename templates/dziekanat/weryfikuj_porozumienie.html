@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="POST" id="porozumienieForm">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 0;">
+            Weryfikacja Porozumienia i Programu Praktyki (Zał. 1 i 2)</h2>
+        <div class="d-flex align-items-center flex-wrap gap-2 justify-content-end">
+            <a href="{{ url_for('dziekanat.porozumienia') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Powrót do listy
+            </a>
+            {% if not porozumienie %}
+            <span class="badge bg-secondary fs-6">Status: Brak (Szkic)</span>
+            {% elif porozumienie.status == 'ZaakceptowaneDyrektor' %}
+            <span class="badge bg-secondary fs-6">Status: Zaakceptowane (Dyrektor)</span>
+            {% elif porozumienie.status == 'OczekujeZOPZ' %}
+            <span class="badge bg-primary fs-6">Status: Wysłane do ZOPZ</span>
+            {% elif porozumienie.status == 'UwagiZOPZ' %}
+            <span class="badge bg-warning text-dark fs-6">Status: Uwagi ZOPZ</span>
+            {% elif porozumienie.status == 'ZatwierdzoneZOPZ' %}
+            <span class="badge bg-success fs-6">Status: Zaakceptowane (ZOPZ)</span>
+            {% elif porozumienie.status == 'Podpisane' %}
+            <span class="badge bg-success fs-6">Status: Porozumienie zawarte</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Zakładki dla dokumentów -->
+    <ul class="nav nav-tabs" id="docTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="zal1-tab" data-bs-toggle="tab" data-bs-target="#zal1" type="button" role="tab">Załącznik nr 1 (Porozumienie)</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="zal2-tab" data-bs-toggle="tab" data-bs-target="#zal2" type="button" role="tab">Załącznik nr 2 (Program)</button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 p-3 bg-light mb-5" id="docTabsContent">
+        <!-- ZAL 1 -->
+        <div class="tab-pane fade show active" id="zal1" role="tabpanel">
+            {% include 'dokumenty/_zal1_content.html' %}
+        </div>
+        
+        <!-- ZAL 2 -->
+        <div class="tab-pane fade" id="zal2" role="tabpanel">
+            {% include 'dokumenty/_zal2_content.html' %}
+        </div>
+    </div>
+
+    <!-- Panel Akcji na dole strony -->
+    <div id="action-panel" class="mb-5 mt-5">
+        {% if porozumienie and porozumienie.komentarz_zopz %}
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Uwagi ZOPZ:</strong>
+            <p class="mb-0 mt-2">{{ porozumienie.komentarz_zopz }}</p>
+        </div>
+        {% endif %}
+
+        {% if not porozumienie or porozumienie.status != 'Podpisane' %}
+        <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body p-4">
+
+
+                <div class="d-flex gap-2 justify-content-end">
+                    {% if current_user.rola == 'dyrektor' and (not porozumienie or porozumienie.status == 'Draft') %}
+                        <button type="submit" name="akcja" value="akceptuj_dyrektor" class="btn btn-success">
+                            <i class="bi bi-pen"></i> Akceptuj i Podpisz Porozumienie
+                        </button>
+                    {% elif current_user.rola == 'dziekanat' and (not porozumienie or porozumienie.status in ['Draft', 'UwagiZOPZ']) %}
+                        {% if porozumienie and porozumienie.status == 'UwagiZOPZ' %}
+                        <button type="submit" name="akcja" value="przekaz_dyrektorowi" class="btn btn-warning" formnovalidate>
+                            <i class="bi bi-arrow-return-left"></i> Przekaż do Dyrektora
+                        </button>
+                        {% endif %}
+                    {% elif porozumienie and porozumienie.status == 'ZaakceptowaneDyrektor' and current_user.rola == 'dziekanat' %}
+                        <button type="submit" name="akcja" value="wyslij_zopz" class="btn btn-primary" formnovalidate>
+                            <i class="bi bi-send"></i> Wyślij Porozumienie do ZOPZ
+                        </button>
+                    {% elif porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ' and current_user.rola == 'dziekanat' %}
+                        <button type="submit" name="akcja" value="podpisz_ostatecznie" class="btn btn-success" formnovalidate>
+                            <i class="bi bi-check-all"></i> Ostatecznie Zatwierdź Porozumienie
+                        </button>
+                    {% else %}
+                        <p class="text-muted w-100 text-end mb-0">Brak dostępnych akcji dla Twojej roli na tym etapie.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-success mt-3 mb-5 border-0 shadow-sm">
+            <h5 class="alert-heading fw-bold"><i class="bi bi-check-circle-fill"></i> Porozumienie zawarte</h5>
+            <p>Porozumienie zostało podpisane i jest przechowywane w systemie.</p>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
+
+{% endblock %}

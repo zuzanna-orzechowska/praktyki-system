@@ -1,0 +1,15 @@
+from flask import Blueprint
+
+api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+from .student_api import student_api_bp
+from .dziekanat_api import dziekanat_api_bp
+from .admin_api import admin_api_bp
+from .zopz_api import zopz_api_bp
+from .uopz_api import uopz_api_bp
+
+api_bp.register_blueprint(student_api_bp)
+api_bp.register_blueprint(dziekanat_api_bp)
+api_bp.register_blueprint(admin_api_bp)
+api_bp.register_blueprint(zopz_api_bp)
+api_bp.register_blueprint(uopz_api_bp)

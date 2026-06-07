@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='js/dziekanat/zal4b_lista.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 style="color: #495057; font-weight: normal; font-size: 1.5rem; text-transform: uppercase;">
+        Weryfikacja Wniosków o Zaliczenie Praktyki (Zał. 4b)
+    </h2>
+</div>
+
+<ul class="nav nav-tabs" id="zal4bTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="do-weryfikacji-tab" data-bs-toggle="tab" data-bs-target="#do-weryfikacji"
+            type="button" role="tab" aria-controls="do-weryfikacji" aria-selected="true">
+            Do weryfikacji <span class="badge bg-danger ms-1" id="badge-do-weryfikacji" style="display:none;">0</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="w-trakcie-tab" data-bs-toggle="tab" data-bs-target="#w-trakcie"
+            type="button" role="tab" aria-controls="w-trakcie" aria-selected="false">
+            W trakcie (Poprawiane)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="zatwierdzone-tab" data-bs-toggle="tab" data-bs-target="#zatwierdzone"
+            type="button" role="tab" aria-controls="zatwierdzone" aria-selected="false">
+            Zarchiwizowane
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="zal4bTabsContent">
+    <!-- Do weryfikacji -->
+    <div class="tab-pane fade show active p-3 bg-white border border-top-0" id="do-weryfikacji" role="tabpanel"
+        aria-labelledby="do-weryfikacji-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="table-do-weryfikacji">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Nr albumu</th>
+                        <th>Data wpłynięcia</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4" class="text-center text-muted">Ładowanie...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- W trakcie -->
+    <div class="tab-pane fade p-3 bg-white border border-top-0" id="w-trakcie" role="tabpanel"
+        aria-labelledby="w-trakcie-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="table-w-trakcie">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Nr albumu</th>
+                        <th>Ostatnia zmiana</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4" class="text-center text-muted">Ładowanie...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Zarchiwizowane -->
+    <div class="tab-pane fade p-3 bg-white border border-top-0" id="zatwierdzone" role="tabpanel"
+        aria-labelledby="zatwierdzone-tab">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="table-zatwierdzone">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Nr albumu</th>
+                        <th>Data weryfikacji</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4" class="text-center text-muted">Ładowanie...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

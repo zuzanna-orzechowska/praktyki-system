@@ -53,6 +53,7 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 </style>
+<script src="{{ url_for('static', filename='js/dziekanat/dashboard.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -66,47 +67,152 @@
 <p class="text-muted mb-4">Wybierz kategorię dokumentów, którymi chcesz zarządzać.</p>
 
 <div class="row g-4">
-    <!-- Załącznik 9 -->
-    <div class="col-md-6 col-lg-6">
-        <a href="{{ url_for('dziekanat.zal9_lista') }}" class="usos-tile border-primary border-2">
-            <div class="usos-tile-icon text-primary">
-                <i class="bi bi-clipboard-check"></i>
+    <!-- SEKCJA ZARZĄDZANIE -->
+    <div class="col-12 mb-1">
+        <h5 class="text-muted text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Zarządzanie</h5>
+        <hr class="mt-2 mb-0 text-muted">
+    </div>
+
+    <!-- Przypisz UOPZ -->
+    <div class="col-md-6 col-lg-6 mt-3">
+        <a href="{{ url_for('dziekanat.przypisz_uopz') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-person-lines-fill"></i>
             </div>
             <div class="usos-tile-content">
-                <h5 class="text-primary">Oświadczenia (Zał. 9)</h5>
-                <p>Weryfikacja danych wprowadzonych przez studentów dot. wyboru miejsca praktyki.</p>
+                <h5>Przypisz UOPZ</h5>
+                <p>Zarządzanie i przypisywanie Uczelnianych Opiekunów Praktyk Zawodowych do studentów.</p>
             </div>
-            {% if zal9_count and zal9_count > 0 %}
-            <span class="badge bg-danger tile-badge">{{ zal9_count }}</span>
-            {% endif %}
         </a>
     </div>
 
+    <!-- SEKCJA DOKUMENTY -->
+    <div class="col-12 mt-5 mb-1">
+        <h5 class="text-muted text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">Dokumenty (Załączniki)</h5>
+        <hr class="mt-2 mb-0 text-muted">
+    </div>
+
     <!-- Porozumienia (Zał. 1) -->
-    <div class="col-md-6 col-lg-6">
-        <a href="#" class="usos-tile border-secondary border-2">
-            <div class="usos-tile-icon text-secondary">
+    <div class="col-md-6 col-lg-6 mt-3">
+        <a href="{{ url_for('dziekanat.porozumienia') }}" class="usos-tile">
+            <div class="usos-tile-icon">
                 <i class="bi bi-file-earmark-text"></i>
             </div>
             <div class="usos-tile-content">
-                <h5 class="text-secondary">Porozumienia (Zał. 1)</h5>
-                <p>Generowanie i podpisywanie porozumień z instytucjami.</p>
+                <h5>Porozumienia (Zał. 1, 2)</h5>
+                <p>Generowanie i podpisywanie porozumień z instytucjami oraz załączników.</p>
             </div>
-            <span class="badge bg-secondary tile-badge">Brak wdrożenia</span>
+            <span id="porozumienia-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
+        </a>
+    </div>
+
+    <!-- Załącznik 2a -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal2a_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Harmonogramy (Zał. 2a)</h5>
+                <p>Ostateczna weryfikacja harmonogramów zgłoszonych przez studentów.</p>
+            </div>
+            <span id="zal2a-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
+        </a>
+    </div>
+
+    <!-- Karty Praktyki (Zał. 3) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal3_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-card-checklist"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Karty Praktyki (Zał. 3)</h5>
+                <p>Weryfikacja dokumentów końcowych z ocenami od zakładu pracy i opiekuna z uczelni.</p>
+            </div>
+            <span id="zal3-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
+        </a>
+    </div>
+
+    <!-- Efekty Uczenia (Zał. 4) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal4_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Efekty Uczenia (Zał. 4)</h5>
+                <p>Wgląd do potwierdzonych przez ZOPZ i UOPZ efektów uczenia się.</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Wniosek Zaliczenie (Zał. 4b) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal4b_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-briefcase"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Zaliczenie pracy (Zał. 4b)</h5>
+                <p>Zarządzanie wnioskami o zaliczenie praktyki na podstawie aktywności zawodowej.</p>
+            </div>
+            <span id="zal4b-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
+        </a>
+    </div>
+
+    <!-- Decyzje (Zał. 4a) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal4a_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-file-earmark-check"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Decyzje (Zał. 4a)</h5>
+                <p>Wydawanie decyzji dotyczących uznania efektów uczenia się dla studentów.</p>
+            </div>
+            <span id="zal4a-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
+        </a>
+    </div>
+
+    <!-- Sprawozdania (Zał. 7, 7a) -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal7_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-file-text"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Sprawozdania (Zał. 7, 7a)</h5>
+                <p>Wgląd do sprawozdań z realizacji praktyki zawodowej.</p>
+            </div>
+            <span id="zal7-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
         </a>
     </div>
 
     <!-- Protokoły (Zał. 8) -->
     <div class="col-md-6 col-lg-6">
-        <a href="#" class="usos-tile border-secondary border-2">
-            <div class="usos-tile-icon text-secondary">
+        <a href="{{ url_for('dziekanat.zal8_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
                 <i class="bi bi-award"></i>
             </div>
             <div class="usos-tile-content">
-                <h5 class="text-secondary">Protokoły (Zał. 8)</h5>
+                <h5>Protokoły (Zał. 8)</h5>
                 <p>Archiwizacja i wgląd w protokoły egzaminu po zaliczeniu praktyki.</p>
             </div>
-            <span class="badge bg-secondary tile-badge">Brak wdrożenia</span>
+        </a>
+    </div>
+
+    <!-- Załącznik 9 -->
+    <div class="col-md-6 col-lg-6">
+        <a href="{{ url_for('dziekanat.zal9_lista') }}" class="usos-tile">
+            <div class="usos-tile-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div class="usos-tile-content">
+                <h5>Oświadczenia (Zał. 9)</h5>
+                <p>Weryfikacja danych wprowadzonych przez studentów dot. wyboru miejsca praktyki.</p>
+            </div>
+            <span id="zal9-badge" class="badge bg-danger tile-badge" style="display: none;"></span>
         </a>
     </div>
 </div>
