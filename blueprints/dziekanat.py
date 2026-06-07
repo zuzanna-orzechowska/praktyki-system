@@ -233,18 +233,20 @@ def zal7_sprawozdanie(student_id):
         if akcja == 'zatwierdz':
             dokument.status = 'Approved'
             sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
-            from models import Powiadomienie
+            from models import Powiadomienie, dodaj_log
             notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor zaakceptował Twoje Sprawozdanie (Zał. 7).", link="/student/zal7_sprawozdanie")
             db.session.add(notif)
             db.session.commit()
+            dodaj_log(current_user.id, f"Zatwierdzono Sprawozdanie (Zał. 7) dla studenta {student.nr_albumu}")
             flash('Sprawozdanie zatwierdzone przez Dyrektora.', 'success')
         elif akcja == 'odrzuc':
             dokument.status = 'Rejected'
             sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
-            from models import Powiadomienie
+            from models import Powiadomienie, dodaj_log
             notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor odrzucił Twoje Sprawozdanie (Zał. 7) do poprawy.", link="/student/zal7_sprawozdanie")
             db.session.add(notif)
             db.session.commit()
+            dodaj_log(current_user.id, f"Odrzucono Sprawozdanie (Zał. 7) dla studenta {student.nr_albumu}")
             flash('Sprawozdanie odrzucone przez Dyrektora do poprawy.', 'warning')
         return redirect(url_for('dziekanat.zal7_lista'))
         
@@ -272,18 +274,20 @@ def zal7a_sprawozdanie(student_id):
             if akcja == 'zatwierdz':
                 dokument.status = 'Approved'
                 sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
-                from models import Powiadomienie
+                from models import Powiadomienie, dodaj_log
                 notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor zaakceptował Twoje Sprawozdanie (Zał. 7a).", link="/student/zal7a_sprawozdanie")
                 db.session.add(notif)
                 db.session.commit()
+                dodaj_log(current_user.id, f"Zatwierdzono Sprawozdanie (Zał. 7a) dla studenta {student.nr_albumu}")
                 flash('Zatwierdzono sprawozdanie.', 'success')
             elif akcja == 'odrzuc':
                 dokument.status = 'Rejected'
                 sprawozdanie.podpis_dyrektora = f"{current_user.imie} {current_user.nazwisko}"
-                from models import Powiadomienie
+                from models import Powiadomienie, dodaj_log
                 notif = Powiadomienie(uzytkownik_id=student.uzytkownik.id, tresc="Dyrektor odrzucił Twoje Sprawozdanie (Zał. 7a) do poprawy.", link="/student/zal7a_sprawozdanie")
                 db.session.add(notif)
                 db.session.commit()
+                dodaj_log(current_user.id, f"Odrzucono Sprawozdanie (Zał. 7a) dla studenta {student.nr_albumu}")
                 flash('Odrzucono sprawozdanie do poprawy.', 'warning')
             return redirect(url_for('dziekanat.zal7_lista'))
         else:

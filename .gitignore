@@ -5,3 +5,6 @@ __pycache__
 .env
 /static/uploads
 /static/wzory
+
+/migrate_to_postgres.py
+/praktyki.db

@@ -20,10 +20,15 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SERVER_NAME'] = 'localhost:5001' #TO ZMIENIĆ W PRZYSZŁOŚCI!!!!!!!!!!
+    # app.config['SERVER_NAME'] = 'localhost:5000'
     
     basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
+    
+    db_url = os.getenv('DATABASE_URL')
+    if db_url:
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'praktyki.db')
     
     upload_folder = os.path.join(basedir, 'static', 'uploads')
     app.config['UPLOAD_FOLDER'] = upload_folder
@@ -109,4 +114,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, port=5001)
+    app.run(host='0.0.0.0', debug=True, port=5000)

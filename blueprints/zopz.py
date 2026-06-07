@@ -114,6 +114,9 @@ def zal7_sprawozdanie(student_id):
                     sprawozdanie_doc.uwagi_zopz = uwagi
                 db.session.commit()
                 
+                from models import dodaj_log
+                dodaj_log(current_user.id, f"Odrzucono Sprawozdanie (Zał. 7) dla studenta {student.nr_albumu}")
+                
                 powiadomienie_student = Powiadomienie(
                     uzytkownik_id=student.uzytkownik_id,
                     tresc=f"Twoje Sprawozdanie (Zał. 7) zostało odrzucone do poprawy przez ZOPZ. Powód: {uwagi}",
@@ -131,6 +134,9 @@ def zal7_sprawozdanie(student_id):
                 sprawozdanie_doc.uwagi_zopz = uwagi
                 sprawozdanie_doc.podpis_zopz = f"{current_user.imie} {current_user.nazwisko}"
             db.session.commit()
+            
+            from models import dodaj_log
+            dodaj_log(current_user.id, f"Zatwierdzono Sprawozdanie (Zał. 7) dla studenta {student.nr_albumu}")
             
             powiadomienie_student = Powiadomienie(
                 uzytkownik_id=student.uzytkownik_id,

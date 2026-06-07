@@ -331,6 +331,9 @@ def handle_sprawozdanie(student_id, typ):
                 db.session.add(notif)
                 db.session.commit()
                 
+                from models import dodaj_log
+                dodaj_log(current_user.id, f"Zatwierdzono Sprawozdanie ({'Zał. 7a' if typ == 'ZAL7A' else 'Zał. 7'}) dla studenta {student.nr_albumu}")
+                
                 return jsonify({'success': True, 'message': 'Sprawozdanie zostało zatwierdzone.'})
             elif akcja == 'odrzuc':
                 dokument.status = 'Rejected'
@@ -343,6 +346,9 @@ def handle_sprawozdanie(student_id, typ):
                 )
                 db.session.add(notif)
                 db.session.commit()
+                
+                from models import dodaj_log
+                dodaj_log(current_user.id, f"Odrzucono Sprawozdanie ({'Zał. 7a' if typ == 'ZAL7A' else 'Zał. 7'}) dla studenta {student.nr_albumu}")
                 
                 return jsonify({'success': True, 'message': 'Sprawozdanie zostało odrzucone do poprawy.'})
                 

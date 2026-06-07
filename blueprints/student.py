@@ -185,6 +185,8 @@ def sprawozdanie():
                 db.session.add(powiadomienie_uopz)
                 
             db.session.commit()
+            from models import dodaj_log
+            dodaj_log(current_user.id, "Przesłano Sprawozdanie (Zał. 7) do weryfikacji ZOPZ")
             
             flash('Sprawozdanie zapisano i przesłano do weryfikacji ZOPZ!', 'success')
         else:
@@ -337,7 +339,7 @@ def zal7a_sprawozdanie():
                 dokument.status = 'Weryfikacja Dyrektor'
                 db.session.commit()
                 
-                from models import Uzytkownik, Powiadomienie
+                from models import Uzytkownik, Powiadomienie, dodaj_log
                 dyrektor = Uzytkownik.query.filter_by(rola='dyrektor').first()
                 if dyrektor:
                     notif = Powiadomienie(
@@ -347,6 +349,8 @@ def zal7a_sprawozdanie():
                     )
                     db.session.add(notif)
                     db.session.commit()
+                    
+                dodaj_log(current_user.id, "Przesłano skan Sprawozdania (Zał. 7a) do oceny Dyrektora")
                 flash('Sprawozdanie przesłane do Dyrektora!', 'success')
                 return redirect(url_for('student.dashboard'))
         else:
