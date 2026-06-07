@@ -50,21 +50,24 @@
 
         <div class="row mt-5 pt-5 text-center">
             <div class="col-6">
-                <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
-                    <small>zakład pracy</small>
+                <div id="podpis-zopz-zal2" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;"></span>
+                    <span>{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</span>
+                    {% endif %}
                 </div>
-                {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
-                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</div>
-                {% endif %}
+                <small>podpis osoby reprezentującej zakład pracy</small>
             </div>
             <div class="col-6">
-                <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
-                    <small>dyrektor Instytutu</small>
+                <div id="podpis-dyrektora-zal2" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ porozumienie.data_podpisania }}</span>
+                    <span>{{ porozumienie.podpisal_dziekanat }}</span>
+                    {% endif %}
                 </div>
-                {% if porozumienie and porozumienie.podpisal_dziekanat %}
-                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ porozumienie.podpisal_dziekanat }}</div>
-                {% endif %}
+                <small>data i podpis Dyrektora Instytutu</small>
             </div>
         </div>
     </div>
 </div>
+

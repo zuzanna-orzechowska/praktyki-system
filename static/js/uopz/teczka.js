@@ -55,6 +55,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 const badgeZal6 = document.getElementById('badge-zal6');
                 if (badgeZal6) badgeZal6.style.display = 'inline-block';
             }
+
+            // Hiding logic based on path
+            const isProfessionalPath = (data.praktyka.status === 'SCIEZKA_PRACA' || data.praktyka.status === 'ZAL4B_ZATWIERDZONE' || (data.praktyka.status === 'ZALICZONA' && dokumenty['ZAL4B']));
+            
+            if (isProfessionalPath) {
+                document.getElementById('card-zal2a').style.display = 'none';
+                document.getElementById('card-zal3').style.display = 'none';
+                document.getElementById('card-zal4').style.display = 'none';
+                document.getElementById('card-zal6').style.display = 'none';
+                document.getElementById('card-zal7').style.display = 'none';
+                document.getElementById('card-zal8').style.display = 'none';
+            } else {
+                document.getElementById('card-zal7a').style.display = 'none';
+                document.getElementById('card-zal8a').style.display = 'none';
+            }
         })
         .catch(err => console.error(err));
 });

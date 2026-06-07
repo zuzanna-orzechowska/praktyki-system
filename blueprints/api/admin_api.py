@@ -132,18 +132,24 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
     oswiadczenie.dokument.status = 'AccountCreated'
     db.session.commit()
 
+    msg = Message('Utworzono konto w Systemie Obsługi Praktyk', recipients=[email_zopz])
     if provider == 'local':
-        msg = Message('Utworzono konto w Systemie Obsługi Praktyk', recipients=[email_zopz])
         msg.body = f"Witaj {oswiadczenie.opiekun_imie} {oswiadczenie.opiekun_nazwisko},\n\nTwoje konto Opiekuna Zakładowego (ZOPZ) zostało utworzone.\n\nE-mail: {email_zopz}\nTymczasowe hasło: {temp_password}\n\nPrzy pierwszym logowaniu zostaniesz poproszony o zmianę hasła na własne."
-        try:
-            mail.send(msg)
-            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem lokalnym. Wysłano e-mail z hasłem do {email_zopz} i przypisano studenta do tego ZOPZ.'})
-        except Exception as e:
-            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ, przypisano do studenta, ale wystąpił błąd przy wysyłaniu e-maila: {e}'})
     elif provider == 'google':
-        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ (GOOGLE). Opiekun ({email_zopz}) może zalogować się jednym kliknięciem bez hasła. Student przypisany.'})
+        msg.body = f"Witaj {oswiadczenie.opiekun_imie} {oswiadczenie.opiekun_nazwisko},\n\nTwoje konto Opiekuna Zakładowego (ZOPZ) zostało utworzone.\n\nPonieważ używasz adresu {email_zopz}, na stronie logowania po prostu kliknij 'Zaloguj się przez Google'. Nie potrzebujesz hasła do systemu."
     else:
-        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem Microsoft ({email_zopz}). Student przypisany.'})
+        msg.body = f"Witaj {oswiadczenie.opiekun_imie} {oswiadczenie.opiekun_nazwisko},\n\nTwoje konto Opiekuna Zakładowego (ZOPZ) zostało utworzone.\n\nPonieważ używasz adresu {email_zopz}, na stronie logowania po prostu kliknij logowanie przez Microsoft. Nie potrzebujesz hasła do systemu."
+        
+    try:
+        mail.send(msg)
+        if provider == 'local':
+            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ z logowaniem lokalnym. Wysłano e-mail z hasłem do {email_zopz}.'})
+        elif provider == 'google':
+            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ (GOOGLE). Wysłano powiadomienie e-mail do {email_zopz}.'})
+        else:
+            return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ (MICROSOFT). Wysłano powiadomienie e-mail do {email_zopz}.'})
+    except Exception as e:
+        return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ, ale wystąpił błąd przy wysyłaniu powiadomienia e-mail: {e}'})
 
 
 @admin_api_bp.route('/stworz_zopz', methods=['POST'])

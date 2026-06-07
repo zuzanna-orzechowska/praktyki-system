@@ -8,7 +8,15 @@ function submitDecision(akcja) {
         alert('Komentarz jest wymagany przy zgłaszaniu uwag.');
         return;
     }
-    if (akcja === 'zatwierdz' && !confirm('Czy na pewno chcesz zatwierdzić to Porozumienie?')) return;
+    
+    if (akcja === 'zatwierdz') {
+        const check = document.getElementById('generateSignatureZOPZ');
+        if (check && !check.checked) {
+            alert('Wymagane jest zaznaczenie pola z podpisem elektronicznym.');
+            return;
+        }
+        if (!confirm('Czy na pewno chcesz zatwierdzić to Porozumienie?')) return;
+    }
     
     fetch(`/api/zopz/weryfikuj_porozumienie/{{ porozumienie.id }}`, {
         method: 'POST',
@@ -48,11 +56,33 @@ function submitDecision(akcja) {
     {% endif %}
 </div>
 
+<h4 class="mt-4 mb-3 text-secondary">Podgląd Dokumentów</h4>
+<ul class="nav nav-tabs" id="docTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="zal1-tab" data-bs-toggle="tab" data-bs-target="#zal1" type="button" role="tab">Załącznik nr 1 (Porozumienie)</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="zal2-tab" data-bs-toggle="tab" data-bs-target="#zal2" type="button" role="tab">Załącznik nr 2 (Program)</button>
+  </li>
+</ul>
+
+<div class="tab-content border border-top-0 p-3 bg-white mb-5" id="docTabsContent">
+  <!-- ZAL 1 -->
+  <div class="tab-pane fade show active" id="zal1" role="tabpanel">
+      {% include 'dokumenty/_zal1_content.html' %}
+  </div>
+  
+  <!-- ZAL 2 -->
+  <div class="tab-pane fade" id="zal2" role="tabpanel">
+      {% include 'dokumenty/_zal2_content.html' %}
+  </div>
+</div>
+
 {% if porozumienie and porozumienie.status == 'OczekujeZOPZ' %}
 <div class="card shadow-sm border-primary mb-4 bg-light">
     <div class="card-body">
         <h5 class="text-primary"><i class="bi bi-info-circle-fill"></i> Oczekuje na Twoją weryfikację</h5>
-        <p>Sprawdź poniższe Porozumienie (Zał. 1). Jeśli wszystkie dane się zgadzają, możesz je zatwierdzić. W przypadku błędów, zgłoś uwagi, a zostaną one przekazane do Dziekanatu.</p>
+        <p>Sprawdź powyższe Porozumienie (Zał. 1). Jeśli wszystkie dane się zgadzają, możesz je zatwierdzić. W przypadku błędów, zgłoś uwagi, a zostaną one przekazane do Dziekanatu.</p>
         
         <div class="mb-3">
             <label for="komentarz_zopz" class="form-label fw-bold text-danger"><i class="bi bi-chat-left-text"></i> Uwagi (wymagane przy odrzuceniu):</label>
@@ -80,26 +110,4 @@ function submitDecision(akcja) {
     <strong>Twoje uwagi:</strong> {{ porozumienie.komentarz_zopz }}
 </div>
 {% endif %}
-
-<h4 class="mt-5 mb-3 text-secondary">Podgląd Dokumentów</h4>
-<ul class="nav nav-tabs" id="docTabs" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="zal1-tab" data-bs-toggle="tab" data-bs-target="#zal1" type="button" role="tab">Załącznik nr 1 (Porozumienie)</button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="zal2-tab" data-bs-toggle="tab" data-bs-target="#zal2" type="button" role="tab">Załącznik nr 2 (Program)</button>
-  </li>
-</ul>
-
-<div class="tab-content border border-top-0 p-3 bg-white mb-5" id="docTabsContent">
-  <!-- ZAL 1 -->
-  <div class="tab-pane fade show active" id="zal1" role="tabpanel">
-      {% include 'dokumenty/_zal1_content.html' %}
-  </div>
-  
-  <!-- ZAL 2 -->
-  <div class="tab-pane fade" id="zal2" role="tabpanel">
-      {% include 'dokumenty/_zal2_content.html' %}
-  </div>
-</div>
 {% endblock %}

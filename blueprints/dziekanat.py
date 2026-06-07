@@ -35,11 +35,11 @@ def porozumienia():
         return redirect(url_for('index'))
     return render_template('dziekanat/porozumienia_lista.html')
 
-@dziekanat_bp.route('/weryfikuj_porozumienie/<int:praktyka_id>')
+@dziekanat_bp.route('/weryfikuj_porozumienie/<int:praktyka_id>', methods=['GET', 'POST'])
 @login_required
 def weryfikuj_porozumienie(praktyka_id):
-    from models import Praktyka, Oswiadczenie, Dokument
-    from datetime import datetime
+    from models import Praktyka, Oswiadczenie, Dokument, Porozumienie, Powiadomienie
+    from datetime import datetime, date
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
         
@@ -51,6 +51,106 @@ def weryfikuj_porozumienie(praktyka_id):
     dokument_zal9 = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL9').first()
     if dokument_zal9:
         oswiadczenie = Oswiadczenie.query.filter_by(dokument_id=dokument_zal9.id).first()
+
+    if request.method == 'POST':
+        akcja = request.form.get('akcja')
+        
+        # Save inline form data if provided
+        imie = request.form.get('student_imie')
+        if imie:
+            student.uzytkownik.imie = imie
+            
+        nazwisko = request.form.get('student_nazwisko')
+        if nazwisko:
+            if '(' in student.uzytkownik.nazwisko:
+                nr_idx = student.uzytkownik.nazwisko.find('(')
+                rest = student.uzytkownik.nazwisko[nr_idx:]
+                student.uzytkownik.nazwisko = f"{nazwisko} {rest}"
+            else:
+                student.uzytkownik.nazwisko = nazwisko
+                
+        data_start = request.form.get('praktyka_data_start')
+        if data_start:
+            praktyka.data_start = datetime.strptime(data_start, '%Y-%m-%d').date()
+            
+        data_end = request.form.get('praktyka_data_end')
+        if data_end:
+            praktyka.data_end = datetime.strptime(data_end, '%Y-%m-%d').date()
+            
+        liczba_godzin = request.form.get('praktyka_liczba_godzin')
+        if liczba_godzin:
+            praktyka.liczba_godzin = int(liczba_godzin)
+            
+        if praktyka.zaklad:
+            nazwa = request.form.get('nazwa')
+            if nazwa: praktyka.zaklad.nazwa = nazwa
+            praktyka.zaklad.nip = request.form.get('nip', praktyka.zaklad.nip)
+            praktyka.zaklad.kod_pocztowy = request.form.get('kod_pocztowy', praktyka.zaklad.kod_pocztowy)
+            praktyka.zaklad.miasto = request.form.get('miasto', praktyka.zaklad.miasto)
+            praktyka.zaklad.ulica = request.form.get('ulica', praktyka.zaklad.ulica)
+            praktyka.zaklad.nr_budynku = request.form.get('nr_budynku', praktyka.zaklad.nr_budynku)
+            praktyka.zaklad.nr_lokalu = request.form.get('nr_lokalu', praktyka.zaklad.nr_lokalu)
+            
+        if oswiadczenie:
+            oswiadczenie.osoba_upowazniona_imie = request.form.get('osoba_upowazniona_imie', oswiadczenie.osoba_upowazniona_imie)
+            oswiadczenie.osoba_upowazniona_nazwisko = request.form.get('osoba_upowazniona_nazwisko', oswiadczenie.osoba_upowazniona_nazwisko)
+            oswiadczenie.osoba_upowazniona_stanowisko = request.form.get('osoba_upowazniona_stanowisko', oswiadczenie.osoba_upowazniona_stanowisko)
+
+        if akcja == 'zapisz':
+            db.session.commit()
+            flash('Zmiany w dokumencie zostały zapisane.', 'success')
+            
+        elif akcja == 'akceptuj_dyrektor' and current_user.rola == 'dyrektor':
+            if request.form.get('generateSignatureDyrektor'):
+                if not porozumienie:
+                    porozumienie = Porozumienie(praktyka_id=praktyka.id, zaklad_id=praktyka.zaklad_id, status='ZaakceptowaneDyrektor')
+                    db.session.add(porozumienie)
+                else:
+                    porozumienie.status = 'ZaakceptowaneDyrektor'
+                
+                tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                porozumienie.podpisal_dziekanat = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                porozumienie.data_podpisania = date.today()
+                
+                db.session.commit()
+                flash('Porozumienie zaakceptowane i podpisane przez Dyrektora.', 'success')
+            else:
+                flash('Wymagane jest zaznaczenie pola z podpisem elektronicznym.', 'danger')
+
+        elif akcja == 'wyslij_zopz':
+            if porozumienie and porozumienie.status == 'ZaakceptowaneDyrektor':
+                porozumienie.status = 'OczekujeZOPZ'
+                porozumienie.komentarz_zopz = None
+                
+                if praktyka.zaklad and praktyka.zaklad.zopz_id:
+                    from models import Powiadomienie
+                    powiadomienie = Powiadomienie(
+                        uzytkownik_id=praktyka.zaklad.zopz_id,
+                        tresc=f"Dziekanat przekazał Porozumienie i Program Praktyki studenta {student.uzytkownik.imie} {student.uzytkownik.nazwisko} do Twojej weryfikacji.",
+                        link=url_for('zopz.porozumienie', id=porozumienie.id)
+                    )
+                    db.session.add(powiadomienie)
+                    
+                db.session.commit()
+                flash('Porozumienie wysłane do ZOPZ.', 'success')
+            else:
+                flash('Porozumienie musi zostać najpierw zaakceptowane przez Dyrektora.', 'danger')
+
+        elif akcja == 'przekaz_dyrektorowi':
+            if porozumienie and porozumienie.status == 'UwagiZOPZ':
+                porozumienie.status = 'Draft'
+                db.session.commit()
+                flash('Dokument przekazany do ponownej akceptacji Dyrektora.', 'success')
+                
+        elif akcja == 'podpisz_ostatecznie':
+            if porozumienie and porozumienie.status == 'ZatwierdzoneZOPZ':
+                porozumienie.status = 'Podpisane'
+                if not porozumienie.data_podpisania:
+                    porozumienie.data_podpisania = date.today()
+                db.session.commit()
+                flash('Porozumienie zostało ostatecznie zatwierdzone i podpisane.', 'success')
+        
+        return redirect(url_for('dziekanat.weryfikuj_porozumienie', praktyka_id=praktyka.id))
 
     current_date = datetime.now().strftime('%Y-%m-%d')
     current_year = datetime.now().year

@@ -7,13 +7,7 @@
     {% endif %}
 </div>
 
-{% if current_user.rola in ['dziekanat', 'dyrektor'] %}
-<div class="d-flex justify-content-end mb-3">
-    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editZakladModal">
-        <i class="bi bi-pencil-square"></i> Edytuj dane
-    </button>
-</div>
-{% endif %}
+
 
 <div class="card shadow-sm mb-5 border-0">
     <div class="card-body p-5"
@@ -36,9 +30,13 @@
                 {% endif %}
             </strong>
             pomiędzy <strong>Akademią Nauk Stosowanych w Elblągu</strong>, ul. Wojska Polskiego 1, 82-300 Elbląg zwaną dalej „Uczelnią” reprezentowaną przez <strong>Dyrektora Instytutu Informatyki Stosowanej</strong> z jednej strony, a 
-            <strong>{{ praktyka.zaklad.nazwa }}{% if praktyka.zaklad.ulica %}, {{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.kod_pocztowy }} {{ praktyka.zaklad.miasto }}{% else %}, {{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}{% endif %}</strong>, 
+            <strong>
+                {{ praktyka.zaklad.nazwa }}{% if praktyka.zaklad.ulica %}, {{ praktyka.zaklad.ulica }} {{ praktyka.zaklad.nr_budynku }}{% if praktyka.zaklad.nr_lokalu %}/{{ praktyka.zaklad.nr_lokalu }}{% endif %}, {{ praktyka.zaklad.kod_pocztowy }} {{ praktyka.zaklad.miasto }}{% else %}, {{ praktyka.zaklad.adres }}, {{ praktyka.zaklad.miasto }}{% endif %}
+            </strong>, 
             zwanym dalej „Zakładem pracy”, reprezentowanym przez 
-            <strong>{% if oswiadczenie %}{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }} - {{ oswiadczenie.osoba_upowazniona_stanowisko }}{% else %}........................................................{% endif %}</strong> 
+            <strong>
+                {% if oswiadczenie %}{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }} - {{ oswiadczenie.osoba_upowazniona_stanowisko }}{% else %}........................................................{% endif %}
+            </strong> 
             — z drugiej strony.
         </p>
 
@@ -55,9 +53,15 @@
             <tbody>
                 <tr>
                     <td>1.</td>
-                    <td>{{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0].strip() }}</td>
-                    <td>{{ praktyka.data_start }} – {{ praktyka.data_end }}</td>
-                    <td>{{ praktyka.liczba_godzin }} godz.</td>
+                    <td>
+                        {{ student.uzytkownik.imie }} {{ student.uzytkownik.nazwisko.split('(')[0].strip() }}
+                    </td>
+                    <td>
+                        {{ praktyka.data_start }} – {{ praktyka.data_end }}
+                    </td>
+                    <td>
+                        {{ praktyka.liczba_godzin }} godz.
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -101,21 +105,80 @@
 
         <div class="row mt-5 pt-5 text-center">
             <div class="col-6">
-                <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
-                    <small>(podpis Dyrektora Instytutu)</small>
+                <div id="podpis-dyrektora" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.podpisal_dziekanat %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">{{ porozumienie.data_podpisania }}</span>
+                    <span>{{ porozumienie.podpisal_dziekanat }}</span>
+                    {% endif %}
                 </div>
-                {% if porozumienie and porozumienie.podpisal_dziekanat %}
-                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ porozumienie.podpisal_dziekanat }}</div>
+                <small>data i podpis Dyrektora Instytutu</small>
+                
+                {% if current_user.rola == 'dyrektor' and (not porozumienie or porozumienie.status == 'Draft') %}
+                <div class="mt-3 form-check d-flex justify-content-center">
+                    <input class="form-check-input me-2" type="checkbox" name="generateSignatureDyrektor" id="generateSignatureDyrektor" value="1">
+                    <label class="form-check-label fw-bold text-dark" for="generateSignatureDyrektor">
+                        Złóż podpis cyfrowy pod Porozumieniem
+                    </label>
+                </div>
                 {% endif %}
             </div>
             <div class="col-6">
-                <div style="border-top: 1px dotted #000; width: 80%; margin: 0 auto; padding-top: 5px;">
-                    <small>(podpis osoby uprawnionej do reprezentacji<br>w imieniu Zakładu pracy)</small>
+                <div id="podpis-zopz" style="border-bottom: 1px dotted #000; height: 30px; margin-bottom: 5px; font-family: cursive; color: #004a99; width: 80%; margin: 0 auto;">
+                    {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
+                    <span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;"></span>
+                    <span>{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</span>
+                    {% endif %}
                 </div>
-                {% if porozumienie and porozumienie.status in ['ZatwierdzoneZOPZ', 'Podpisane'] and oswiadczenie %}
-                <div class="mt-2" style="font-family: cursive; color: #004a99;">{{ oswiadczenie.osoba_upowazniona_imie }} {{ oswiadczenie.osoba_upowazniona_nazwisko }}</div>
+                <small>podpis osoby uprawnionej do reprezentacji<br>w imieniu Zakładu pracy</small>
+                
+                {% if current_user.rola == 'zopz' and porozumienie and porozumienie.status == 'OczekujeZOPZ' %}
+                <div class="mt-3 form-check d-flex justify-content-center">
+                    <input class="form-check-input me-2" type="checkbox" id="generateSignatureZOPZ" value="1">
+                    <label class="form-check-label fw-bold text-dark" for="generateSignatureZOPZ">
+                        Złóż podpis cyfrowy
+                    </label>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dyrektorCheckbox = document.getElementById('generateSignatureDyrektor');
+        if (dyrektorCheckbox) {
+            dyrektorCheckbox.addEventListener('change', function() {
+                if(this.checked) {
+                    const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                    const imieNazwisko = `{{ current_user.tytul_naukowy or '' }} {{ current_user.imie }} {{ current_user.nazwisko }}`;
+                    document.getElementById('podpis-dyrektora').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                    const zal2 = document.getElementById('podpis-dyrektora-zal2');
+                    if (zal2) zal2.innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                } else {
+                    document.getElementById('podpis-dyrektora').innerHTML = ``;
+                    const zal2 = document.getElementById('podpis-dyrektora-zal2');
+                    if (zal2) zal2.innerHTML = ``;
+                }
+            });
+        }
+        
+        const zopzCheckbox = document.getElementById('generateSignatureZOPZ');
+        if (zopzCheckbox) {
+            zopzCheckbox.addEventListener('change', function() {
+                if(this.checked) {
+                    const dzisiaj = new Date().toLocaleDateString('pl-PL');
+                    const imieNazwisko = `{{ current_user.tytul_naukowy or '' }} {{ current_user.imie }} {{ current_user.nazwisko }}`;
+                    document.getElementById('podpis-zopz').innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                    const zal2Zopz = document.getElementById('podpis-zopz-zal2');
+                    if (zal2Zopz) zal2Zopz.innerHTML = `<span style="font-family: sans-serif; color: #000; font-size: 14px; margin-right: 10px;">${dzisiaj}</span>${imieNazwisko}`;
+                } else {
+                    document.getElementById('podpis-zopz').innerHTML = ``;
+                    const zal2Zopz = document.getElementById('podpis-zopz-zal2');
+                    if (zal2Zopz) zal2Zopz.innerHTML = ``;
+                }
+            });
+        }
+    });
+</script>
+

@@ -104,6 +104,8 @@ def porozumienia_lista():
     def format_praktyka_porozumienie(p):
         student = p.student
         por = p.porozumienie
+        zal9 = db.session.query(Dokument).filter_by(praktyka_id=p.id, typ_zalacznika='ZAL9').first()
+        data_zl = zal9.updated_at.strftime('%Y-%m-%d %H:%M') if zal9 and zal9.updated_at else '---'
         return {
             'id': por.id if por else p.id,
             'praktyka_id': p.id,
@@ -112,7 +114,8 @@ def porozumienia_lista():
             'student_nazwisko': student.uzytkownik.nazwisko,
             'nr_albumu': student.nr_albumu,
             'status_porozumienia': por.status if por else 'Brak / Szkic',
-            'komentarz_zopz': por.komentarz_zopz if por else None
+            'komentarz_zopz': por.komentarz_zopz if por else None,
+            'data_zlozenia': data_zl
         }
 
     return jsonify({
@@ -468,7 +471,7 @@ def przypisz_uopz():
         
     return jsonify({
         'uopz_list': [{'id': u.id, 'imie': u.imie, 'nazwisko': u.nazwisko, 'tytul': u.tytul_naukowy} for u in uopz_list],
-        'praktyki': [format_praktyka(p) for p in praktyki]
+        'praktyki': [format_praktyka(p) for p in praktyki if p.student]
     })
 
 @dziekanat_api_bp.route('/zal3', methods=['GET'])

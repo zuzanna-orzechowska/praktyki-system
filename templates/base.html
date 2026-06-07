@@ -254,6 +254,32 @@
                     {% set praktyka = current_user.student_profil.praktyki[0] if current_user.student_profil.praktyki
                     else none %}
 
+                    {% set ns = namespace(etap_standardowy=1) %}
+                    {% if praktyka and praktyka.status not in ['BRAK_ZGŁOSZENIA', 'OCZEKUJE_NA_ZAL9'] %}
+                        {% set poroz_ok = praktyka.porozumienie and praktyka.porozumienie.status in ['Podpisane', 'ZaakceptowaneDyrektor'] %}
+                        {% if poroz_ok %}
+                            {% set ns.etap_standardowy = 3 %}
+                        {% else %}
+                            {% set ns.etap_standardowy = 2 %}
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% macro standard_link(url, name, endpoint_keyword, required_etap=1) %}
+                        {% set is_unlocked = ns.etap_standardowy >= required_etap %}
+                        {% set locked_text = "Wymaga zatwierdzenia Oświadczenia (Zał. 9)" if required_etap == 2 else "Wymaga zatwierdzenia Porozumienia przez Zakład Pracy" %}
+                        <li>
+                        {% if not is_unlocked %}
+                            <a href="#" style="opacity: 0.6; cursor: not-allowed; text-decoration: none; color: #6c757d;" title="{{ locked_text }}" onclick="event.preventDefault()">
+                                <i class="bi bi-lock-fill me-1" style="font-size: 0.8rem;"></i> {{ name }}
+                            </a>
+                        {% else %}
+                            <a href="{{ url }}" class="{% if endpoint_keyword in request.path %}active{% endif %}">
+                                {{ name }}
+                            </a>
+                        {% endif %}
+                        </li>
+                    {% endmacro %}
+
                     {% if not praktyka or praktyka.status == 'BRAK_ZGŁOSZENIA'
                     %}
                     <!-- POCZĄTEK: Wybór ścieżki -->
@@ -287,32 +313,6 @@
                             class="{% if 'zal9' in request.path %}active{% endif %}">Oświadczenie (Zał. 9)</a>
                     </li>
                     
-                    {% set ns = namespace(etap_standardowy=1) %}
-                    {% if praktyka and praktyka.status not in ['BRAK_ZGŁOSZENIA', 'OCZEKUJE_NA_ZAL9'] %}
-                        {% set poroz_ok = praktyka.porozumienie and praktyka.porozumienie.status in ['Podpisane', 'ZaakceptowaneDyrektor'] %}
-                        {% if poroz_ok %}
-                            {% set ns.etap_standardowy = 3 %}
-                        {% else %}
-                            {% set ns.etap_standardowy = 2 %}
-                        {% endif %}
-                    {% endif %}
-                    
-                    {% macro standard_link(url, name, endpoint_keyword, required_etap=1) %}
-                        {% set is_unlocked = ns.etap_standardowy >= required_etap %}
-                        {% set locked_text = "Wymaga zatwierdzenia Oświadczenia (Zał. 9)" if required_etap == 2 else "Wymaga zatwierdzenia Porozumienia przez Zakład Pracy" %}
-                        <li>
-                        {% if not is_unlocked %}
-                            <a href="#" style="opacity: 0.6; cursor: not-allowed; text-decoration: none; color: #6c757d;" title="{{ locked_text }}" onclick="event.preventDefault()">
-                                <i class="bi bi-lock-fill me-1" style="font-size: 0.8rem;"></i> {{ name }}
-                            </a>
-                        {% else %}
-                            <a href="{{ url }}" class="{% if endpoint_keyword in request.path %}active{% endif %}">
-                                {{ name }}
-                            </a>
-                        {% endif %}
-                        </li>
-                    {% endmacro %}
-
                     {{ standard_link('/student/porozumienie', 'Porozumienie i Program (Zał. 1, 2)', 'porozumienie', 2) }}
                     {{ standard_link('/student/zal2a_harmonogram', 'Harmonogram (Zał. 2a)', 'zal2a_harmonogram', 3) }}
                     {{ standard_link('/student/zal3_karta', 'Karta Praktyki (Zał. 3)', 'zal3_karta', 3) }}
@@ -339,11 +339,14 @@
                             class="{% if 'uopz/zal2a_lista' in request.path %}active{% endif %}">Harmonogramy (Zał. 2a)</a></li>
                     <li><a href="{{ url_for('uopz.zal3_lista') }}"
                             class="{% if 'uopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}"
+                            class="{% if 'uopz/zal4_efekty' in request.path %}active{% endif %}">Efekty Uczenia (Zał. 4)</a></li>
                     <li><a href="{{ url_for('uopz.zal6_lista') }}"
                             class="{% if 'uopz/zal6_lista' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}"
+                            class="{% if 'uopz/zal7_sprawozdanie' in request.path or 'uopz/zal7a_sprawozdanie' in request.path %}active{% endif %}">Sprawozdania (Zał. 7, 7a)</a></li>
                     <li><a href="{{ url_for('uopz.zal8_lista') }}"
-                            class="{% if 'uopz/zal8_lista' in request.path %}active{% endif %}">Protokoły (Zał. 8)</a></li>
-                    <li><a href="#">Hospitacje</a></li>
+                            class="{% if 'uopz/zal8_lista' in request.path %}active{% endif %}">Protokoły (Zał. 8, 8a)</a></li>
                 </ul>
                 {% endif %}
 
@@ -448,10 +451,13 @@
                     <li><a href="{{ url_for('zopz.dashboard') }}"
                             class="{% if 'zopz/dashboard' in request.path %}active{% endif %}">Moi Praktykanci</a></li>
                     <li><a href="{{ url_for('zopz.dashboard') }}">Porozumienia i Programy (Zał. 1, 2)</a></li>
+                    <li><a href="{{ url_for('zopz.dashboard') }}">Harmonogramy (Zał. 2a)</a></li>
                     <li><a href="{{ url_for('zopz.zal3_lista') }}"
                             class="{% if 'zopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
+                    <li><a href="{{ url_for('zopz.dashboard') }}">Efekty Uczenia (Zał. 4)</a></li>
                     <li><a href="{{ url_for('zopz.dashboard') }}"
                             class="{% if 'zopz/dziennik' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>
+                    <li><a href="{{ url_for('zopz.dashboard') }}">Sprawozdania (Zał. 7)</a></li>
                 </ul>
                 {% endif %}
             </div>

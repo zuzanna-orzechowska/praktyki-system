@@ -29,12 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="ps-4">
-                            <strong>${p.student_imie} ${p.student_nazwisko}</strong><br>
-                            <small class="text-muted">Album: ${p.nr_albumu}</small>
-                        </td>
-                        <td><span class="badge bg-${badgeClass}">${p.status_porozumienia}</span></td>
-                        <td><small class="text-danger">${p.komentarz_zopz || ''}</small></td>
+                        <td class="fw-bold">${p.student_imie} ${p.student_nazwisko}</td>
+                        <td>${p.nr_albumu}</td>
+                        <td>${p.data_zlozenia || 'Brak'}</td>
                         <td class="text-center">
                             <a href="/dziekanat/weryfikuj_porozumienie/${p.praktyka_id}" class="btn btn-sm btn-primary">
                                 <i class="bi bi-search"></i> Zarządzaj
@@ -61,11 +58,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 podpisane.forEach(p => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="ps-4">
-                            <strong>${p.student_imie} ${p.student_nazwisko}</strong><br>
-                            <small class="text-muted">Album: ${p.nr_albumu}</small>
-                        </td>
-                        <td><span class="badge bg-success">${p.status_porozumienia}</span></td>
+                        <td class="fw-bold">${p.student_imie} ${p.student_nazwisko}</td>
+                        <td>${p.nr_albumu}</td>
+                        <td>${p.data_zlozenia || 'Brak'}</td>
                         <td class="text-center">
                             <a href="/dziekanat/weryfikuj_porozumienie/${p.praktyka_id}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-eye"></i> Podgląd
