@@ -149,10 +149,14 @@ def zal3_karta(student_id):
             except ValueError:
                 return jsonify({'success': False, 'message': 'Wprowadzono niepoprawny format oceny.'})
 
+    praktyka_dict = praktyka.to_dict()
+    if praktyka.zaklad:
+        praktyka_dict['zaklad'] = praktyka.zaklad.to_dict()
+
     return jsonify({
         'student': student.to_dict(),
         'uzytkownik': student.uzytkownik.to_dict(),
-        'praktyka': praktyka.to_dict(),
+        'praktyka': praktyka_dict,
         'uopz': current_user.to_dict(),
         'zopz': zopz.to_dict() if zopz else None,
         'porozumienie': porozumienie.to_dict() if porozumienie else None,

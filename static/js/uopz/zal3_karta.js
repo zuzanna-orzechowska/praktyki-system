@@ -144,10 +144,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const btnWydaj = document.getElementById('btn-wydaj');
+    const chkSkierowanie = document.getElementById('zloz-podpis-skierowanie');
+    
+    if (chkSkierowanie) {
+        chkSkierowanie.addEventListener('change', function() {
+            const podpisDiv = document.getElementById('val-skierowanie-podpis');
+            if (this.checked) {
+                podpisDiv.textContent = this.getAttribute('data-imienazwisko');
+            } else {
+                podpisDiv.textContent = '';
+            }
+        });
+    }
+
     if(btnWydaj) {
         btnWydaj.addEventListener('click', function (e) {
             e.preventDefault();
-            if (confirm("Czy na pewno chcesz wystawić i podpisać skierowanie na praktykę?")) {
+            if (!chkSkierowanie || !chkSkierowanie.checked) {
+                alert('Musisz złożyć podpis elektroniczny pod skierowaniem, aby je wystawić i wysłać do zakładu (ZOPZ).');
+                return;
+            }
+            if (confirm("Czy na pewno chcesz wystawić i podpisać skierowanie na praktykę? Zostanie ono przekazane do ZOPZ.")) {
                 sendAction({ akcja: 'wydaj_skierowanie' });
             }
         });
@@ -170,12 +187,17 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (checkboxPodpis && btnZapisz) {
             checkboxPodpis.addEventListener('change', function() {
+                const podpisDiv = document.getElementById('val-uopz-podpis');
                 if (this.checked) {
                     btnZapisz.innerHTML = '<i class="bi bi-send"></i> Wyślij do Dziekanatu';
                     btnZapisz.className = 'btn btn-success';
+                    document.getElementById('uopz-podpis-container').style.setProperty('display', 'flex', 'important');
+                    podpisDiv.textContent = this.getAttribute('data-imienazwisko');
                 } else {
                     btnZapisz.innerHTML = '<i class="bi bi-save"></i> Zapisz Kartę';
                     btnZapisz.className = 'btn btn-primary';
+                    document.getElementById('uopz-podpis-container').style.setProperty('display', 'none', 'important');
+                    podpisDiv.textContent = '';
                 }
             });
         }

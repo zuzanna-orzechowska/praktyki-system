@@ -72,22 +72,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Zgłoszenie
                     if (data.karta.podpis_zgloszenie) {
-                        document.getElementById('zgloszenie-actions').style.display = 'none';
-                        document.getElementById('zgloszenie-info').style.display = 'block';
+                        const zgActions = document.getElementById('zgloszenie-actions');
+                        if (zgActions) zgActions.style.display = 'none';
                         document.getElementById('val-zgloszenie-podpis').innerHTML = `${data.karta.podpis_zgloszenie}`;
                     } else {
-                        document.getElementById('zgloszenie-actions').style.display = 'block';
-                        document.getElementById('zgloszenie-info').style.display = 'none';
+                        const zgActions = document.getElementById('zgloszenie-actions');
+                        if (zgActions) zgActions.style.display = 'block';
                     }
 
                     // BHP
                     if (data.karta.podpis_bhp) {
-                        document.getElementById('bhp-actions').style.display = 'none';
-                        document.getElementById('bhp-info').style.display = 'block';
+                        const bhpActions = document.getElementById('bhp-actions');
+                        if (bhpActions) bhpActions.style.display = 'none';
                         document.getElementById('val-bhp-podpis').innerHTML = `${data.karta.podpis_bhp}`;
                     } else {
-                        document.getElementById('bhp-actions').style.display = 'block';
-                        document.getElementById('bhp-info').style.display = 'none';
+                        const bhpActions = document.getElementById('bhp-actions');
+                        if (bhpActions) bhpActions.style.display = 'block';
                     }
 
                     // UOPZ fields (read-only for ZOPZ)
@@ -157,16 +157,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.zal3Zopz = {
         potwierdzZgloszenie: function() {
+            const chk = document.getElementById('chk-podpis-zgloszenie');
+            if(!chk || !chk.checked) {
+                alert("Musisz złożyć podpis elektroniczny, aby zatwierdzić zgłoszenie.");
+                return;
+            }
             if(confirm("Potwierdzasz zgłoszenie się studenta?")) {
                 sendAction({ akcja: 'potwierdz_zgloszenie', zloz_podpis: true });
             }
         },
         potwierdzBhp: function() {
+            const chk = document.getElementById('chk-podpis-bhp');
+            if(!chk || !chk.checked) {
+                alert("Musisz złożyć podpis elektroniczny, aby zatwierdzić BHP.");
+                return;
+            }
             if(confirm("Potwierdzasz odbycie szkolenia BHP przez studenta?")) {
                 sendAction({ akcja: 'potwierdz_bhp', zloz_podpis: true });
             }
         }
     };
+
+    // Dynamic signatures for zgłoszenie and bhp
+    const chkZgloszenie = document.getElementById('chk-podpis-zgloszenie');
+    if (chkZgloszenie) {
+        chkZgloszenie.addEventListener('change', function() {
+            const podpisDiv = document.getElementById('val-zgloszenie-podpis');
+            if (this.checked) {
+                podpisDiv.textContent = this.getAttribute('data-imienazwisko');
+            } else {
+                podpisDiv.textContent = 'Brak podpisu';
+            }
+        });
+    }
+
+    const chkBhp = document.getElementById('chk-podpis-bhp');
+    if (chkBhp) {
+        chkBhp.addEventListener('change', function() {
+            const podpisDiv = document.getElementById('val-bhp-podpis');
+            if (this.checked) {
+                podpisDiv.textContent = this.getAttribute('data-imienazwisko');
+            } else {
+                podpisDiv.textContent = 'Brak podpisu';
+            }
+        });
+    }
 
     const formOceny = document.getElementById('form-oceny-zopz');
     if(formOceny) {
@@ -175,12 +210,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (checkboxPodpis && btnZapisz) {
             checkboxPodpis.addEventListener('change', function() {
+                const podpisDiv = document.getElementById('val-zopz-podpis');
+                const zaswiadczeniePodpisDiv = document.getElementById('val-zaswiadczenie-podpis');
                 if (this.checked) {
                     btnZapisz.innerHTML = '<i class="bi bi-send"></i> Wyślij do Uczelni';
                     btnZapisz.className = 'btn btn-success';
+                    document.getElementById('zopz-podpis-container').style.setProperty('display', 'flex', 'important');
+                    const imienazwisko = this.getAttribute('data-imienazwisko');
+                    podpisDiv.textContent = imienazwisko;
+                    if (zaswiadczeniePodpisDiv) zaswiadczeniePodpisDiv.textContent = imienazwisko;
                 } else {
                     btnZapisz.innerHTML = '<i class="bi bi-save"></i> Zapisz Kartę';
                     btnZapisz.className = 'btn btn-primary';
+                    document.getElementById('zopz-podpis-container').style.setProperty('display', 'none', 'important');
+                    podpisDiv.textContent = '';
+                    if (zaswiadczeniePodpisDiv) zaswiadczeniePodpisDiv.textContent = '';
                 }
             });
         }

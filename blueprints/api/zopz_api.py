@@ -4,7 +4,7 @@ from extensions import db
 from models import (
     Praktyka, ZakladPracy, Porozumienie, Student, Dokument, 
     ProgramPraktyki, HarmonogramPraktyki, Zal2aPodpisy, Powiadomienie,
-    KartaPraktyki
+    KartaPraktyki, Uzytkownik
 )
 from datetime import date
 zopz_api_bp = Blueprint('zopz_api', __name__, url_prefix='/zopz')
@@ -251,6 +251,9 @@ def zal3_karta(student_id):
     if not dokument:
         return jsonify({'error': 'Uczelnia nie utworzyła jeszcze karty praktyki (Brak Zał. 3).'}), 404
         
+    uopz = Uzytkownik.query.get(praktyka.uopz_id) if praktyka.uopz_id else None
+    porozumienie = Porozumienie.query.filter_by(praktyka_id=praktyka.id).first()
+        
     karta = KartaPraktyki.query.filter_by(dokument_id=dokument.id).first()
     if not karta:
         return jsonify({'error': 'Brak wpisów w karcie praktyki.'}), 404
@@ -304,13 +307,19 @@ def zal3_karta(student_id):
             except ValueError:
                 return jsonify({'success': False, 'message': 'Wprowadzono niepoprawny format oceny.'})
 
+    praktyka_dict = praktyka.to_dict()
+    if praktyka.zaklad:
+        praktyka_dict['zaklad'] = praktyka.zaklad.to_dict()
+
     return jsonify({
         'student': student.to_dict(),
         'uzytkownik': student.uzytkownik.to_dict(),
-        'praktyka': praktyka.to_dict(),
+        'praktyka': praktyka_dict,
         'dokument': dokument.to_dict(),
         'karta': karta.to_dict(),
-        'zopz': current_user.to_dict()
+        'zopz': current_user.to_dict(),
+        'uopz': uopz.to_dict() if uopz else None,
+        'porozumienie': porozumienie.to_dict() if porozumienie else None
     })
 
 @zopz_api_bp.route('/zal3_lista', methods=['GET'])

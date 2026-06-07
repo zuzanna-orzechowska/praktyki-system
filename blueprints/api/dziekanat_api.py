@@ -566,10 +566,14 @@ def weryfikuj_zal3(praktyka_id):
             'data_podpisania': porozumienie.data_podpisania.strftime('%Y-%m-%d') if porozumienie.data_podpisania else None
         }
 
+    praktyka_dict = praktyka.to_dict()
+    if praktyka.zaklad:
+        praktyka_dict['zaklad'] = praktyka.zaklad.to_dict()
+
     return jsonify({
         'dokument': dokument.to_dict(),
         'karta': karta.to_dict() if karta else None,
-        'praktyka': praktyka.to_dict(),
+        'praktyka': praktyka_dict,
         'student': student.to_dict(),
         'uzytkownik': student.uzytkownik.to_dict(),
         'porozumienie': porozumienie_data

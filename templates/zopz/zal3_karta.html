@@ -129,7 +129,7 @@
                 Dyrektor Instytutu<br>lub osoba upoważniona
             </div>
             <div class="w-50 p-4 karta-border-left d-flex align-items-center justify-content-center flex-column">
-                <div style="height: 40px; font-family: 'Brush Script MT', cursive; font-size: 20px; color: #000;" id="val-skierowanie-podpis">
+                <div style="border-bottom: 1px dotted #000; height: 30px; width: 80%; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 1.1rem; text-align: center;" id="val-skierowanie-podpis">
                 </div>
                 <div class="karta-signature-line mt-2">(podpis cyfrowy)</div>
             </div>
@@ -150,20 +150,32 @@
             <div class="d-flex justify-content-between align-items-center mb-4 border p-3 rounded bg-light">
                 <div>
                     <p class="fw-bold mb-0">Potwierdzenie zgłoszenia się studenta na praktykę:</p>
+                    <div id="zgloszenie-actions" style="display: none;" class="mt-2 text-start">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="chk-podpis-zgloszenie" data-imienazwisko="{{ current_user.imie }} {{ current_user.nazwisko }}">
+                            <label class="form-check-label fw-bold small text-primary" for="chk-podpis-zgloszenie">Złóż podpis</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-success mt-1 zopz-action" id="btn-podpis-zgloszenie" onclick="zal3Zopz.potwierdzZgloszenie()">Zatwierdź zgłoszenie</button>
+                    </div>
                 </div>
                 <div class="text-end">
-                    <div style="font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zgloszenie-podpis">Brak podpisu</div>
-                    <button class="btn btn-sm btn-outline-success mt-1 zopz-action" id="btn-podpis-zgloszenie" style="display:none;" onclick="podpiszSekcje('zgloszenie')">Złóż podpis elektroniczny</button>
+                    <div style="border-bottom: 1px dotted #000; height: 30px; min-width: 150px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 1.1rem; text-align: center;" id="val-zgloszenie-podpis">Brak podpisu</div>
                 </div>
             </div>
             
             <div class="d-flex justify-content-between align-items-center border p-3 rounded bg-light">
                 <div>
                     <p class="fw-bold mb-0">Potwierdzenie odbycia szkolenia BHP:</p>
+                    <div id="bhp-actions" style="display: none;" class="mt-2 text-start">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="chk-podpis-bhp" data-imienazwisko="{{ current_user.imie }} {{ current_user.nazwisko }}">
+                            <label class="form-check-label fw-bold small text-primary" for="chk-podpis-bhp">Złóż podpis</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-success mt-1 zopz-action" id="btn-podpis-bhp" onclick="zal3Zopz.potwierdzBhp()">Zatwierdź BHP</button>
+                    </div>
                 </div>
                 <div class="text-end">
-                    <div style="font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-bhp-podpis">Brak podpisu</div>
-                    <button class="btn btn-sm btn-outline-success mt-1 zopz-action" id="btn-podpis-bhp" style="display:none;" onclick="podpiszSekcje('bhp')">Złóż podpis elektroniczny</button>
+                    <div style="border-bottom: 1px dotted #000; height: 30px; min-width: 150px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 1.1rem; text-align: center;" id="val-bhp-podpis">Brak podpisu</div>
                 </div>
             </div>
         </div>
@@ -171,9 +183,9 @@
 
     <!-- Zaświadczenie -->
     <form id="form-oceny-zopz">
-        <div class="karta-box mt-4 border-dark" style="border-width: 2px;">
+        <div class="karta-box mt-4">
             <div class="karta-box-inner text-center bg-light">
-                <h5 class="mb-0">ZAŚWIADCZENIE I OCENA (Wypełnia ZOPZ)</h5>
+                <h5 class="mb-0 text-uppercase">Zaświadczenie i ocena (Wypełnia ZOPZ)</h5>
             </div>
             <div class="karta-box-inner karta-border-top">
                 <p>Zaświadczam, że student <span class="data-value fs-5" id="val-student-imienazwisko2"></span> odbył praktykę zawodową w:</p>
@@ -190,7 +202,7 @@
 
                 <div class="d-flex justify-content-end pb-2 pt-2 px-4">
                     <div class="d-flex flex-column align-items-center">
-                        <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zaswiadczenie-podpis">
+                        <div style="border-bottom: 1px dotted #000; height: 30px; width: 250px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 1.1rem; text-align: center;" id="val-zaswiadczenie-podpis">
                         </div>
                         <div class="karta-signature-line mt-3">(pieczęć i podpis kierownika zakładu)</div>
                     </div>
@@ -199,7 +211,7 @@
 
             <!-- Ocena ZOPZ -->
             <div class="karta-box-inner karta-border-top bg-light">
-                <h5 class="m-0"><i class="bi bi-building"></i> Ocena z zakładu pracy</h5>
+                <h5 class="m-0">Ocena z zakładu pracy</h5>
             </div>
             <div class="karta-box-inner karta-border-top">
                 <div class="row mb-3 align-items-center">
@@ -219,7 +231,7 @@
                 
                 <div id="zopz-form-actions" class="p-3 border rounded bg-white mt-4 shadow-sm">
                     <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="zloz-podpis-zopz">
+                        <input class="form-check-input" type="checkbox" id="zloz-podpis-zopz" data-imienazwisko="{{ current_user.imie }} {{ current_user.nazwisko }}">
                         <label class="form-check-label fw-bold" for="zloz-podpis-zopz">
                             Złóż podpis elektroniczny i ostatecznie zatwierdź ocenę oraz zaświadczenie
                         </label>
@@ -230,7 +242,7 @@
 
                 <div class="d-flex justify-content-end align-items-end mb-2 mt-4" id="zopz-podpis-container" style="display: none !important;">
                     <div class="d-flex flex-column align-items-center">
-                        <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #000;" id="val-zopz-podpis">
+                        <div style="border-bottom: 1px dotted #000; height: 30px; width: 250px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 1.1rem; text-align: center;" id="val-zopz-podpis">
                         </div>
                         <div class="karta-signature-line mt-3">(podpis zakładowego opiekuna)</div>
                     </div>
@@ -241,8 +253,8 @@
 
     <!-- Ocena UOPZ -->
     <div class="karta-box mt-4">
-        <div class="karta-box-inner karta-border-top bg-light">
-            <h5 class="m-0 text-primary"><i class="bi bi-mortarboard"></i> Ocena Uczelnianego Opiekuna (UOPZ)</h5>
+        <div class="karta-box-inner karta-border-top bg-light text-center">
+            <h5 class="m-0 text-uppercase">Ocena Uczelnianego Opiekuna (Wypełnia UOPZ)</h5>
         </div>
         <div class="karta-box-inner karta-border-top opacity-75">
             <div class="row mb-3">
@@ -260,7 +272,7 @@
             
             <div class="d-flex justify-content-end align-items-end mb-2 mt-4">
                 <div class="d-flex flex-column align-items-center">
-                    <div style="height: 30px; font-family: 'Brush Script MT', cursive; font-size: 18px; color: #004a99;" id="val-uopz-podpis">
+                    <div style="border-bottom: 1px dotted #000; height: 30px; width: 250px; margin-bottom: 5px; font-family: cursive; color: #004a99; font-size: 1.1rem; text-align: center;" id="val-uopz-podpis">
                     </div>
                     <div class="karta-signature-line mt-3">(podpis uczelnianego opiekuna)</div>
                 </div>
