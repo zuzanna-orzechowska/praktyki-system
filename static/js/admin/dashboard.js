@@ -112,23 +112,27 @@ function loadDashboard() {
                 zgloszeniaContainer.style.display = 'none';
             }
             
-            // Pracownicy
-            const pracownicy = data.pracownicy || [];
-            const tablePracownicy = document.getElementById('pracownicy-table');
-            tablePracownicy.innerHTML = '';
-            if (pracownicy.length > 0) {
-                pracownicy.forEach(u => {
-                    tablePracownicy.innerHTML += `
-                        <tr>
-                            <td>${u.imie} ${u.nazwisko}</td>
-                            <td>${u.email}</td>
-                            <td><span class="badge bg-secondary">${u.rola}</span></td>
-                            <td>${u.data_utworzenia}</td>
-                        </tr>
+            // Uzytkownicy
+            const uzytkownicy = data.uzytkownicy || [];
+            const tableUzytkownicy = document.getElementById('uzytkownicy-table');
+            tableUzytkownicy.innerHTML = '';
+            if (uzytkownicy.length > 0) {
+                uzytkownicy.forEach(u => {
+                    const statusBadge = u.aktywny === 1 ? '<span class="badge bg-success">Aktywny</span>' : '<span class="badge bg-danger">Zablokowany</span>';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${u.imie} ${u.nazwisko}</td>
+                        <td>${u.email}</td>
+                        <td><span class="badge bg-secondary">${u.rola}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="otworzModalEdycjiUzytkownika(${u.id}, '${u.imie}', '${u.nazwisko}', '${u.email}', '${u.rola}', ${u.aktywny}, ${u.is_me})">Edytuj</button>
+                        </td>
                     `;
+                    tableUzytkownicy.appendChild(tr);
                 });
             } else {
-                tablePracownicy.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Brak pracowników.</td></tr>';
+                tableUzytkownicy.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Brak użytkowników.</td></tr>';
             }
             
             // ZOPZ
@@ -192,6 +196,60 @@ function akceptujZgloszenieZopz(oswiadczenie_id) {
             alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
             // Jeśli nie powiodło się, bo np. już istnieje, nadal przeładujmy by zniknęło
             loadDashboard();
+        }
+        window.scrollTo(0,0);
+    })
+    .catch(err => console.error(err));
+}
+
+function otworzModalEdycjiUzytkownika(id, imie, nazwisko, email, rola, aktywny, is_me) {
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserImie').value = imie;
+    document.getElementById('editUserNazwisko').value = nazwisko;
+    document.getElementById('editUserEmail').value = email;
+    document.getElementById('editUserRola').value = rola;
+    document.getElementById('editUserAktywny').value = aktywny;
+    document.getElementById('editUserHaslo').value = '';
+    
+    // Jeśli to moje konto, nie mogę odebrać sobie uprawnień ani się zablokować
+    document.getElementById('editUserRola').disabled = is_me;
+    document.getElementById('editUserAktywny').disabled = is_me;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    modal.show();
+}
+
+function zapiszEdycjeUzytkownika() {
+    const id = document.getElementById('editUserId').value;
+    const data = {
+        imie: document.getElementById('editUserImie').value,
+        nazwisko: document.getElementById('editUserNazwisko').value,
+        email: document.getElementById('editUserEmail').value,
+        rola: document.getElementById('editUserRola').value,
+        aktywny: parseInt(document.getElementById('editUserAktywny').value)
+    };
+    
+    const haslo = document.getElementById('editUserHaslo').value;
+    if (haslo) {
+        data.haslo = haslo;
+    }
+    
+    fetch(`/api/admin/uzytkownik/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+        modal.hide();
+        
+        const alerts = document.getElementById('alerts-container');
+        if (data.success) {
+            alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            loadDashboard();
+        } else {
+            alerts.innerHTML = `<div class="alert alert-danger">${data.error || data.message}</div>`;
         }
         window.scrollTo(0,0);
     })

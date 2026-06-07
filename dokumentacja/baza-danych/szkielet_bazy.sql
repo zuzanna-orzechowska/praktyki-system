@@ -313,6 +313,22 @@ CREATE TABLE oswiadczenie (
 -- 15. PROGRAM PRAKTYKI (Zał. 2a)
 -- ------------------------------------------------------------
 CREATE TABLE program_praktyki (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    praktyka_id INTEGER NOT NULL,
+    tresc TEXT NOT NULL,
+    data_utworzenia DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (praktyka_id) REFERENCES praktyka(id) ON DELETE CASCADE
+);
+
+CREATE TABLE log_systemowy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uzytkownik_id INTEGER,
+    akcja VARCHAR(500) NOT NULL,
+    data_utworzenia DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownik(id) ON DELETE SET NULL
+);
+
+CREATE TABLE program_praktyki_data (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     dokument_id     INTEGER NOT NULL,
     kod_efektu      TEXT NOT NULL,

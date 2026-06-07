@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-clock-history me-2"></i> Logi Systemowe</h2>
+<p class="text-muted mb-4">Podgląd ostatnich zdarzeń i operacji wykonywanych w systemie.</p>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 20%;">Kiedy</th>
+                        <th style="width: 30%;">Kto</th>
+                        <th style="width: 50%;">Akcja</th>
+                    </tr>
+                </thead>
+                <tbody id="logi-table">
+                    <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/admin/logi')
+        .then(response => response.json())
+        .then(data => {
+            const logi = data.logi || [];
+            const tableLogi = document.getElementById('logi-table');
+            tableLogi.innerHTML = '';
+            
+            if (logi.length > 0) {
+                logi.forEach(l => {
+                    tableLogi.innerHTML += `
+                        <tr>
+                            <td class="text-muted small">${l.kiedy}</td>
+                            <td class="fw-bold">${l.kto}</td>
+                            <td>${l.akcja}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableLogi.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Brak logów systemowych.</td></tr>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('logi-table').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Błąd podczas pobierania logów.</td></tr>';
+        });
+});
+</script>
+{% endblock %}

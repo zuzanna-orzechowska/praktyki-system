@@ -13,7 +13,7 @@
         <div class="list-group shadow-sm">
             {% if praktyka and praktyka.dokumenty %}
                 {% for doc in praktyka.dokumenty %}
-                    {% if doc.typ_zalacznika in ['ZAL4B', 'ZAL4A', 'ZAL7A', 'ZAL8A'] %}
+                    {% if doc.typ_zalacznika in ['ZAL1', 'ZAL2', 'ZAL2A', 'ZAL3', 'ZAL4', 'ZAL4A', 'ZAL4B', 'ZAL5', 'ZAL6', 'ZAL7', 'ZAL7A', 'ZAL8', 'ZAL8A', 'ZAL9'] %}
                     <a href="{{ url_for('student.generate_pdf', typ_dokumentu=doc.typ_zalacznika) }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
                         <div class="d-flex align-items-center">
                             <div class="bg-light text-primary rounded p-3 me-3">
@@ -21,10 +21,21 @@
                             </div>
                             <div>
                                 <h5 class="mb-1 text-dark" style="font-weight: 500;">
-                                    {% if doc.typ_zalacznika == 'ZAL4B' %}Wniosek o zaliczenie (Zał. 4b)
+                                    {% if doc.typ_zalacznika == 'ZAL1' %}Porozumienie (Zał. 1)
+                                    {% elif doc.typ_zalacznika == 'ZAL2' %}Program Praktyki (Zał. 2)
+                                    {% elif doc.typ_zalacznika == 'ZAL2A' %}Program i Harmonogram (Zał. 2a)
+                                    {% elif doc.typ_zalacznika == 'ZAL3' %}Skierowanie i Karta Praktyki (Zał. 3)
+                                    {% elif doc.typ_zalacznika == 'ZAL4' %}Efekty Uczenia Się (Zał. 4)
                                     {% elif doc.typ_zalacznika == 'ZAL4A' %}Decyzja Dyrektora (Zał. 4a)
+                                    {% elif doc.typ_zalacznika == 'ZAL4B' %}Wniosek o zaliczenie (Zał. 4b)
+                                    {% elif doc.typ_zalacznika == 'ZAL5' %}Ankieta (Zał. 5)
+                                    {% elif doc.typ_zalacznika == 'ZAL6' %}Dziennik Praktyk (Zał. 6)
+                                    {% elif doc.typ_zalacznika == 'ZAL7' %}Sprawozdanie (Zał. 7)
                                     {% elif doc.typ_zalacznika == 'ZAL7A' %}Sprawozdanie końcowe (Zał. 7a)
-                                    {% elif doc.typ_zalacznika == 'ZAL8A' %}Protokół zaliczenia (Zał. 8/8a)
+                                    {% elif doc.typ_zalacznika == 'ZAL8' %}Protokół zaliczenia (Zał. 8)
+                                    {% elif doc.typ_zalacznika == 'ZAL8A' %}Protokół zaliczenia (Zał. 8a)
+                                    {% elif doc.typ_zalacznika == 'ZAL9' %}Oświadczenie Zakładu (Zał. 9)
+                                    {% else %}Dokument ({{ doc.typ_zalacznika }})
                                     {% endif %}
                                 </h5>
                                 <small class="text-muted">Kliknij, aby otworzyć dokument PDF na podstawie Twoich danych.</small>

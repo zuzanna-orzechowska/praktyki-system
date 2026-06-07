@@ -478,6 +478,9 @@ def zal9_oswiadczenie():
             dokument.status = 'Submitted'
             praktyka.status = 'OCZEKUJE_NA_ZAL9' 
             
+            from models import dodaj_log
+            dodaj_log(current_user.id, "Złożono wniosek o akceptację Zakładu Pracy (Zał. 9)")
+            
             from models import Uzytkownik, Powiadomienie
             safe_nazwisko = current_user.nazwisko.split('(')[0].strip()
             dziekanat_users = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'dyrektor'])).all()

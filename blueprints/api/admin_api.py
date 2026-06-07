@@ -15,7 +15,8 @@ def dashboard():
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').all()
-    pracownicy = Uzytkownik.query.filter(Uzytkownik.rola.in_(['dziekanat', 'uopz', 'admin', 'dyrektor', 'pracownik'])).all()
+    # Pobieramy wszystkich użytkowników oprócz oczekujących
+    uzytkownicy = Uzytkownik.query.filter(Uzytkownik.rola != 'oczekujacy_pracownik').all()
     opiekunowie = Uzytkownik.query.filter_by(rola='zopz').all()
     
     zgloszenia_zopz = Oswiadczenie.query.join(Dokument).filter(Dokument.status == 'AwaitingAccount').all()
@@ -27,6 +28,8 @@ def dashboard():
             'imie': u.imie,
             'nazwisko': u.nazwisko,
             'rola': u.rola,
+            'aktywny': u.aktywny,
+            'is_me': u.id == current_user.id,
             'auth_provider': u.auth_provider,
             'data_utworzenia': u.data_utworzenia.strftime('%Y-%m-%d %H:%M') if getattr(u, 'data_utworzenia', None) else ''
         }
@@ -47,7 +50,7 @@ def dashboard():
 
     return jsonify({
         'oczekujacy': [format_uzytkownik(u) for u in oczekujacy],
-        'pracownicy': [format_uzytkownik(u) for u in pracownicy],
+        'uzytkownicy': [format_uzytkownik(u) for u in uzytkownicy],
         'opiekunowie': [format_uzytkownik(u) for u in opiekunowie],
         'zgloszenia_zopz': [format_zgloszenie(z) for z in zgloszenia_zopz]
     })
@@ -191,3 +194,89 @@ def stworz_zopz():
         return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ! Wysłano e-mail z tymczasowym hasłem na adres {email}.'})
     except Exception as e:
         return jsonify({'success': True, 'message': f'Utworzono konto ZOPZ, ale wystąpił błąd przy wysyłaniu e-maila: {e}'})
+
+@admin_api_bp.route('/uzytkownik/<int:id>', methods=['PUT'])
+@login_required
+def edytuj_uzytkownika(id):
+    if current_user.rola != 'admin':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    user = Uzytkownik.query.get_or_404(id)
+    data = request.json
+    
+    if user.id == current_user.id:
+        if 'rola' in data and data['rola'] != 'admin':
+            return jsonify({'success': False, 'message': 'Nie możesz odebrać sobie uprawnień administratora.'})
+        if 'aktywny' in data and int(data['aktywny']) == 0:
+            return jsonify({'success': False, 'message': 'Nie możesz zablokować własnego konta.'})
+    
+    if 'imie' in data: user.imie = data['imie']
+    if 'nazwisko' in data: user.nazwisko = data['nazwisko']
+    if 'email' in data: user.email = data['email']
+    if 'rola' in data: user.rola = data['rola']
+    if 'aktywny' in data: user.aktywny = int(data['aktywny'])
+    
+    if 'haslo' in data and data['haslo'].strip():
+        user.set_password(data['haslo'].strip())
+    
+    from models import dodaj_log
+    dodaj_log(current_user.id, f"Zmieniono dane użytkownika ID:{user.id} ({user.imie} {user.nazwisko}). Nowa rola: {user.rola}, Aktywny: {user.aktywny}")
+    
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Zaktualizowano dane użytkownika.'})
+
+@admin_api_bp.route('/praktyki', methods=['GET'])
+@login_required
+def get_praktyki():
+    from models import Praktyka
+    if current_user.rola != 'admin':
+        return jsonify({'error': 'Odmowa dostępu'}), 403
+        
+    praktyki = Praktyka.query.all()
+    wynik = []
+    
+    for p in praktyki:
+        if not p.student or not p.student.uzytkownik:
+            continue
+        
+        student_imie = p.student.uzytkownik.imie
+        student_nazwisko = p.student.uzytkownik.nazwisko
+        
+        zaklad_nazwa = p.zaklad.nazwa if p.zaklad else 'Brak'
+        
+        uopz = Uzytkownik.query.get(p.uopz_id) if p.uopz_id else None
+        uopz_nazwa = f"{uopz.imie} {uopz.nazwisko}" if uopz else 'Nie przypisano'
+        
+        wynik.append({
+            'id': p.id,
+            'student_id': p.student_id,
+            'student': f"{student_imie} {student_nazwisko} ({p.student.nr_albumu if p.student else ''})",
+            'zaklad': zaklad_nazwa,
+            'uopz': uopz_nazwa,
+            'status': p.status,
+            'data_start': p.data_start.isoformat() if p.data_start else '',
+            'data_end': p.data_end.isoformat() if p.data_end else ''
+        })
+        
+    return jsonify({'praktyki': wynik})
+
+@admin_api_bp.route('/logi', methods=['GET'])
+@login_required
+def logi():
+    if current_user.rola != 'admin':
+        return jsonify({'error': 'Brak uprawnień'}), 403
+        
+    from models import LogSystemowy
+    logi_z_bazy = LogSystemowy.query.order_by(LogSystemowy.data_utworzenia.desc()).limit(100).all()
+    
+    wynik = []
+    for log in logi_z_bazy:
+        uzytkownik = f"{log.uzytkownik.imie} {log.uzytkownik.nazwisko} ({log.uzytkownik.email})" if log.uzytkownik else "System / Nieznany"
+        wynik.append({
+            'id': log.id,
+            'kiedy': log.data_utworzenia.strftime('%Y-%m-%d %H:%M:%S') if log.data_utworzenia else '',
+            'kto': uzytkownik,
+            'akcja': log.akcja
+        })
+        
+    return jsonify({'logi': wynik})

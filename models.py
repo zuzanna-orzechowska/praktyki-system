@@ -1,6 +1,6 @@
 from extensions import db
 from flask_login import UserMixin
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -355,3 +355,26 @@ class Ankieta(db.Model, DictSerializable):
     semestr = db.Column(db.Integer, nullable=False)
     liczba_godzin = db.Column(db.Integer, nullable=False)
     data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
+
+class LogSystemowy(db.Model, DictSerializable):
+    __tablename__ = 'log_systemowy'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    uzytkownik_id = db.Column(db.Integer, db.ForeignKey('uzytkownik.id'), nullable=True)
+    akcja = db.Column(db.String(500), nullable=False)
+    data_utworzenia = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    uzytkownik = db.relationship('Uzytkownik', backref='logi_systemowe')
+
+def dodaj_log(uzytkownik_id, akcja):
+    try:
+        # Usuń logi starsze niż 30 dni
+        trzydziesci_dni_temu = datetime.utcnow() - timedelta(days=30)
+        LogSystemowy.query.filter(LogSystemowy.data_utworzenia < trzydziesci_dni_temu).delete()
+
+        nowy_log = LogSystemowy(uzytkownik_id=uzytkownik_id, akcja=akcja)
+        db.session.add(nowy_log)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Błąd zapisu loga: {str(e)}")

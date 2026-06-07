@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from functools import wraps
 import os
 from extensions import login_manager, db, oauth
-from models import Uzytkownik, Student
+from models import Uzytkownik, Student, dodaj_log
 from werkzeug.security import check_password_hash
 
 auth_bp = Blueprint('auth', __name__)
@@ -73,6 +73,10 @@ def login():
             if user.check_password(password):
                 if user.aktywny == 1:
                     login_user(user)
+                    
+                    from models import dodaj_log
+                    dodaj_log(user.id, "Zalogowano do systemu (hasło)")
+                    
                     flash('Zalogowano pomyślnie.', 'success')
                     if user.wymaga_zmiany_hasla:
                         return redirect(url_for('auth.zmien_haslo'))
@@ -181,6 +185,7 @@ def auth_callback(provider):
         return redirect(url_for('auth.login'))
 
     login_user(user)
+    dodaj_log(user.id, f"Zalogowano do systemu ({provider})")
     
     if user.rola in ['dziekanat', 'dyrektor']:
         return redirect(url_for('dziekanat.dashboard'))
@@ -198,6 +203,7 @@ def auth_callback(provider):
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    dodaj_log(current_user.id, "Wylogowano z systemu")
     logout_user()
     return redirect(url_for('auth.login'))
 

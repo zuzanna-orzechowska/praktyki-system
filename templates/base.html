@@ -433,9 +433,10 @@
                 <div class="sidebar-section-title mt-4">Panel Administratora</div>
                 <ul class="sidebar-menu">
                     <li><a href="{{ url_for('admin.dashboard') }}">Zarządzaj kontami
-                    {% set pending = pending_accounts_count() %}
                     <span class="badge bg-danger ms-2" id="nav-admin-badge" {% if pending == 0 %}style="display: none;"{% endif %}>{{ pending }}</span>
                     </a></li>
+                    <li><a href="{{ url_for('admin.praktyki_lista') }}" class="{% if request.endpoint == 'admin.praktyki_lista' %}active{% endif %}">Studenci</a></li>
+                    <li><a href="{{ url_for('admin.logi') }}" class="{% if request.endpoint == 'admin.logi' %}active{% endif %}">Logi Systemowe</a></li>
                 </ul>
                 {% endif %}
 

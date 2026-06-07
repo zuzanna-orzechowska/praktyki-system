@@ -13,7 +13,7 @@ uopz_api_bp = Blueprint('uopz_api', __name__, url_prefix='/uopz')
 @uopz_api_bp.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    if current_user.rola != 'uopz':
+    if current_user.rola not in ['uopz', 'admin']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
 
     praktyki = Praktyka.query.filter_by(uopz_id=current_user.id).all()
@@ -51,13 +51,13 @@ def dashboard():
 @uopz_api_bp.route('/teczka/<int:student_id>', methods=['GET'])
 @login_required
 def teczka(student_id):
-    if current_user.rola != 'uopz':
+    if current_user.rola not in ['uopz', 'admin']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
 
     student = Student.query.get_or_404(student_id)
-    praktyka = Praktyka.query.filter_by(student_id=student.id, uopz_id=current_user.id).first()
+    praktyka = Praktyka.query.filter_by(student_id=student.id).first()
 
-    if not praktyka:
+    if not praktyka or (praktyka.uopz_id != current_user.id and current_user.rola != 'admin'):
         return jsonify({'error': 'Brak dostępu do tego studenta lub brak przypisanej praktyki.'}), 403
 
     dokumenty = Dokument.query.filter_by(praktyka_id=praktyka.id).all()
@@ -74,7 +74,7 @@ def teczka(student_id):
 @uopz_api_bp.route('/zal3_karta/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal3_karta(student_id):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Odmowa dostępu'}), 403
 
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
@@ -168,7 +168,7 @@ def zal3_karta(student_id):
 @uopz_api_bp.route('/zal2a_harmonogram/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal2a_harmonogram(student_id):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Odmowa dostępu'}), 403
 
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
@@ -262,7 +262,7 @@ def zal2a_harmonogram(student_id):
 @uopz_api_bp.route('/zal4_efekty/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal4_efekty(student_id):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Odmowa dostępu'}), 403
 
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
@@ -301,7 +301,7 @@ def zal7a_sprawozdanie(student_id):
     return handle_sprawozdanie(student_id, 'ZAL7A')
 
 def handle_sprawozdanie(student_id, typ):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Odmowa dostępu'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Odmowa dostępu'}), 403
 
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
@@ -356,7 +356,7 @@ def handle_sprawozdanie(student_id, typ):
 @uopz_api_bp.route('/zal2a_lista', methods=['GET'])
 @login_required
 def zal2a_lista():
-    if current_user.rola != 'uopz':
+    if current_user.rola not in ['uopz', 'admin']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     praktyki = Praktyka.query.filter_by(uopz_id=current_user.id).all()
@@ -399,7 +399,7 @@ def zal2a_lista():
 @uopz_api_bp.route('/zal3_lista', methods=['GET'])
 @login_required
 def zal3_lista():
-    if current_user.rola != 'uopz':
+    if current_user.rola not in ['uopz', 'admin']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     praktyki = Praktyka.query.filter_by(uopz_id=current_user.id).all()
@@ -444,7 +444,7 @@ def zal3_lista():
 @uopz_api_bp.route('/zal6_lista', methods=['GET'])
 @login_required
 def zal6_lista():
-    if current_user.rola != 'uopz':
+    if current_user.rola not in ['uopz', 'admin']:
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     praktyki = Praktyka.query.filter_by(uopz_id=current_user.id).all()
@@ -489,7 +489,7 @@ def zal6_lista():
 @uopz_api_bp.route('/dziennik/<int:student_id>', methods=['GET'])
 @login_required
 def dziennik_get(student_id):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Brak uprawnień'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Brak uprawnień'}), 403
     from models import Student, Praktyka, Dokument, WpisDziennika
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
@@ -510,7 +510,7 @@ def dziennik_get(student_id):
 @uopz_api_bp.route('/dziennik/<int:student_id>/zatwierdz', methods=['POST'])
 @login_required
 def zatwierdz_dziennik(student_id):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Brak uprawnień'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Brak uprawnień'}), 403
     from models import Student, Praktyka, Dokument
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
@@ -525,7 +525,7 @@ def zatwierdz_dziennik(student_id):
 @uopz_api_bp.route('/dziennik/<int:student_id>/odrzuc', methods=['POST'])
 @login_required
 def odrzuc_dziennik(student_id):
-    if current_user.rola != 'uopz': return jsonify({'error': 'Brak uprawnień'}), 403
+    if current_user.rola not in ['uopz', 'admin']: return jsonify({'error': 'Brak uprawnień'}), 403
     from models import Student, Praktyka, Dokument, Powiadomienie
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()

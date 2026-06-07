@@ -224,6 +224,9 @@ def weryfikuj_zal9(id):
             )
             db.session.add(notif_s)
             
+            from models import dodaj_log
+            dodaj_log(current_user.id, f"Zatwierdzono Oświadczenie (Zał. 9) dla {student.uzytkownik.imie} {student.uzytkownik.nazwisko}")
+            
             db.session.commit()
             return jsonify({'success': True, 'message': f'Oświadczenie studenta {student.uzytkownik.nazwisko} zostało zatwierdzone. Dane przekazano do IT.'})
             
@@ -239,6 +242,9 @@ def weryfikuj_zal9(id):
                 link="/student/zal9_oswiadczenie"
             )
             db.session.add(notif_s)
+            
+            from models import dodaj_log
+            dodaj_log(current_user.id, f"Odrzucono Oświadczenie (Zał. 9) dla {student.uzytkownik.imie} {student.uzytkownik.nazwisko}")
             
             db.session.commit()
             return jsonify({'success': True, 'message': 'Oświadczenie odrzucone do poprawy przez studenta.'})

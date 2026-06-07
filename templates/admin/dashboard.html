@@ -17,8 +17,8 @@
         </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pracownicy" type="button" role="tab">
-            Pracownicy Uczelni
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#uzytkownicy" type="button" role="tab">
+            Zarządzanie Użytkownikami
         </button>
     </li>
     <li class="nav-item">
@@ -66,19 +66,20 @@
         </div>
     </div>
 
-    <!-- Zakładka: Pracownicy -->
-    <div class="tab-pane fade" id="pracownicy" role="tabpanel">
+    <!-- Zakładka: Użytkownicy -->
+    <div class="tab-pane fade" id="uzytkownicy" role="tabpanel">
         <table class="table align-middle">
             <thead>
                 <tr>
                     <th>Imię i Nazwisko</th>
                     <th>E-mail</th>
                     <th>Rola</th>
-                    <th>Konto utworzono</th>
+                    <th>Status</th>
+                    <th>Akcje</th>
                 </tr>
             </thead>
-            <tbody id="pracownicy-table">
-                <tr><td colspan="4" class="text-center">Ładowanie...</td></tr>
+            <tbody id="uzytkownicy-table">
+                <tr><td colspan="5" class="text-center">Ładowanie...</td></tr>
             </tbody>
         </table>
     </div>
@@ -117,6 +118,62 @@
                 <tr><td colspan="3" class="text-center">Ładowanie...</td></tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Modal Edycji Użytkownika -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edycja użytkownika</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label for="editUserImie" class="form-label">Imię</label>
+                        <input type="text" class="form-control" id="editUserImie" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUserNazwisko" class="form-label">Nazwisko</label>
+                        <input type="text" class="form-control" id="editUserNazwisko" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUserEmail" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="editUserEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUserHaslo" class="form-label">Nowe hasło (opcjonalnie)</label>
+                        <input type="password" class="form-control" id="editUserHaslo" placeholder="Wpisz, aby zmienić (lub zostaw puste)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUserRola" class="form-label">Rola</label>
+                        <select class="form-select" id="editUserRola">
+                            <option value="student">Student</option>
+                            <option value="zopz">Zakładowy Opiekun (ZOPZ)</option>
+                            <option value="uopz">Uczelniany Opiekun (UOPZ)</option>
+                            <option value="dziekanat">Dziekanat</option>
+                            <option value="dyrektor">Dyrektor</option>
+                            <option value="pracownik">Pracownik (bez uprawnień)</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUserAktywny" class="form-label">Status</label>
+                        <select class="form-select" id="editUserAktywny">
+                            <option value="1">Aktywny</option>
+                            <option value="0">Zablokowany</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-primary" onclick="zapiszEdycjeUzytkownika()">Zapisz zmiany</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

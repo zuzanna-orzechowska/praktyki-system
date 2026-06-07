@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Lista Studentów (Wszystkie Praktyki)</h2>
+
+<div class="mb-4">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i> Powrót do panelu</a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <table class="table align-middle table-striped">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Zakład Pracy</th>
+                    <th>UOPZ</th>
+                    <th>Status</th>
+                    <th>Daty</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody id="praktyki-table">
+                <tr><td colspan="6" class="text-center">Ładowanie...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/admin/praktyki')
+        .then(response => response.json())
+        .then(data => {
+            const praktyki = data.praktyki || [];
+            const tablePraktyki = document.getElementById('praktyki-table');
+            tablePraktyki.innerHTML = '';
+            
+            if (praktyki.length > 0) {
+                praktyki.forEach(p => {
+                    let statusBadge = `<span class="badge bg-secondary">${p.status}</span>`;
+                    
+                    let daty = '';
+                    if (p.data_start && p.data_end) {
+                        daty = `${p.data_start} - ${p.data_end}`;
+                    }
+                    
+                    tablePraktyki.innerHTML += `
+                        <tr>
+                            <td>${p.student}</td>
+                            <td>${p.zaklad}</td>
+                            <td>${p.uopz}</td>
+                            <td>${statusBadge}</td>
+                            <td>${daty}</td>
+                            <td>
+                                <a href="/uopz/teczka/${p.student_id}" class="btn btn-sm btn-info">Podgląd Dokumentów</a>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tablePraktyki.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Brak zarejestrowanych praktyk.</td></tr>';
+            }
+        })
+        .catch(err => console.error(err));
+});
+</script>
+{% endblock %}

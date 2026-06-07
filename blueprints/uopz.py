@@ -9,7 +9,7 @@ uopz_bp = Blueprint('uopz', __name__, url_prefix='/uopz')
 @uopz_bp.route('/dashboard')
 @login_required
 def dashboard():
-    if current_user.rola != 'uopz':
+    if current_user.rola not in ['uopz', 'admin']:
         flash('Odmowa dostępu. Strona tylko dla Uczelnianych Opiekunów Praktyk.', 'danger')
         return redirect(url_for('index'))
     return render_template('uopz/dashboard.html')
@@ -17,29 +17,29 @@ def dashboard():
 @uopz_bp.route('/teczka/<int:student_id>')
 @login_required
 def teczka(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/teczka.html')
 
 @uopz_bp.route('/zal3_karta/<int:student_id>')
 @login_required
 def zal3_karta(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/zal3_karta.html')
 
 @uopz_bp.route('/zal2a_harmonogram/<int:student_id>')
 @login_required
 def zal2a_harmonogram(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/zal2a_harmonogram.html')
 
 @uopz_bp.route('/zal4_efekty/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal4_efekty(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     
     student = Student.query.get_or_404(student_id)
     praktyka = Praktyka.query.filter_by(student_id=student.id).first()
-    if not praktyka or praktyka.uopz_id != current_user.id:
+    if not praktyka or (praktyka.uopz_id != current_user.id and current_user.rola != 'admin'):
         flash('Odmowa dostępu do tego studenta.', 'danger')
         return redirect(url_for('uopz.dashboard'))
 
@@ -109,13 +109,13 @@ def zal4_efekty(student_id):
 @uopz_bp.route('/zal7_sprawozdanie/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal7_sprawozdanie(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return handle_sprawozdanie_view(student_id, 'ZAL7')
 
 @uopz_bp.route('/zal7a_sprawozdanie/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal7a_sprawozdanie(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return handle_sprawozdanie_view(student_id, 'ZAL7A')
 
 def handle_sprawozdanie_view(student_id, typ):
@@ -171,31 +171,31 @@ def handle_sprawozdanie_view(student_id, typ):
 @uopz_bp.route('/zal2a_lista')
 @login_required
 def zal2a_lista():
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/zal2a_lista.html')
 
 @uopz_bp.route('/zal3_lista')
 @login_required
 def zal3_lista():
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/zal3_lista.html')
 
 @uopz_bp.route('/zal6_lista')
 @login_required
 def zal6_lista():
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/zal6_lista.html')
 
 @uopz_bp.route('/dziennik/<int:student_id>')
 @login_required
 def dziennik(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     return render_template('uopz/weryfikuj_dziennik.html')
 
 @uopz_bp.route('/zal8_lista')
 @login_required
 def zal8_lista():
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     from models import Student, Praktyka, Protokol
     
     studenci = Student.query.join(Praktyka).outerjoin(Protokol).filter(
@@ -210,7 +210,7 @@ def zal8_lista():
 @uopz_bp.route('/zal8_protokol/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal8_protokol(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     from models import Student, Praktyka, Dokument, KartaPraktyki, Protokol, Uzytkownik
     from datetime import datetime
     
@@ -279,7 +279,7 @@ def zal8_protokol(student_id):
 @uopz_bp.route('/zal8a_protokol/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def zal8a_protokol(student_id):
-    if current_user.rola != 'uopz': return redirect(url_for('index'))
+    if current_user.rola not in ['uopz', 'admin']: return redirect(url_for('index'))
     from models import Student, Praktyka, Protokol, Uzytkownik, Powiadomienie
     from datetime import datetime
     
@@ -297,7 +297,7 @@ def zal8a_protokol(student_id):
         flash('Protokół nie został jeszcze utworzony i przypisany przez Dziekanat.', 'danger')
         return redirect(url_for('uopz.teczka', student_id=student.id))
         
-    if protokol.komisja_2 != f"{current_user.imie} {current_user.nazwisko}":
+    if protokol.komisja_2 != f"{current_user.imie} {current_user.nazwisko}" and current_user.rola != 'admin':
         flash('Nie jesteś przypisany jako członek komisji do tego protokołu.', 'danger')
         return redirect(url_for('uopz.teczka', student_id=student.id))
 
