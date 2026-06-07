@@ -156,7 +156,32 @@
                             Wygeneruj podpis elektroniczny ZOPZ
                         </label>
                     </div>
+
+                    <div id="preview-podpis-zopz" style="display: none; margin-bottom: 20px;">
+                        <div style="font-family: cursive; color: #004a99; font-size: 1.2rem; margin-bottom: 5px;">
+                            {{ current_user.imie }} {{ current_user.nazwisko }}
+                        </div>
+                        <div class="small text-muted mb-3" id="preview-data-zopz"></div>
+                    </div>
+
                     <button type="submit" name="akcja" value="zapisz_zopz" class="btn btn-primary"><i class="bi bi-check-circle"></i> Zatwierdź Efekty</button>
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const chkZopz = document.getElementById('podpis_zopz');
+                            if (chkZopz) {
+                                chkZopz.addEventListener('change', function() {
+                                    const preview = document.getElementById('preview-podpis-zopz');
+                                    if (this.checked) {
+                                        preview.style.display = 'block';
+                                        document.getElementById('preview-data-zopz').textContent = new Date().toLocaleDateString('pl-PL');
+                                    } else {
+                                        preview.style.display = 'none';
+                                    }
+                                });
+                            }
+                        });
+                    </script>
                     {% else %}
                         <br><br>
                         {% if efekty and efekty[0].podpis_zopz %}
@@ -206,8 +231,32 @@
                                     Wygeneruj podpis elektroniczny UOPZ
                                 </label>
                             </div>
+
+                            <div id="preview-podpis-uopz" style="display: none; margin-bottom: 20px;">
+                                <div style="font-family: cursive; color: #004a99; font-size: 1.2rem; margin-bottom: 5px;">
+                                    {{ current_user.imie }} {{ current_user.nazwisko }}
+                                </div>
+                                <div class="small text-muted mb-3" id="preview-data-uopz"></div>
+                            </div>
                             
                             <button type="submit" name="akcja" value="zapisz_uopz" class="btn btn-success btn-sm w-100"><i class="bi bi-save"></i> Zapisz i Podpisz</button>
+                            
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const chkUopz = document.getElementById('podpis_uopz');
+                                    if (chkUopz) {
+                                        chkUopz.addEventListener('change', function() {
+                                            const preview = document.getElementById('preview-podpis-uopz');
+                                            if (this.checked) {
+                                                preview.style.display = 'block';
+                                                document.getElementById('preview-data-uopz').textContent = new Date().toLocaleDateString('pl-PL');
+                                            } else {
+                                                preview.style.display = 'none';
+                                            }
+                                        });
+                                    }
+                                });
+                            </script>
                             {% endif %}
                             
                             {% if podpis_uopz %}

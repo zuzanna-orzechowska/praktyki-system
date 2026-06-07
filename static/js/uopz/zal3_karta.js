@@ -110,12 +110,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (data.karta && data.karta.ocena_zopz_param && !data.karta.podpis_uopz) {
                     formOceny.style.display = 'block';
                     document.getElementById('uopz-form-actions').style.display = 'block';
+                    document.getElementById('uopz-waiting-zopz').style.display = 'none';
                     
                     if (data.karta.ocena_uopz_param) document.getElementById('ocena-uopz-param-input').value = data.karta.ocena_uopz_param;
                     if (data.karta.ocena_sprawozdania) document.getElementById('ocena-sprawozdania-input').value = data.karta.ocena_sprawozdania;
                     if (data.karta.ocena_uopz_opis) document.getElementById('ocena-uopz-opis-input').value = data.karta.ocena_uopz_opis;
                 } else {
                     formOceny.style.display = 'none';
+                    document.getElementById('uopz-waiting-zopz').style.display = 'block';
                 }
             })
             .catch(err => console.error(err));

@@ -95,7 +95,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     const statusBanner = document.createElement('div');
                     statusBanner.id = 'status-alert-banner';
                     statusBanner.className = `alert ${alertType} fw-bold mb-4 shadow-sm`;
-                    statusBanner.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> ${statusText}. Pola formularza zostały zablokowane.`;
+                    
+                    if (dokument.status === 'Approved') {
+                        statusBanner.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> ${statusText}.`;
+                    } else {
+                        statusBanner.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> ${statusText}. Pola formularza zostały zablokowane.`;
+                    }
+                    
                     form.insertBefore(statusBanner, form.firstChild);
                 }
             }

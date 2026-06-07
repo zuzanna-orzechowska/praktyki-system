@@ -335,18 +335,12 @@
                 <ul class="sidebar-menu">
                     <li><a href="{{ url_for('uopz.dashboard') }}"
                             class="{% if 'uopz/dashboard' in request.path %}active{% endif %}">Moi Studenci</a></li>
-                    <li><a href="{{ url_for('uopz.zal2a_lista') }}"
-                            class="{% if 'uopz/zal2a_lista' in request.path %}active{% endif %}">Harmonogramy (Zał. 2a)</a></li>
-                    <li><a href="{{ url_for('uopz.zal3_lista') }}"
-                            class="{% if 'uopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
-                    <li><a href="{{ url_for('uopz.dashboard') }}"
-                            class="{% if 'uopz/zal4_efekty' in request.path %}active{% endif %}">Efekty Uczenia (Zał. 4)</a></li>
-                    <li><a href="{{ url_for('uopz.zal6_lista') }}"
-                            class="{% if 'uopz/zal6_lista' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>
-                    <li><a href="{{ url_for('uopz.dashboard') }}"
-                            class="{% if 'uopz/zal7_sprawozdanie' in request.path or 'uopz/zal7a_sprawozdanie' in request.path %}active{% endif %}">Sprawozdania (Zał. 7, 7a)</a></li>
-                    <li><a href="{{ url_for('uopz.zal8_lista') }}"
-                            class="{% if 'uopz/zal8_lista' in request.path %}active{% endif %}">Protokoły (Zał. 8, 8a)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}">Harmonogramy (Zał. 2a)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}">Karty Praktyki (Zał. 3)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}">Efekty Uczenia (Zał. 4)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}">Dzienniki praktyk (Zał. 6)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}">Sprawozdania (Zał. 7, 7a)</a></li>
+                    <li><a href="{{ url_for('uopz.dashboard') }}">Protokoły (Zał. 8, 8a)</a></li>
                 </ul>
                 {% endif %}
 
@@ -452,8 +446,7 @@
                             class="{% if 'zopz/dashboard' in request.path %}active{% endif %}">Moi Praktykanci</a></li>
                     <li><a href="{{ url_for('zopz.dashboard') }}">Porozumienia i Programy (Zał. 1, 2)</a></li>
                     <li><a href="{{ url_for('zopz.dashboard') }}">Harmonogramy (Zał. 2a)</a></li>
-                    <li><a href="{{ url_for('zopz.zal3_lista') }}"
-                            class="{% if 'zopz/zal3_lista' in request.path %}active{% endif %}">Karty Praktyki (Zał. 3)</a></li>
+                    <li><a href="{{ url_for('zopz.dashboard') }}">Karty Praktyki (Zał. 3)</a></li>
                     <li><a href="{{ url_for('zopz.dashboard') }}">Efekty Uczenia (Zał. 4)</a></li>
                     <li><a href="{{ url_for('zopz.dashboard') }}"
                             class="{% if 'zopz/dziennik' in request.path %}active{% endif %}">Dzienniki praktyk (Zał. 6)</a></li>

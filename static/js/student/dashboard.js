@@ -56,17 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
                 `;
-            } else if (data.etap_standardowy === 3) {
-                alertsContainer.innerHTML += `
-                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4 d-flex align-items-center" role="alert">
-                    <i class="bi bi-check-circle-fill me-3 fs-3 text-success"></i>
-                    <div>
-                        <h5 class="mb-1 fw-bold text-success">Porozumienie o organizację praktyki zawarte</h5>
-                        <p class="mb-0">Dyrektor Instytutu oraz Zakład Pracy podpisali Porozumienie (Zał. 1, 2). Kolejne moduły w systemie zostały odblokowane.</p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                `;
             } else if (data.zal9_status === 'AwaitingAccount' || status === 'ZAL9_ZATWIERDZONE') {
                 alertsContainer.innerHTML += `
                 <div class="alert alert-success border-0 shadow-sm mb-4 d-flex align-items-center">

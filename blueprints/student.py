@@ -491,8 +491,15 @@ def zal5_ankieta():
         flash('Wysłałeś już anonimową ankietę dla tej praktyki. Dziękujemy!', 'info')
         return redirect(url_for('student.dashboard'))
 
+    # Sprawdzenie czy sprawozdanie jest zatwierdzone
+    sprawozdanie_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first()
+    mozna_wyslac = (sprawozdanie_doc is not None and sprawozdanie_doc.status == 'Zatwierdzone')
+
     if request.method == 'POST':
-        
+        if not mozna_wyslac:
+            flash('Błąd: Możesz wypełnić ankietę dopiero po złożeniu i zatwierdzeniu sprawozdania z praktyki (Zał. 7).', 'danger')
+            return redirect(url_for('student.zal5_ankieta'))
+            
         odpowiedzi = []
         for i in range(1, 15):
             val = request.form.get(f'pytanie_{i}', '0')
@@ -525,4 +532,4 @@ def zal5_ankieta():
         
         flash('Ankieta została wysłana anonimowo do Dziekanatu. Dziękujemy!', 'success')
         return redirect(url_for('student.dashboard'))
-    return render_template('dokumenty/zal5_ankieta.html')
+    return render_template('dokumenty/zal5_ankieta.html', mozna_wyslac=mozna_wyslac)

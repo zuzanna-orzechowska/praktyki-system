@@ -229,12 +229,16 @@
     </div>
 
     <!-- Ocena UOPZ -->
-    <form id="form-oceny">
-        <div class="karta-box mt-4">
-            <div class="karta-box-inner karta-border-top bg-light text-center">
-                <h5 class="m-0 text-uppercase">Ocena Uczelnianego Opiekuna (Wypełnia UOPZ)</h5>
+    <div class="karta-box mt-4">
+        <div class="karta-box-inner karta-border-top bg-light text-center">
+            <h5 class="m-0 text-uppercase">Ocena Uczelnianego Opiekuna (Wypełnia UOPZ)</h5>
+        </div>
+        <div class="karta-box-inner karta-border-top" id="uopz-ocena-container">
+            <div id="uopz-waiting-zopz" style="display: none;" class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i> Oczekuje na ocenę z Zakładu Pracy (ZOPZ). Dopiero po jej wpłynięciu będzie można wystawić ocenę końcową.
             </div>
-            <div class="karta-box-inner karta-border-top">
+
+            <form id="form-oceny">
                 <div class="row mb-3 align-items-center">
                     <div class="col-md-4 text-muted fw-bold">Ocena z przebiegu praktyki:</div>
                     <div class="col-md-8">
@@ -275,8 +279,8 @@
                         <div class="karta-signature-line mt-3">(podpis uczelnianego opiekuna)</div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 {% endblock %}
