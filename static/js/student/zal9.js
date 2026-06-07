@@ -20,12 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const oswiadczenie = data.oswiadczenie;
             const dokument = data.dokument;
 
-            // Populate text elements
             const safeNazwisko = (student.nazwisko || '').split('(')[0].trim();
             document.getElementById('student-info').textContent = `${student.imie} ${safeNazwisko}`;
             document.getElementById('student-album').textContent = student.nr_albumu;
 
-            // Populate form fields
             if (oswiadczenie) {
                 setValue('miejscowosc', oswiadczenie.miejscowosc);
                 setValue('data_oswiadczenia', oswiadczenie.data_oswiadczenia);
@@ -62,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 setValue('data_end', praktyka.data_end);
             }
 
-            // Handle statuses and readonly fields
             if (dokument && dokument.status !== 'Draft' && dokument.status !== 'Rejected') {
                 const fieldset = document.getElementById('form-fieldset');
                 if (fieldset) fieldset.setAttribute('disabled', 'disabled');
@@ -81,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const deleteBtns = document.querySelectorAll('#skan-container button');
                 deleteBtns.forEach(b => b.style.display = 'none');
 
-                // Add explicit status message
                 let statusText = 'Oczekuje na weryfikację przez Dziekanat';
                 let alertType = 'alert-info';
 
@@ -95,13 +91,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     const statusBanner = document.createElement('div');
                     statusBanner.id = 'status-alert-banner';
                     statusBanner.className = `alert ${alertType} fw-bold mb-4 shadow-sm`;
-                    
+
                     if (dokument.status === 'Approved') {
                         statusBanner.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> ${statusText}.`;
                     } else {
                         statusBanner.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i> ${statusText}. Pola formularza zostały zablokowane.`;
                     }
-                    
+
                     form.insertBefore(statusBanner, form.firstChild);
                 }
             }

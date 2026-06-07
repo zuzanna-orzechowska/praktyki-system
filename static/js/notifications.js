@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadNotifications();
 });
 
@@ -8,29 +8,29 @@ function loadNotifications() {
         .then(data => {
             if (data.error) return;
             const notifs = data.powiadomienia || [];
-            
+
             const badge = document.getElementById('notif-badge');
             const unreadCount = notifs.filter(n => !n.przeczytane).length;
-            
+
             if (unreadCount > 0) {
                 badge.style.display = 'inline-block';
                 badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
             } else {
                 badge.style.display = 'none';
             }
-            
+
             const content = document.getElementById('notif-content');
             if (notifs.length === 0) {
                 content.innerHTML = '<li><span class="dropdown-item text-muted text-center small py-3">Brak nowych powiadomień</span></li>';
                 return;
             }
-            
+
             content.innerHTML = '';
             notifs.forEach(n => {
                 const bgClass = n.przeczytane ? '' : 'bg-light';
                 const fwClass = n.przeczytane ? 'text-muted' : 'fw-bold';
                 const icon = !n.przeczytane ? '<i class="bi bi-circle-fill text-primary" style="font-size: 0.5rem; margin-right: 5px;"></i>' : '';
-                
+
                 content.innerHTML += `
                     <li>
                         <a class="dropdown-item py-2 ${bgClass}" href="#" onclick="handleNotificationClick(event, ${n.id}, '${n.link}')" style="white-space: normal; font-size: 0.85rem; border-bottom: 1px solid #f1f1f1;">
@@ -44,7 +44,7 @@ function loadNotifications() {
                     </li>
                 `;
             });
-            
+
             if (unreadCount > 0) {
                 content.innerHTML += `
                     <li><hr class="dropdown-divider"></li>
@@ -57,7 +57,7 @@ function loadNotifications() {
 
 function handleNotificationClick(e, id, link) {
     e.preventDefault();
-    
+
     fetch(`/api/notifications/mark_read/${id}`, { method: 'POST' })
         .then(() => {
             if (link && link !== 'null') {

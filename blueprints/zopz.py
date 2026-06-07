@@ -178,7 +178,6 @@ def zal4_efekty(student_id):
         db.session.add(dokument)
         db.session.commit()
         
-    # Oznacz powiadomienia jako przeczytane
     Powiadomienie.query.filter_by(uzytkownik_id=current_user.id, link=request.path, przeczytane=False).update({'przeczytane': True})
     db.session.commit()
         
@@ -193,7 +192,6 @@ def zal4_efekty(student_id):
             podpis = f"{current_user.imie} {current_user.nazwisko}" if request.form.get('podpis_zopz') else None
             liczba_efektow = int(request.form.get('liczba_efektow', 0))
             
-            # Zapisywanie poszczególnych efektów
             if not efekty:
                 for i in range(1, liczba_efektow + 1):
                     kod = request.form.get(f'kod_efektu_{i}')
@@ -218,13 +216,11 @@ def zal4_efekty(student_id):
                     if podpis:
                         efekt.data_podpisu = datetime.today().date()
             
-            # Ogólny wynik
             ogolny_wynik = int(request.form.get('ogolny_wynik', 0))
             
             dokument.status = 'Weryfikacja UOPZ'
             db.session.commit()
             
-            # Powiadomienia
             powiadomienie_student = Powiadomienie(
                 uzytkownik_id=student.uzytkownik_id,
                 tresc="ZOPZ ocenił i podpisał Twoje efekty uczenia się (Zał. 4). Dokument przesłany do UOPZ.",

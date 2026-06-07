@@ -241,7 +241,6 @@ def wyslij_do_zopz():
         
     dokument.status = 'Weryfikacja ZOPZ'
     
-    # Powiadomienie dla ZOPZ
     if praktyka.zaklad and praktyka.zaklad.zopz_id:
         from flask import url_for
         notif = Powiadomienie(
@@ -278,7 +277,6 @@ def wyslij_do_uopz():
         
     dokument.status = 'Weryfikacja UOPZ'
     
-    # Powiadomienie dla UOPZ
     if praktyka.uopz_id:
         from flask import url_for
         notif = Powiadomienie(
@@ -360,7 +358,6 @@ def usun_zalacznik_dziennika(zid):
 
     zalacznik = ZalacznikDziennika.query.get_or_404(zid)
     
-    # Check ownership indirectly
     dokument = Dokument.query.get(zalacznik.dokument_id)
     praktyka = Praktyka.query.get(dokument.praktyka_id)
     student = Student.query.get(praktyka.student_id)
@@ -374,7 +371,7 @@ def usun_zalacznik_dziennika(zid):
             if os.path.exists(filepath):
                 os.remove(filepath)
         except Exception:
-            pass # ignore deletion errors, just remove from db
+            pass
             
     db.session.delete(zalacznik)
     db.session.commit()

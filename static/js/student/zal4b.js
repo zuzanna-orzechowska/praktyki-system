@@ -132,28 +132,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (dokument && (dokument.status === 'Returned' || dokument.status === 'Rejected' || dokument.status === 'Uzupełniono')) {
                 const actionBtns = document.getElementById('action-buttons');
                 if (actionBtns) {
-                    actionBtns.style.display = 'none'; // Ukryj dolne przyciski, by nie mylić studenta
+                    actionBtns.style.display = 'none';
                     const alertDiv = document.createElement('div');
                     let alertClass = 'alert-danger';
                     let headingText = 'Ścieżka odrzucona przez Dziekanat';
                     if (dokument.status === 'Returned') { alertClass = 'alert-warning'; headingText = 'Wniosek zwrócony do poprawy'; }
                     if (dokument.status === 'Uzupełniono') { alertClass = 'alert-info'; headingText = 'Wniosek oczekuje na weryfikację uzupełnień'; }
-                    
+
                     alertDiv.className = `alert ${alertClass} mb-4 shadow-sm`;
                     alertDiv.innerHTML = `<h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> ${headingText}</h5><hr><p class="mb-0"><strong>Uwagi dziekanatu:</strong> ${dokument.komentarz || 'Brak uwag'}</p>`;
                     actionBtns.parentNode.insertBefore(alertDiv, actionBtns);
                 }
             }
 
-            // Obsługa uzupełnień dla ZAL4A (częściowo/zwrócono)
             const zal4a_decyzja = data.zal4a_decyzja;
             if (zal4a_decyzja && (zal4a_decyzja.ogolny_wynik === 'uzyskał/a częściowo' || dokument.status === 'Returned')) {
                 const sec = document.getElementById('uzupelnienia-section');
                 if (sec) sec.classList.remove('d-none');
-                
+
                 if (wniosek && wniosek.uzupelnienia_paths) {
                     let uzup = [];
-                    try { uzup = JSON.parse(wniosek.uzupelnienia_paths); } catch(e) {}
+                    try { uzup = JSON.parse(wniosek.uzupelnienia_paths); } catch (e) { }
                     const con = document.getElementById('uzupelnienia-container');
                     if (uzup.length > 0 && con) {
                         con.innerHTML = '';
@@ -171,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                 }
-                
+
                 if (dokument.status === 'Uzupełniono') {
                     if (document.getElementById('upload-uzup-container')) document.getElementById('upload-uzup-container').style.display = 'none';
                     if (document.getElementById('btn-wyslij-uzupelnienia')) document.getElementById('btn-wyslij-uzupelnienia').style.display = 'none';

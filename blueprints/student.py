@@ -215,7 +215,6 @@ def zal4_efekty():
         flash('Brak przypisanej praktyki.', 'warning')
         return redirect(url_for('student.dashboard'))
 
-    # Oznacz powiadomienia jako przeczytane
     Powiadomienie.query.filter_by(uzytkownik_id=current_user.id, link=request.path, przeczytane=False).update({'przeczytane': True})
     db.session.commit()
 
@@ -441,7 +440,6 @@ def zal5_ankieta():
         flash('Wysłałeś już anonimową ankietę dla tej praktyki. Dziękujemy!', 'info')
         return redirect(url_for('student.dashboard'))
 
-    # Sprawdzenie czy sprawozdanie jest zatwierdzone
     sprawozdanie_doc = Dokument.query.filter_by(praktyka_id=praktyka.id, typ_zalacznika='ZAL7').first()
     mozna_wyslac = (sprawozdanie_doc is not None and sprawozdanie_doc.status == 'Zatwierdzone')
 
@@ -466,7 +464,6 @@ def zal5_ankieta():
         )
         db.session.add(nowa_ankieta)
         
-        # Powiadomienia dla dziekanatu
         pracownicy_dziekanatu = Uzytkownik.query.filter_by(rola='dziekanat').all()
         for pracownik in pracownicy_dziekanatu:
             powiadomienie = Powiadomienie(
@@ -476,7 +473,6 @@ def zal5_ankieta():
             )
             db.session.add(powiadomienie)
             
-        # Oznacz ankietę jako wypełnioną dla praktyki studenta (zachowując anonimowość wpisu Ankiety)
         praktyka.ankieta_wypelniona = True
         db.session.commit()
         

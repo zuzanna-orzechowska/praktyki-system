@@ -123,7 +123,6 @@ def auth_callback(provider):
     email = user_info.get('email')
     external_id = user_info.get('sub') or user_info.get('oid')
     
-    # Wyciąganie imienia i nazwiska w zależności od dostawcy
     imie = user_info.get('given_name', '')
     nazwisko = user_info.get('family_name', '')
     if not imie or not nazwisko:

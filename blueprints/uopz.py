@@ -48,7 +48,6 @@ def zal4_efekty(student_id):
         flash('ZOPZ nie utworzył jeszcze załącznika nr 4.', 'info')
         return redirect(url_for('uopz.teczka', student_id=student_id))
 
-    # Oznacz powiadomienia jako przeczytane
     Powiadomienie.query.filter_by(uzytkownik_id=current_user.id, link=request.path, przeczytane=False).update({'przeczytane': True})
     db.session.commit()
 
@@ -65,7 +64,6 @@ def zal4_efekty(student_id):
                 flash('Opinia musi zawierać co najmniej 300 znaków.', 'danger')
                 return redirect(url_for('uopz.zal4_efekty', student_id=student_id))
             
-            # Jeśli zaznaczono checkbox podpisu elektronicznego
             if request.form.get('podpis_uopz'):
                 opinia += f"\n\n[Podpis elektroniczny UOPZ: {current_user.tytul_naukowy or ''} {current_user.imie} {current_user.nazwisko}, Data: {datetime.today().date()}]"
                 

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const pathParts = window.location.pathname.split('/');
     const studentId = pathParts[pathParts.length - 1];
     document.getElementById('back-link').href = `/zopz/teczka/${studentId}`;
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 document.getElementById('student-name-header').textContent = `${data.student.nr_albumu} - ${data.uzytkownik.imie} ${data.uzytkownik.nazwisko}`;
-                
+
                 if (data.dokument) {
                     document.getElementById('doc-status-badge').textContent = data.dokument.status;
                 }
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('val-student-album').textContent = data.student.nr_albumu;
                 document.getElementById('val-student-studia').textContent = `inżynierskie ${data.student.tryb_studiow}`;
                 document.getElementById('val-student-kierunek').textContent = data.student.kierunek;
-                if(data.student.specjalnosc) document.getElementById('val-student-specjalnosc').textContent = data.student.specjalnosc;
+                if (data.student.specjalnosc) document.getElementById('val-student-specjalnosc').textContent = data.student.specjalnosc;
 
                 // Wypełnianie danych UOPZ
                 if (data.uopz) {
@@ -90,12 +90,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (bhpActions) bhpActions.style.display = 'block';
                     }
 
-                    // UOPZ fields (read-only for ZOPZ)
                     if (data.karta.ocena_uopz_param) {
                         document.getElementById('val-uopz-ocena-param').textContent = data.karta.ocena_uopz_param;
                         document.getElementById('val-uopz-ocena-opis').textContent = data.karta.ocena_uopz_opis || 'Brak wpisu';
                         document.getElementById('val-ocena-sprawozdania').textContent = data.karta.ocena_sprawozdania || 'Brak wpisu';
-                        if(data.karta.podpis_uopz) {
+                        if (data.karta.podpis_uopz) {
                             const podpisUopz = `${data.karta.podpis_uopz}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">${data.karta.ocena_uopz_data}</span>`;
                             document.getElementById('val-uopz-podpis').innerHTML = podpisUopz;
                         }
@@ -104,9 +103,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Ocena ZOPZ i formularz
                     if (data.karta.podpis_zopz) {
                         document.getElementById('zopz-form-actions').style.display = 'none';
-                        
+
                         document.getElementById('val-zaswiadczenie-podpis').innerHTML = `${data.karta.podpis_zopz}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">${data.karta.zaswiadczenie_data}</span>`;
-                        
+
                         document.getElementById('ocena-zopz-param-input').style.display = 'none';
                         document.getElementById('ocena-zopz-param-view').style.display = 'block';
                         document.getElementById('ocena-zopz-param-view').textContent = data.karta.ocena_zopz_param;
@@ -123,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('val-zopz-podpis').innerHTML = `${data.karta.podpis_zopz}<br><span style="font-size: 12px; font-family: Arial; color: #6c757d;">${data.karta.ocena_zopz_data}</span>`;
                     } else {
                         document.getElementById('zopz-form-actions').style.display = 'block';
-                        
+
                         if (data.karta.ocena_zopz_param) document.getElementById('ocena-zopz-param-input').value = data.karta.ocena_zopz_param;
                         if (data.karta.ocena_zopz_opis) document.getElementById('ocena-zopz-opis-input').value = data.karta.ocena_zopz_opis;
                         if (data.karta.zaswiadczenie_uwagi) document.getElementById('zaswiadczenie-uwagi-input').value = data.karta.zaswiadczenie_uwagi;
@@ -141,47 +140,46 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(actionData)
         })
-        .then(response => response.json())
-        .then(data => {
-            const alerts = document.getElementById('alerts-container');
-            if (data.success) {
-                alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                loadData();
-            } else {
-                alerts.innerHTML = `<div class="alert alert-danger">${data.message || 'Wystąpił błąd'}</div>`;
-            }
-            window.scrollTo(0,0);
-        })
-        .catch(err => console.error(err));
+            .then(response => response.json())
+            .then(data => {
+                const alerts = document.getElementById('alerts-container');
+                if (data.success) {
+                    alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    loadData();
+                } else {
+                    alerts.innerHTML = `<div class="alert alert-danger">${data.message || 'Wystąpił błąd'}</div>`;
+                }
+                window.scrollTo(0, 0);
+            })
+            .catch(err => console.error(err));
     }
 
     window.zal3Zopz = {
-        potwierdzZgloszenie: function() {
+        potwierdzZgloszenie: function () {
             const chk = document.getElementById('chk-podpis-zgloszenie');
-            if(!chk || !chk.checked) {
+            if (!chk || !chk.checked) {
                 alert("Musisz złożyć podpis elektroniczny, aby zatwierdzić zgłoszenie.");
                 return;
             }
-            if(confirm("Potwierdzasz zgłoszenie się studenta?")) {
+            if (confirm("Potwierdzasz zgłoszenie się studenta?")) {
                 sendAction({ akcja: 'potwierdz_zgloszenie', zloz_podpis: true });
             }
         },
-        potwierdzBhp: function() {
+        potwierdzBhp: function () {
             const chk = document.getElementById('chk-podpis-bhp');
-            if(!chk || !chk.checked) {
+            if (!chk || !chk.checked) {
                 alert("Musisz złożyć podpis elektroniczny, aby zatwierdzić BHP.");
                 return;
             }
-            if(confirm("Potwierdzasz odbycie szkolenia BHP przez studenta?")) {
+            if (confirm("Potwierdzasz odbycie szkolenia BHP przez studenta?")) {
                 sendAction({ akcja: 'potwierdz_bhp', zloz_podpis: true });
             }
         }
     };
 
-    // Dynamic signatures for zgłoszenie and bhp
     const chkZgloszenie = document.getElementById('chk-podpis-zgloszenie');
     if (chkZgloszenie) {
-        chkZgloszenie.addEventListener('change', function() {
+        chkZgloszenie.addEventListener('change', function () {
             const podpisDiv = document.getElementById('val-zgloszenie-podpis');
             if (this.checked) {
                 podpisDiv.textContent = this.getAttribute('data-imienazwisko');
@@ -193,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const chkBhp = document.getElementById('chk-podpis-bhp');
     if (chkBhp) {
-        chkBhp.addEventListener('change', function() {
+        chkBhp.addEventListener('change', function () {
             const podpisDiv = document.getElementById('val-bhp-podpis');
             if (this.checked) {
                 podpisDiv.textContent = this.getAttribute('data-imienazwisko');
@@ -204,12 +202,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const formOceny = document.getElementById('form-oceny-zopz');
-    if(formOceny) {
+    if (formOceny) {
         const checkboxPodpis = document.getElementById('zloz-podpis-zopz');
         const btnZapisz = document.getElementById('btn-zapisz-ocene');
-        
+
         if (checkboxPodpis && btnZapisz) {
-            checkboxPodpis.addEventListener('change', function() {
+            checkboxPodpis.addEventListener('change', function () {
                 const podpisDiv = document.getElementById('val-zopz-podpis');
                 const zaswiadczeniePodpisDiv = document.getElementById('val-zaswiadczenie-podpis');
                 if (this.checked) {
@@ -229,13 +227,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        formOceny.addEventListener('submit', function(e) {
+        formOceny.addEventListener('submit', function (e) {
             e.preventDefault();
             const zloz_podpis = document.getElementById('zloz-podpis-zopz').checked;
-            
+
             let akcja = 'zapisz_ocene';
             if (zloz_podpis) {
-                if(!confirm("Zaznaczono e-podpis. Dokument zostanie ostatecznie zatwierdzony przez Zakład Pracy i odesłany na Uczelnię. Kontynuować?")) return;
+                if (!confirm("Zaznaczono e-podpis. Dokument zostanie ostatecznie zatwierdzony przez Zakład Pracy i odesłany na Uczelnię. Kontynuować?")) return;
                 akcja = 'wyslij_do_uczelni';
             }
 

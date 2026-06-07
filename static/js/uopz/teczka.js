@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('btn-zal4').href = `/uopz/zal4_efekty/${studentId}`;
             document.getElementById('btn-zal7').href = `/uopz/zal7_sprawozdanie/${studentId}`;
             document.getElementById('btn-zal7a').href = `/uopz/zal7a_sprawozdanie/${studentId}`;
-            
+
             if (data.dokumenty && data.dokumenty['ZAL4B']) {
                 document.getElementById('btn-zal8').href = `/uopz/zal8a_protokol/${studentId}`;
                 document.getElementById('btn-zal8').textContent = 'Wypełnij Protokół (Zał. 8a)';
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (btnZal8a) {
                 btnZal8a.href = `/uopz/zal8a_protokol/${studentId}`;
             }
-            
+
             const btnZal6 = document.getElementById('btn-zal6');
             if (btnZal6) {
                 btnZal6.href = `/uopz/dziennik/${studentId}`;
@@ -56,9 +56,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (badgeZal6) badgeZal6.style.display = 'inline-block';
             }
 
-            // Hiding logic based on path
             const isProfessionalPath = (data.praktyka.status === 'SCIEZKA_PRACA' || data.praktyka.status === 'ZAL4B_ZATWIERDZONE' || (data.praktyka.status === 'ZALICZONA' && dokumenty['ZAL4B']));
-            
+
             if (isProfessionalPath) {
                 document.getElementById('card-zal2a').style.display = 'none';
                 document.getElementById('card-zal3').style.display = 'none';

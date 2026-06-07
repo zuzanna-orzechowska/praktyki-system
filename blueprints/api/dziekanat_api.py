@@ -31,7 +31,6 @@ def dashboard():
     zal2a_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL2A').count()
     zal4b_count = db.session.query(Dokument).filter_by(status='Submitted', typ_zalacznika='ZAL4B').count()
     
-    # zal4a_count to te co mają ZAL4B_ZATWIERDZONE, ale nie mają zatwierdzonego ZAL4A
     praktyki_4b = db.session.query(Praktyka).filter(Praktyka.status == 'ZAL4B_ZATWIERDZONE').all()
     praktyki_4a = db.session.query(Praktyka).join(Dokument).filter(Dokument.typ_zalacznika == 'ZAL4A').all()
     wszystkie_4a = set(praktyki_4b + praktyki_4a)

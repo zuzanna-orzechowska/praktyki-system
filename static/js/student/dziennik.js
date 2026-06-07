@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     inputEl.value = '';
                 }
 
-                // Render efekty list
                 const efektyUl = document.getElementById('efekty-list');
                 efektyUl.innerHTML = '';
                 efektyListaGlobal.forEach(efekt => {
@@ -85,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const statusDokumentu = data.status_dokumentu || 'Draft';
 
-                // Render table
                 const tbody = document.getElementById('dziennikBody');
                 tbody.innerHTML = '';
 
@@ -103,14 +101,12 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(err => console.error(err));
     };
 
-    // Inicjalne ładowanie
     window.loadDziennik();
 });
 
 function renderStatusAndActions(status, wpisyCount) {
     const badge = document.getElementById('dokument-status-badge');
 
-    // Status Badge
     badge.textContent = status;
     badge.className = 'badge';
     if (status === 'Draft') badge.classList.add('bg-secondary');
@@ -119,13 +115,11 @@ function renderStatusAndActions(status, wpisyCount) {
     else if (status === 'Wrócono do poprawy' || status === 'Odrzucone') badge.classList.add('bg-danger');
     else badge.classList.add('bg-info');
 
-    // Bottom Actions
     const mainSaveBtn = document.getElementById('btnZapiszDziennik');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
     const btnBottomZopz = document.getElementById('btnBottomZopz');
     const btnBottomUopz = document.getElementById('btnBottomUopz');
 
-    // Reset defaults
     if (btnBottomZopz) {
         btnBottomZopz.classList.remove('d-none');
         btnBottomZopz.disabled = true;
@@ -140,7 +134,6 @@ function renderStatusAndActions(status, wpisyCount) {
         if (mainSaveBtn) mainSaveBtn.style.display = 'inline-block';
         if (bulkAddContainer) bulkAddContainer.style.display = 'flex';
 
-        // Blokada dodawania jeśli nie ma daty rozpoczęcia praktyki
         if (bulkAddContainer && !praktykaStartGlobal) {
             bulkAddContainer.style.display = 'none';
             document.getElementById('alerts-container').innerHTML = `
@@ -150,7 +143,6 @@ function renderStatusAndActions(status, wpisyCount) {
             `;
         }
 
-        // Przycisk "Wyślij do ZOPZ" na dole
         if (btnBottomZopz) {
             if (wpisyCount < 5) {
                 btnBottomZopz.disabled = true;
@@ -162,13 +154,11 @@ function renderStatusAndActions(status, wpisyCount) {
             }
         }
     } else {
-        // Zablokuj edycję
         if (mainSaveBtn) mainSaveBtn.style.display = 'none';
         if (bulkAddContainer) bulkAddContainer.style.display = 'none';
         if (btnBottomZopz) btnBottomZopz.classList.add('d-none');
 
         if (status === 'Zatwierdzone przez ZOPZ') {
-            // Przycisk "Wyślij do UOPZ" na dole
             if (btnBottomUopz) {
                 btnBottomUopz.classList.remove('d-none');
                 btnBottomUopz.onclick = wyslijDoUopz;
@@ -220,7 +210,6 @@ function appendRow(tbody, dayNumber, wpis, statusDokumentu = 'Draft') {
     const potwierdzony = wpis ? wpis.potwierdzony_zopz : 0;
     const komentarz = wpis ? wpis.komentarz_zopz : '';
 
-    // Dokument jest zablokowany jeśli status to nie Draft i nie Wrócono do poprawy
     const isLocked = statusDokumentu !== 'Draft' && statusDokumentu !== 'Wrócono do poprawy';
     const isRowLocked = isLocked || potwierdzony === 1;
 
@@ -373,7 +362,6 @@ function saveDziennik() {
 
     const btn = event.target;
 
-    // Sprawdzenie czy są niezapisane załączniki
     const niezapisane = document.querySelectorAll('.nowy-zalacznik-row');
     if (niezapisane.length > 0) {
         alert('Masz nowo dodane załączniki, które nie zostały zapisane. Zapisz je najpierw, klikając zielony przycisk "Zapisz dodane załączniki" pod tabelą załączników, albo usuń je jeśli z nich rezygnujesz.');
@@ -408,7 +396,6 @@ function saveDziennik() {
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
             </div>`;
 
-                // Dynamiczne przeładowanie dziennika by pobrać wygenerowane nowe ID wpisów, bez mrugania ekranu
                 loadDziennik();
 
                 btn.disabled = false;

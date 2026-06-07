@@ -1,7 +1,7 @@
 let efektyListaGlobal = [];
 
-document.addEventListener('DOMContentLoaded', function() {
-    window.loadDziennik = function() {
+document.addEventListener('DOMContentLoaded', function () {
+    window.loadDziennik = function () {
         fetch(`/api/zopz/dziennik/${STUDENT_ID}`)
             .then(response => response.json())
             .then(data => {
@@ -9,23 +9,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('alerts-container').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
                     return;
                 }
-                
+
                 const student = data.student;
                 const profil = data.student_profil;
                 const praktyka = data.praktyka;
                 const dokument = data.dokument;
                 efektyListaGlobal = data.efekty_lista;
-                
+
                 document.getElementById('student-imie-nazwisko').textContent = `${student.imie} ${student.nazwisko}`;
                 document.getElementById('student-nr-albumu').textContent = profil.nr_albumu || 'Brak';
                 document.getElementById('student-specjalnosc').textContent = profil.specjalnosc || 'Brak';
                 document.getElementById('student-studia').textContent = `inżynierskie, ${profil.tryb_studiow || 'stacjonarne'}`;
                 document.getElementById('rok-akademicki-text').textContent = profil.rok_akademicki || 'Brak';
-                
+
                 document.getElementById('praktyka-zaklad').textContent = praktyka.zaklad_nazwa || 'Brak przypisanej firmy';
                 document.getElementById('praktyka-start').textContent = praktyka.data_start || '';
                 document.getElementById('praktyka-end').textContent = praktyka.data_end || '';
-                
+
                 // Status Badge
                 const badge = document.getElementById('dokument-status-badge');
                 badge.textContent = dokument.status;
@@ -42,16 +42,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 else if (dokument.status === 'Zatwierdzone przez ZOPZ') badge.classList.add('bg-success');
                 else if (dokument.status === 'Wrócono do poprawy' || dokument.status === 'Odrzucone') badge.classList.add('bg-danger');
                 else badge.classList.add('bg-info');
-                
-                // Show "Zatwierdź ocenę" button only if status is Weryfikacja ZOPZ
+
                 const btnZatwierdz = document.getElementById('btn-zatwierdz-wszystko');
                 if (dokument.status === 'Weryfikacja ZOPZ') {
                     btnZatwierdz.classList.remove('d-none');
                 } else {
                     btnZatwierdz.classList.add('d-none');
                 }
-                
-                // Efekty
+
                 const efektyUl = document.getElementById('efekty-list');
                 efektyUl.innerHTML = '';
                 efektyListaGlobal.forEach(efekt => {
@@ -60,8 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     li.innerHTML = `<strong>${efekt.kod}</strong>: ${efekt.opis}`;
                     efektyUl.appendChild(li);
                 });
-                
-                // Zalaczniki
+
                 const zalBody = document.getElementById('zalacznikiBody');
                 zalBody.innerHTML = '';
                 if (data.zalaczniki && data.zalaczniki.length > 0) {
@@ -82,11 +79,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     zalBody.innerHTML = '<tr><td colspan="3" class="text-center py-2 text-muted fst-italic">Brak załączników</td></tr>';
                 }
-                
-                // Wpisy
+
                 const tbody = document.getElementById('dziennikBody');
                 tbody.innerHTML = '';
-                
+
                 if (data.wpisy && data.wpisy.length > 0) {
                     data.wpisy.forEach((wpis, index) => {
                         appendRow(tbody, index + 1, wpis, dokument.status);
@@ -103,10 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function appendRow(tbody, dayNumber, wpis, statusDokumentu) {
     const tr = document.createElement('tr');
-    
+
     let decyzjaHtml = '';
     let opisKlasa = '';
-    
+
     if (wpis.potwierdzony_zopz === 1) {
         decyzjaHtml = '<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> Potwierdzone</span>';
     } else if (wpis.potwierdzony_zopz === -1) {
@@ -124,7 +120,7 @@ function appendRow(tbody, dayNumber, wpis, statusDokumentu) {
             decyzjaHtml = '<span class="text-muted small">Oczekuje na weryfikację</span>';
         }
     }
-    
+
     tr.innerHTML = `
         <td class="text-center fw-bold day-number">${dayNumber}</td>
         <td>
@@ -140,7 +136,7 @@ function appendRow(tbody, dayNumber, wpis, statusDokumentu) {
             ${decyzjaHtml}
         </td>
     `;
-    
+
     tbody.appendChild(tr);
 }
 
@@ -154,45 +150,45 @@ function otworzModalOdrzucenia(wpisId, nrDnia) {
     modal.show();
 }
 
-window.zapiszOdrzucenie = function() {
+window.zapiszOdrzucenie = function () {
     const komentarz = document.getElementById('modal-komentarz').value.trim();
     if (!komentarz) {
         alert('Musisz wpisać powód odrzucenia/uwagi dla studenta.');
         return;
     }
-    
+
     fetch(`/api/zopz/dziennik/${STUDENT_ID}/odrzuc_wpis/${currentOdrzucWpisId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ komentarz: komentarz })
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('odrzucModal')).hide();
-            loadDziennik(); // Odśwież tabelę
-        } else {
-            alert(data.error || 'Wystąpił błąd');
-        }
-    });
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('odrzucModal')).hide();
+                loadDziennik();
+            } else {
+                alert(data.error || 'Wystąpił błąd');
+            }
+        });
 };
 
-window.zatwierdzDziennik = function() {
+window.zatwierdzDziennik = function () {
     if (!confirm('Czy na pewno chcesz zakończyć weryfikację całego dziennika?\nWszystkie nieodrzucone dni zostaną ZATWIERDZONE.\n\nJeśli jakikolwiek dzień został przez Ciebie odrzucony (czerwony status), dziennik wróci do studenta do poprawy. Jeśli żaden nie został odrzucony, cały dziennik przejdzie na zielono i student będzie mógł go wysłać do Dziekanatu.')) {
         return;
     }
-    
+
     const btn = document.getElementById('btn-zatwierdz-wszystko');
     const orgHtml = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Przetwarzanie...';
-    
+
     fetch(`/api/zopz/dziennik/${STUDENT_ID}/zatwierdz_dziennik`, { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
                 document.getElementById('alerts-container').innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                loadDziennik(); // Odśwież UI
+                loadDziennik();
                 window.scrollTo(0, 0);
             } else {
                 document.getElementById('alerts-container').innerHTML = `<div class="alert alert-danger">${data.error || 'Błąd'}</div>`;

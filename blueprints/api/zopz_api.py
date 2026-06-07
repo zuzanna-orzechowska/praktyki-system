@@ -130,7 +130,6 @@ def weryfikuj_porozumienie(porozumienie_id):
         porozumienie.status = 'Podpisane'
         porozumienie.komentarz_zopz = None
         
-        # Powiadomienie dla studenta
         notif = Powiadomienie(
             uzytkownik_id=porozumienie.praktyka.student.uzytkownik_id,
             tresc="Twoje Porozumienie o organizację praktyki (Zał. 1, 2) zostało zawarte (podpisane przez Zakład Pracy). Odblokowano kolejne etapy praktyki.",

@@ -1,22 +1,22 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const pathParts = window.location.pathname.split('/');
     const studentId = pathParts[pathParts.length - 1];
     document.getElementById('back-link').href = `/zopz/dashboard`;
 
     const efekty_definicje = [
-        {kod: "01", desc: "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych."},
-        {kod: "02", desc: "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce."},
-        {kod: "03", desc: "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy."},
-        {kod: "04", desc: "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka."},
-        {kod: "05", desc: "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami."},
-        {kod: "06", desc: "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje zawodowe."},
-        {kod: "07", desc: "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia."},
-        {kod: "08", desc: "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy i zaproponować jego rozwiązanie."},
-        {kod: "09", desc: "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności IT, stosując odpowiednie normy i standardy."},
-        {kod: "10", desc: "Pracuje w zespole zajmującym się zawodowo branżą IT."},
-        {kod: "11", desc: "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów."},
-        {kod: "12", desc: "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji zadania, jak i przekazać im w sposób zrozumiały opinie z zakresu informatyki."},
-        {kod: "13", desc: "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków, szczególnie te ekonomiczne i społeczne."}
+        { kod: "01", desc: "Ma wiedzę na temat sposobu realizacji zadań inżynierskich dotyczących informatyki z zachowaniem standardów i norm technicznych." },
+        { kod: "02", desc: "Zna technologie, narzędzia, metody, techniki oraz sprzęt stosowane w informatyce." },
+        { kod: "03", desc: "Zna ekonomiczne, prawne skutki własnych działań podejmowanych w ramach praktyki oraz ograniczenia wynikające z prawa autorskiego i kodeksu pracy." },
+        { kod: "04", desc: "Zna zasady bezpieczeństwa pracy i ergonomii w zawodzie informatyka." },
+        { kod: "05", desc: "Pozyskuje informacje odnośnie technologii, metod, technik, sprzętu wymaganego do realizacji powierzonego zadania, posługując się rozmaitymi źródłami literaturowymi i zasobami." },
+        { kod: "06", desc: "W oparciu o kontakty ze środowiskiem inżynierskim zakładu, potrafi podnieść swoje kompetencje zawodowe." },
+        { kod: "07", desc: "Opracowuje dokumentację dotyczącą realizacji podejmowanych zadań w ramach praktyki, a także referuje ustnie prezentowane w niej zagadnienia." },
+        { kod: "08", desc: "Potrafi zidentyfikować problem informatyczny występujący w zakładzie pracy i zaproponować jego rozwiązanie." },
+        { kod: "09", desc: "Potrafi rozwiązać rzeczywiste zadanie inżynierskie z zakresu działalności IT, stosując odpowiednie normy i standardy." },
+        { kod: "10", desc: "Pracuje w zespole zajmującym się zawodowo branżą IT." },
+        { kod: "11", desc: "Przestrzega zasad etyki zawodowej i zgodnie z tymi zasadami korzysta z wiedzy i pomocy doświadczonych kolegów." },
+        { kod: "12", desc: "Kontaktując się z osobami spoza branży potrafi zarówno pozyskać od nich niezbędne informacje do realizacji zadania, jak i przekazać im w sposób zrozumiały opinie z zakresu informatyki." },
+        { kod: "13", desc: "Dostrzega w praktyce tempo deaktualizacji wiedzy informatycznej oraz skutki działalności informatyków, szczególnie te ekonomiczne i społeczne." }
     ];
 
     let rowCount = 0;
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         tbody.appendChild(tr);
 
-        tr.querySelector('.btn-remove').addEventListener('click', function() {
+        tr.querySelector('.btn-remove').addEventListener('click', function () {
             tr.remove();
             rowCount--;
             updateTotal();
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const checkboxPodpis = document.getElementById('zloz_podpis');
     if (checkboxPodpis) {
-        checkboxPodpis.addEventListener('change', function() {
+        checkboxPodpis.addEventListener('change', function () {
             const podpisDiv = document.getElementById('podpis-zopz');
             if (this.checked) {
                 podpisDiv.textContent = this.getAttribute('data-imienazwisko');
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 addHarmonogramRow();
             }
-            
+
             // Podpisy
             if (data.podpisy) {
                 if (data.podpisy.podpis_uopz) {
@@ -136,23 +136,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('data-student').textContent = data.podpisy.data_student;
                 }
             }
-            
+
             const status = data.dokument ? data.dokument.status : null;
             const actionsDiv = document.getElementById('zopz-actions');
             actionsDiv.classList.remove('d-none');
-            
+
             if (status === 'Sent_to_ZOPZ') {
                 document.getElementById('btn-wyslij-uopz').classList.remove('d-none');
             } else {
-                // Read only mode
                 actionsDiv.classList.add('d-none');
                 document.getElementById('zloz_podpis').disabled = true;
                 document.getElementById('btn-add-row').style.display = 'none';
                 document.querySelectorAll('.program-input, .dzial-input, .dni-input').forEach(el => el.disabled = true);
                 document.querySelectorAll('.btn-remove').forEach(el => el.style.display = 'none');
             }
-            
-            // Status badge
+
             const statusBadge = document.getElementById('status-badge');
             let badgeClass = 'bg-secondary';
             let statusText = status;
@@ -166,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => console.error(err));
 
-    window.zapiszDecyzje = function(akcja) {
+    window.zapiszDecyzje = function (akcja) {
         if (akcja === 'wyslij_do_uopz' && !document.getElementById('zloz_podpis').checked) {
             alert('Musisz zaznaczyć pole "Złóż podpis cyfrowy", aby zatwierdzić dokument.');
             return;
@@ -196,17 +194,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 zloz_podpis: document.getElementById('zloz_podpis').checked
             })
         })
-        .then(response => response.json())
-        .then(data => {
-            const alerts = document.getElementById('alerts-container');
-            if (data.success) {
-                alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                setTimeout(() => window.location.reload(), 2500);
-            } else {
-                alerts.innerHTML = `<div class="alert alert-danger">${data.message || 'Błąd zapisu'}</div>`;
-            }
-            window.scrollTo(0,0);
-        })
-        .catch(err => console.error(err));
+            .then(response => response.json())
+            .then(data => {
+                const alerts = document.getElementById('alerts-container');
+                if (data.success) {
+                    alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    setTimeout(() => window.location.reload(), 2500);
+                } else {
+                    alerts.innerHTML = `<div class="alert alert-danger">${data.message || 'Błąd zapisu'}</div>`;
+                }
+                window.scrollTo(0, 0);
+            })
+            .catch(err => console.error(err));
     };
 });

@@ -11,7 +11,6 @@ pdf_export_bp = Blueprint('pdf_export', __name__, url_prefix='/dokumenty/pobierz
 def pobierz_zal3(student_id):
     student = Student.query.get_or_404(student_id)
     
-    # Check permissions
     if current_user.rola == 'student' and current_user.id != student.uzytkownik_id:
         flash('Brak dostępu.', 'danger')
         return redirect(url_for('index'))
@@ -73,7 +72,6 @@ def pobierz_zal4(student_id):
     podpis_uopz = None
     data_podpisu_uopz = ""
     
-    # Parse signature from opinia_text if present
     match = re.search(r'\[PODPIS_UOPZ:(.+?)\|DATA:(.+?)\]', opinia_text)
     if match:
         podpis_uopz = match.group(1).strip()

@@ -55,7 +55,6 @@ def weryfikuj_porozumienie(praktyka_id):
     if request.method == 'POST':
         akcja = request.form.get('akcja')
         
-        # Save inline form data if provided
         imie = request.form.get('student_imie')
         if imie:
             student.uzytkownik.imie = imie
@@ -331,9 +330,7 @@ def zal4a_lista():
     if current_user.rola not in ['dziekanat', 'dyrektor']:
         return redirect(url_for('index'))
     
-    # Lista praktyk, które mają zatwierdzone ZAL4B, więc można do nich stworzyć ZAL4A
     praktyki = Praktyka.query.filter(Praktyka.status == 'ZAL4B_ZATWIERDZONE').all()
-    # Dodatkowo te, które już mają ZAL4A w bazie
     praktyki_z_4a = Praktyka.query.join(Dokument).filter(Dokument.typ_zalacznika == 'ZAL4A').all()
     
     wszystkie = set(praktyki + praktyki_z_4a)

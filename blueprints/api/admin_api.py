@@ -15,7 +15,6 @@ def dashboard():
         return jsonify({'error': 'Odmowa dostępu'}), 403
         
     oczekujacy = Uzytkownik.query.filter_by(rola='oczekujacy_pracownik').all()
-    # Pobieramy wszystkich użytkowników oprócz oczekujących
     uzytkownicy = Uzytkownik.query.filter(Uzytkownik.rola != 'oczekujacy_pracownik').all()
     opiekunowie = Uzytkownik.query.filter_by(rola='zopz').all()
     
@@ -89,15 +88,14 @@ def stworz_zopz_z_zal9(oswiadczenie_id):
     istniejacy_zopz = Uzytkownik.query.filter_by(email=email_zopz).first()
     
     def przypisz_zaklad_do_praktyki(zopz_id):
-        # Sprawdz czy zakład już istnieje dla tego ZOPZ
         zaklad = ZakladPracy.query.filter_by(zopz_id=zopz_id).first()
         if not zaklad:
             zaklad = ZakladPracy(nazwa=oswiadczenie.nazwa_instytucji, zopz_id=zopz_id, miasto=oswiadczenie.miejscowosc, email=email_zopz, telefon=oswiadczenie.opiekun_telefon)
             db.session.add(zaklad)
-            db.session.flush() # Wymusza nadanie ID bez commitu
+            db.session.flush()
             
         oswiadczenie.dokument.praktyka.zaklad_id = zaklad.id
-        oswiadczenie.dokument.praktyka.uopz_id = None # Opcjonalnie
+        oswiadczenie.dokument.praktyka.uopz_id = None
 
     if istniejacy_zopz:
         przypisz_zaklad_do_praktyki(istniejacy_zopz.id)

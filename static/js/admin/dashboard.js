@@ -1,32 +1,32 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadDashboard();
 
-    document.getElementById('stworz-zopz-form').addEventListener('submit', function(e) {
+    document.getElementById('stworz-zopz-form').addEventListener('submit', function (e) {
         e.preventDefault();
         const data = {
             imie: document.getElementById('zopz-imie').value,
             nazwisko: document.getElementById('zopz-nazwisko').value,
             email: document.getElementById('zopz-email').value
         };
-        
+
         fetch('/api/admin/stworz_zopz', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(data => {
-            const alerts = document.getElementById('alerts-container');
-            if (data.success) {
-                alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                document.getElementById('stworz-zopz-form').reset();
-                loadDashboard();
-            } else {
-                alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-            }
-            window.scrollTo(0,0);
-        })
-        .catch(err => console.error(err));
+            .then(response => response.json())
+            .then(data => {
+                const alerts = document.getElementById('alerts-container');
+                if (data.success) {
+                    alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    document.getElementById('stworz-zopz-form').reset();
+                    loadDashboard();
+                } else {
+                    alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+                window.scrollTo(0, 0);
+            })
+            .catch(err => console.error(err));
     });
 });
 
@@ -44,15 +44,15 @@ function loadDashboard() {
                 alert(data.error);
                 return;
             }
-            
+
             // Oczekujacy
             const oczekujacy = data.oczekujacy || [];
             const zgloszenia = data.zgloszenia_zopz || [];
-            
+
             const badge = document.getElementById('oczekujacy-badge');
             const navBadge = document.getElementById('nav-admin-badge');
             const totalOczekujacy = oczekujacy.length + zgloszenia.length;
-            
+
             if (totalOczekujacy > 0) {
                 badge.textContent = totalOczekujacy;
                 badge.style.display = 'inline-block';
@@ -64,7 +64,7 @@ function loadDashboard() {
                 badge.style.display = 'none';
                 if (navBadge) navBadge.style.display = 'none';
             }
-            
+
             const tableOczekujacy = document.getElementById('oczekujacy-table');
             tableOczekujacy.innerHTML = '';
             if (oczekujacy.length > 0) {
@@ -89,7 +89,7 @@ function loadDashboard() {
             } else {
                 tableOczekujacy.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Brak oczekujących pracowników.</td></tr>';
             }
-            
+
             // Zgloszenia ZOPZ
             const zgloszeniaContainer = document.getElementById('zgloszenia-zopz-container');
             const zgloszeniaTable = document.getElementById('zgloszenia-zopz-table');
@@ -111,7 +111,7 @@ function loadDashboard() {
             } else {
                 zgloszeniaContainer.style.display = 'none';
             }
-            
+
             // Uzytkownicy
             const uzytkownicy = data.uzytkownicy || [];
             const tableUzytkownicy = document.getElementById('uzytkownicy-table');
@@ -134,7 +134,7 @@ function loadDashboard() {
             } else {
                 tableUzytkownicy.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Brak użytkowników.</td></tr>';
             }
-            
+
             // ZOPZ
             const opiekunowie = data.opiekunowie || [];
             const tableZopz = document.getElementById('zopz-table');
@@ -162,44 +162,43 @@ function akceptujPracownika(id) {
         alert('Proszę najpierw wybrać rolę z listy.');
         return;
     }
-    
+
     fetch(`/api/admin/akceptuj_pracownika/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rola: rola })
     })
-    .then(response => response.json())
-    .then(data => {
-        const alerts = document.getElementById('alerts-container');
-        if (data.success) {
-            alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            loadDashboard();
-        } else {
-            alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-        }
-        window.scrollTo(0,0);
-    })
-    .catch(err => console.error(err));
+        .then(response => response.json())
+        .then(data => {
+            const alerts = document.getElementById('alerts-container');
+            if (data.success) {
+                alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                loadDashboard();
+            } else {
+                alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+            window.scrollTo(0, 0);
+        })
+        .catch(err => console.error(err));
 }
 
 function akceptujZgloszenieZopz(oswiadczenie_id) {
     fetch(`/api/admin/stworz_zopz_z_zal9/${oswiadczenie_id}`, {
         method: 'POST'
     })
-    .then(response => response.json())
-    .then(data => {
-        const alerts = document.getElementById('alerts-container');
-        if (data.success) {
-            alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            loadDashboard();
-        } else {
-            alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-            // Jeśli nie powiodło się, bo np. już istnieje, nadal przeładujmy by zniknęło
-            loadDashboard();
-        }
-        window.scrollTo(0,0);
-    })
-    .catch(err => console.error(err));
+        .then(response => response.json())
+        .then(data => {
+            const alerts = document.getElementById('alerts-container');
+            if (data.success) {
+                alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                loadDashboard();
+            } else {
+                alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                loadDashboard();
+            }
+            window.scrollTo(0, 0);
+        })
+        .catch(err => console.error(err));
 }
 
 function otworzModalEdycjiUzytkownika(id, imie, nazwisko, email, rola, aktywny, is_me) {
@@ -210,11 +209,10 @@ function otworzModalEdycjiUzytkownika(id, imie, nazwisko, email, rola, aktywny, 
     document.getElementById('editUserRola').value = rola;
     document.getElementById('editUserAktywny').value = aktywny;
     document.getElementById('editUserHaslo').value = '';
-    
-    // Jeśli to moje konto, nie mogę odebrać sobie uprawnień ani się zablokować
+
     document.getElementById('editUserRola').disabled = is_me;
     document.getElementById('editUserAktywny').disabled = is_me;
-    
+
     const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
     modal.show();
 }
@@ -228,30 +226,30 @@ function zapiszEdycjeUzytkownika() {
         rola: document.getElementById('editUserRola').value,
         aktywny: parseInt(document.getElementById('editUserAktywny').value)
     };
-    
+
     const haslo = document.getElementById('editUserHaslo').value;
     if (haslo) {
         data.haslo = haslo;
     }
-    
+
     fetch(`/api/admin/uzytkownik/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(data => {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
-        modal.hide();
-        
-        const alerts = document.getElementById('alerts-container');
-        if (data.success) {
-            alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            loadDashboard();
-        } else {
-            alerts.innerHTML = `<div class="alert alert-danger">${data.error || data.message}</div>`;
-        }
-        window.scrollTo(0,0);
-    })
-    .catch(err => console.error(err));
+        .then(response => response.json())
+        .then(data => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+            modal.hide();
+
+            const alerts = document.getElementById('alerts-container');
+            if (data.success) {
+                alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                loadDashboard();
+            } else {
+                alerts.innerHTML = `<div class="alert alert-danger">${data.error || data.message}</div>`;
+            }
+            window.scrollTo(0, 0);
+        })
+        .catch(err => console.error(err));
 }

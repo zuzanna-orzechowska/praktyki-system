@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded', function() {
-    window.loadDziennik = function() {
+document.addEventListener('DOMContentLoaded', function () {
+    window.loadDziennik = function () {
         fetch(`/api/dziekanat/dziennik/${STUDENT_ID}`)
             .then(response => response.json())
             .then(data => {
@@ -7,30 +7,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('alerts-container').innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
                     return;
                 }
-                
+
                 const student = data.student;
                 const profil = data.student_profil;
                 const praktyka = data.praktyka;
                 const dokument = data.dokument;
-                
+
                 document.getElementById('student-imie-nazwisko').textContent = `${student.imie} ${student.nazwisko}`;
                 document.getElementById('student-nr-albumu').textContent = profil.nr_albumu || 'Brak';
                 document.getElementById('rok-akademicki-text').textContent = profil.rok_akademicki || 'Brak';
-                
+
                 document.getElementById('miejsce-praktyk').textContent = praktyka.zaklad_nazwa || 'Brak przypisanej firmy';
-                
-                // Status Badge
+
                 const badge = document.getElementById('dokument-status-badge');
                 badge.textContent = dokument.status;
                 badge.className = 'badge';
                 if (dokument.status === 'Weryfikacja Dziekanatu' || dokument.status === 'Weryfikacja UOPZ') badge.classList.add('bg-warning', 'text-dark');
                 else if (dokument.status === 'Zatwierdzone') badge.classList.add('bg-success');
                 else badge.classList.add('bg-secondary');
-                
+
                 // Wpisy
                 const tbody = document.getElementById('dziennikBody');
                 tbody.innerHTML = '';
-                
+
                 if (data.wpisy && data.wpisy.length > 0) {
                     data.wpisy.forEach((wpis, index) => {
                         appendRow(tbody, index + 1, wpis);
@@ -47,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function appendRow(tbody, dayNumber, wpis) {
     const tr = document.createElement('tr');
-    
+
     let decyzjaHtml = '';
     if (wpis.potwierdzony_zopz === 1) {
         decyzjaHtml = '<span class="text-success fw-bold"><i class="bi bi-check-circle"></i> Potwierdzone</span>';
@@ -57,7 +56,7 @@ function appendRow(tbody, dayNumber, wpis) {
     } else {
         decyzjaHtml = '<span class="text-muted small">Oczekuje</span>';
     }
-    
+
     tr.innerHTML = `
         <td class="text-center fw-bold">${dayNumber}</td>
         <td>
