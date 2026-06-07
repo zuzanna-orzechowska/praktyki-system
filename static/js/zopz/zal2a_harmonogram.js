@@ -61,6 +61,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('btn-add-row').addEventListener('click', () => addHarmonogramRow());
 
+    const checkboxPodpis = document.getElementById('zloz_podpis');
+    if (checkboxPodpis) {
+        checkboxPodpis.addEventListener('change', function() {
+            const podpisDiv = document.getElementById('podpis-zopz');
+            if (this.checked) {
+                podpisDiv.textContent = this.getAttribute('data-imienazwisko');
+            } else {
+                podpisDiv.textContent = 'Brak podpisu';
+            }
+        });
+    }
+
     fetch(`/api/zopz/zal2a_harmonogram/${studentId}`)
         .then(response => {
             if (response.status === 401 || response.status === 403) {

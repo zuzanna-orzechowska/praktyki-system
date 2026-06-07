@@ -146,6 +146,18 @@ document.addEventListener('DOMContentLoaded', function() {
             statusBadge.innerHTML = `<span class="badge ${badgeClass} fs-6">Status: ${statusText}</span>`;
         })
         .catch(err => console.error(err));
+
+    const checkboxPodpis = document.getElementById('zloz_podpis');
+    if (checkboxPodpis) {
+        checkboxPodpis.addEventListener('change', function() {
+            const podpisDiv = document.getElementById('podpis-student');
+            if (this.checked) {
+                podpisDiv.textContent = this.getAttribute('data-imienazwisko');
+            } else {
+                podpisDiv.textContent = 'Brak podpisu';
+            }
+        });
+    }
 });
 
 function submitDecision(action) {

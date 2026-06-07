@@ -207,7 +207,11 @@ def zal2a_harmonogram(student_id):
             
             if akcja == 'wyslij_do_zopz':
                 dokument.status = 'Sent_to_ZOPZ'
-                message = 'Harmonogram zapisano i przesłano do weryfikacji ZOPZ!'
+                if data.get('zloz_podpis'):
+                    tytul = f"{current_user.tytul_naukowy} " if current_user.tytul_naukowy else ""
+                    podpisy.podpis_uopz = f"{tytul}{current_user.imie} {current_user.nazwisko}"
+                    podpisy.data_uopz = date.today()
+                message = 'Harmonogram zapisano, podpisano i przesłano do weryfikacji ZOPZ!'
                 if praktyka.zaklad and praktyka.zaklad.zopz_id:
                     notif = Powiadomienie(
                         uzytkownik_id=praktyka.zaklad.zopz_id,

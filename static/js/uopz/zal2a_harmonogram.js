@@ -61,6 +61,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('btn-add-row').addEventListener('click', () => addHarmonogramRow());
 
+    const checkboxPodpis = document.getElementById('zloz_podpis');
+    if (checkboxPodpis) {
+        checkboxPodpis.addEventListener('change', function() {
+            const podpisDiv = document.getElementById('podpis-uopz');
+            if (this.checked) {
+                podpisDiv.textContent = this.getAttribute('data-imienazwisko');
+            } else {
+                podpisDiv.textContent = 'Brak podpisu';
+            }
+        });
+    }
+
     fetch(`/api/uopz/zal2a_harmonogram/${studentId}`)
         .then(response => {
             if (response.status === 401 || response.status === 403) {
@@ -129,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const actionsDiv = document.getElementById('uopz-actions');
             actionsDiv.classList.remove('d-none');
 
-            if (status === 'Draft_UOPZ' || !status) {
+            if (status === 'Draft_UOPZ' || status === 'Draft' || !status) {
                 document.getElementById('btn-wyslij-zopz').classList.remove('d-none');
             } else if (status === 'Sent_back_to_UOPZ') {
                 document.getElementById('btn-wyslij-student').classList.remove('d-none');
@@ -144,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(err => console.error(err));
 
     window.zapiszDecyzje = function (akcja) {
-        if (akcja === 'wyslij_do_studenta' && !document.getElementById('zloz_podpis').checked) {
-            alert('Musisz zaznaczyć pole "Złóż podpis cyfrowy", aby wysłać dokument do studenta.');
+        if ((akcja === 'wyslij_do_studenta' || akcja === 'wyslij_do_zopz') && !document.getElementById('zloz_podpis').checked) {
+            alert('Musisz zaznaczyć pole "Złóż podpis cyfrowy", aby wysłać dokument dalej.');
             return;
         }
 
